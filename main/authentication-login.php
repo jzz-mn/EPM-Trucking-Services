@@ -35,21 +35,21 @@
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Sign In</h2>
                 <p class="mb-9">Please enter your credentials to continue.</p>
 
-                <form>
+                <form action="login.php" method="POST">
                   <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" />
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp" required />
                   </div>
                   <div class="mb-4">
-                    <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1" />
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required />
                   </div>
                   <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <a class="text-danger fw-medium" href="./authentication-forgot-password.html">Forgot Password ?</a>
                   </div>
-                  <a href="./index3.html" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Sign In</a>
-
+                  <button type="submit" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Sign In</button>
                 </form>
+
               </div>
             </div>
           </div>
