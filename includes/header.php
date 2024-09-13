@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
+<html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
 
 <head>
   <!-- Required meta tags -->
@@ -70,6 +70,12 @@
                 <span class="hide-menu">Records</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
+              <li class="sidebar-item">
+                  <a class="sidebar-link" href="../super-admin/employees.php">
+                    <span class="icon-small"></span>
+                    <span class="hide-menu">Employees</span>
+                  </a>
+                </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/officers.php">
                     <span class="icon-small"></span>
@@ -330,7 +336,7 @@
                           <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
                             Account Settings
                           </a>
-                          <a href="../super-admin/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
                         </div>

@@ -30,7 +30,7 @@
           <div class="col-lg-6 col-xl-5 col-xxl-4">
             <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
               <div class="col-12 auth-card">
-                <a href="../main/index.html" class="text-nowrap logo-img d-block w-100 mb-4">
+                <a href="../super-admin/home.php" class="text-nowrap logo-img d-block w-100 mb-4">
                   <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-25" alt="Logo-Dark" />
                 </a>
 
@@ -54,7 +54,7 @@
                     </div>
                   </div>
 
-                  <a href="./index.html" class="btn btn-dark w-100 py-3 rounded-2">Sign In</a>
+                  <a href="../super-admin/home.php" class="btn btn-muted w-100 py-3 rounded-2">Sign In</a>
                 </form>
               </div>
             </div>
