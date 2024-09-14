@@ -112,7 +112,7 @@ $conn->close();
                     <input type="password" class="form-control" id="password" name="Password" required />
                   </div>
                   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <a class="text-danger fw-medium" href="./authentication-forgot-password.html">Forgot Password?</a>
+                    <a class="text-danger fw-medium" href="../login/forgot_password.php">Forgot Password?</a>
                   </div>
                   <button type="submit" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Sign In</button>
                 </form>
