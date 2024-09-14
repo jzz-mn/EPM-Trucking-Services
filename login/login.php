@@ -1,7 +1,7 @@
 <?php
 // Start session
 session_start();
-include '../db_conn.php';
+include '../includes/db_connection.php';
 
 // Initialize messages
 $error_message = "";
