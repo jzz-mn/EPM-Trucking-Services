@@ -1,14 +1,13 @@
 <?php
 include '../includes/header.php';
 ?>
-
 <div class="body-wrapper">
   <div class="container-fluid">
     <div class="card card-body py-3">
       <div class="row align-items-center">
         <div class="col-12">
           <div class="d-sm-flex align-items-center justify-space-between">
-            <h4 class="mb-4 mb-sm-0 card-title">Employees</h4>
+            <h4 class="mb-4 mb-sm-0 card-title">Add Officer</h4>
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
@@ -18,7 +17,7 @@ include '../includes/header.php';
                 </li>
                 <li class="breadcrumb-item" aria-current="page">
                   <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                    Employees
+                    Add Officer
                   </span>
                 </li>
               </ol>
@@ -28,153 +27,154 @@ include '../includes/header.php';
       </div>
     </div>
 
-    <div class="widget-content searchable-container list">
-      <div class="card card-body">
-        <div class="row">
-          <div class="col-md-4 col-xl-3">
-            <form class="position-relative">
-              <input type="text" class="form-control product-search ps-5" id="input-search"
-                placeholder="Search Contacts..." />
-              <i class="ti ti-search position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
-            </form>
-          </div>
-          <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-            <a href="add-employee.php" id="btn-add-contact" class="btn btn-primary d-flex align-items-center">
-              <i class="ti ti-users text-white me-1 fs-5"></i> Add Contact
-            </a>
-          </div>
-        </div>
-      </div>
-      <!-- Modal -->
-      <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalTitle"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Contact</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="add-contact-box">
-                <div class="add-contact-content">
-                  <form id="addContactModalTitle">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-name">
-                          <input type="text" id="c-name" class="form-control" placeholder="Name" />
-                          <span class="validation-text text-danger"></span>
-                        </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="tab-content" id="pills-tabContent">
+          <div class="tab-pane fade show active" id="pills-account" role="tabpanel" aria-labelledby="pills-account-tab"
+            tabindex="0">
+            <div class="row">
+              <div class="col-lg-6 d-flex align-items-stretch">
+                <div class="card w-100 border position-relative overflow-hidden">
+                  <div class="card-body p-4">
+                    <h4 class="card-title">Add Profile Picture</h4>
+                    <p class="card-subtitle mb-4">Upload a profile picture here.</p>
+                    <div class="text-center">
+                      <img src="../assets/images/profile/user-1.jpg" alt="matdash-img" class="img-fluid rounded-circle"
+                        width="120" height="120">
+                      <div class="d-flex align-items-center justify-content-center my-4 gap-6">
+                        <button class="btn btn-primary">Upload</button>
+                        <button class="btn bg-danger-subtle text-danger">Reset</button>
                       </div>
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-email">
-                          <input type="text" id="c-email" class="form-control" placeholder="Email" />
-                          <span class="validation-text text-danger"></span>
-                        </div>
-                      </div>
+                      <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
                     </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-occupation">
-                          <input type="text" id="c-occupation" class="form-control" placeholder="Occupation" />
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6 d-flex align-items-stretch">
+                <div class="card w-100 border position-relative overflow-hidden">
+                  <div class="card-body p-4">
+                    <h4 class="card-title">Create Account</h4>
+                    <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
+                    <form>
+                      <div class="mb-3">
+                        <label for="exampleInputtext" class="form-label">Email address</label>
+                        <input type="text" class="form-control" id="exampleInputtext">
+                      </div>
+                      <div class="mb-3">
+                        <label for="exampleInputPassword2" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="exampleInputPassword2">
+                      </div>
+                      <div>
+                        <label for="exampleInputPassword3" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="exampleInputPassword3">
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card w-100 border position-relative overflow-hidden mb-0">
+                  <div class="card-body p-4">
+                    <h4 class="card-title">Personal Details</h4>
+                    <p class="card-subtitle mb-4">Fill in the employee's personal detail below.</p>
+                    <form>
+                      <div class="row">
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="exampleInputtext">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Middle Initial</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Gender</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Date of Birth</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext" class="form-label">College</label>
+                            <input type="text" class="form-control" id="exampleInputtext">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Program</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Year Graduated</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext" class="form-label">Mobile Number</label>
+                            <input type="text" class="form-control" id="exampleInputtext">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Employment Date</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="exampleInputtext2" class="form-label">Position</label>
+                            <input type="text" class="form-control" id="exampleInputtext2">
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div>
+                            <label for="exampleInputtext4" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="exampleInputtext4">
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                            <a class="btn btn-primary" href="../super-admin/officers.php">Save</a>
+                            <a class="btn bg-danger-subtle text-danger" href="../super-admin/officers.php">Cancel</a>
+                          </div>
                         </div>
                       </div>
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-phone">
-                          <input type="text" id="c-phone" class="form-control" placeholder="Phone" />
-                          <span class="validation-text text-danger"></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div class="mb-3 contact-location">
-                          <input type="text" id="c-location" class="form-control" placeholder="Location" />
-                        </div>
-                      </div>
-                    </div>
-                  </form>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="modal-footer">
-              <div class="d-flex gap-6 m-0">
-                <button id="btn-add" class="btn btn-success">Add</button>
-                <button id="btn-edit" class="btn btn-success">Save</button>
-                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"> Discard
-                </button>
-              </div>
-
-            </div>
           </div>
-        </div>
-      </div>
-      <?php
-      include '../includes/db_connection.php';
-
-      // Fetch employee data from database
-      $sql = "SELECT EmployeeID, FirstName, MiddleInitial, LastName, Gender, Position, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate FROM employees";
-      $result = $conn->query($sql);
-      ?>
-      <div class="card card-body">
-        <div class="table-responsive">
-          <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Address</th>
-                <th>Mobile No</th>
-                <th>Email Address</th>
-                <th>Employment Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php
-              if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                  $fullName = "{$row['FirstName']} {$row['MiddleInitial']} {$row['LastName']}";
-                  $positionBadge = '';
-                  if ($row['Position'] === 'Driver') {
-                    $positionBadge = "<span class='badge text-bg-primary'>Driver</span>";
-                  } elseif ($row['Position'] === 'Helper/Crew') {
-                    $positionBadge = "<span class='badge text-bg-danger'>Helper/Crew</span>";
-                  } else {
-                    $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
-                  }
-                  $formattedMobileNo = preg_replace('/(\d{4})(\d{3})(\d{4})/', '$1-$2-$3', $row['MobileNo']);
-                  echo "<tr>";
-                  echo "<td><div class='d-flex align-items-center'>";
-                  echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
-                  echo "<div class='ms-3'>";
-                  echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
-                  echo "</div></div></td>";
-                  echo "<td>{$positionBadge}</td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['Address']}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
-                  echo "<td>";
-                  echo "<a href='acc-setting.php?id={$row['EmployeeID']}' class='me-3 text-primary'>"; // Primary color (usually blue) for the edit icon
-                  echo "<i class='fs-4 ti ti-edit'></i></a>";
-                  echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>"; // Danger color (red) for the delete icon
-                  echo "<i class='fs-4 ti ti-trash'></i></a>";
-                  echo "</td>";
-                  echo "</tr>";
-                }
-              } else {
-                echo "<tr><td colspan='7' class='text-center'>No employees found</td></tr>";
-              }
-              $conn->close();
-              ?>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
   </div>
 </div>
-
+</div>
+</div>
+<button class="btn btn-danger p-3 rounded-circle d-flex align-items-center justify-content-center customizer-btn"
+  type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+  <i class="icon ti ti-settings fs-7"></i>
+</button>
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">
@@ -437,6 +437,8 @@ include '../includes/header.php';
     </div>
   </div>
 </div>
+
+
 </div>
 <div class="dark-transparent sidebartoggler"></div>
 <!-- Import Js Files -->
@@ -449,8 +451,6 @@ include '../includes/header.php';
 
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../assets/js/datatable/datatable-basic.init.js"></script>
 </body>
 
 </html>
