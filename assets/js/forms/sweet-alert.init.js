@@ -32,7 +32,7 @@
       Swal.fire(
         {
           title: "Are you sure?",
-          text: "You will not be able to recover this imaginary file!",
+          text: "You will not be able to recover this data!",
           type: "warning",
           showCancelButton: true,
           confirmButtonColor: "#DD6B55",
@@ -40,7 +40,7 @@
           closeOnConfirm: false,
         },
         function () {
-          swal("Deleted!", "Your imaginary file has been deleted.", "success");
+          swal("Deleted!", "Data has been deleted.", "success");
         }
       );
     });
