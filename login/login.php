@@ -1,64 +1,3 @@
-<?php
-// Start session
-session_start();
-include '../db_conn.php';
-
-// Initialize messages
-$error_message = "";
-$success_message = "Please enter your credentials to continue.";
-
-// Check if form data has been submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ensure the keys 'EmailAddress' and 'Password' exist before accessing them
-    if (isset($_POST['EmailAddress']) && isset($_POST['Password'])) {
-        // Get form data
-        $email = $_POST['EmailAddress'];
-        $password = $_POST['Password'];
-
-        // Validate input
-        if (empty($email) || empty($password)) {
-            $error_message = "Please enter both email and password.";
-        } else {
-            // Query to check if user exists in the database
-            $sql = "SELECT * FROM useraccounts WHERE EmailAddress = ? LIMIT 1";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $email); // Bind email to the query
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            // Check if user was found
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-
-                // Check if the password matches (simple string comparison for now, since passwords are not hashed)
-                if ($password === $row['Password']) {
-                    // Login successful, set session variables
-                    $_SESSION['UserID'] = $row['UserID'];
-                    $_SESSION['Username'] = $row['Username'];
-                    $_SESSION['Role'] = $row['Role'];
-                    $_SESSION['EmailAddress'] = $row['EmailAddress'];
-
-                    // Redirect to a different page (e.g., dashboard)
-                    header("Location: ../super-admin/home.php");
-                    exit();
-                } else {
-                    $error_message = "Invalid password!";
-                }
-            } else {
-                $error_message = "No user found with that email!";
-            }
-
-            $stmt->close();
-        }
-    } else {
-        // If fields are missing, output an error message
-        $error_message = "Please fill in both the email and password fields.";
-    }
-}
-
-$conn->close();
-?>
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
 
@@ -86,7 +25,7 @@ $conn->close();
     <div class="position-relative overflow-hidden radial-gradient min-vh-100 w-100">
       <div class="position-relative z-index-5">
         <div class="row gx-0">
-
+          
           <!-- Left side (Form) -->
           <div class="col-lg-6 col-xl-5 col-xxl-4">
             <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
@@ -96,25 +35,26 @@ $conn->close();
                 </a>
 
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Sign In</h2>
+                <p class="mb-9">Please enter your credentials to continue.</p>
 
-                <!-- Displaying messages based on success or error -->
-                <p class="mb-9 <?php echo (!empty($error_message)) ? 'text-danger' : ''; ?>">
-                  <?php echo (!empty($error_message)) ? $error_message : $success_message; ?>
-                </p>
-
-                <form action="login.php" method="POST">
+                <!-- Form -->
+                <form>
                   <div class="mb-3">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email" name="EmailAddress" required />
+                    <label for="exampleInputEmail1" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" />
                   </div>
                   <div class="mb-4">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="Password" required />
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1" />
                   </div>
-                  <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <a class="text-danger fw-medium" href="./authentication-forgot-password.html">Forgot Password?</a>
+
+                  <div class="d-flex justify-content-between mb-4">
+                    <div class="text-end">
+                      <a class="text-danger fw-medium" href="./authentication-forgot-password.html">Forgot Password?</a>
+                    </div>
                   </div>
-                  <button type="submit" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Sign In</button>
+
+                  <a href="./index.html" class="btn btn-dark w-100 py-3 rounded-2">Sign In</a>
                 </form>
               </div>
             </div>
@@ -124,7 +64,7 @@ $conn->close();
             <div class="position-absolute top-0 start-0 w-100 h-100">
               <img src="../assetsEPM/images/epm-background.png" class="w-100 h-100 object-fit-cover" alt="Background Image" />
             </div>
-
+          
             <!-- Adjusted Text Section -->
             <div class="d-flex align-items-center justify-content-start text-start z-index-5 position-relative h-100 ps-5">
               <div class="text-white">
@@ -133,7 +73,7 @@ $conn->close();
               </div>
             </div>
           </div>
-
+          
         </div>
       </div>
     </div>
