@@ -8,7 +8,7 @@ include '../includes/header.php';
       <div class="row align-items-center">
         <div class="col-12">
           <div class="d-sm-flex align-items-center justify-space-between">
-            <h4 class="mb-4 mb-sm-0 card-title">Employees</h4>
+            <h4 class="mb-4 mb-sm-0 card-title">Records</h4>
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
@@ -27,87 +27,131 @@ include '../includes/header.php';
         </div>
       </div>
     </div>
-
+    <h5 class="border-bottom py-2 px-4 mb-4">Employees</h5>
     <div class="widget-content searchable-container list">
-      <div class="card card-body">
-        <div class="row">
-          <div class="col-md-4 col-xl-3">
-            <form class="position-relative">
-              <input type="text" class="form-control product-search ps-5" id="input-search"
-                placeholder="Search Contacts..." />
-              <i class="ti ti-search position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
-            </form>
-          </div>
-          <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-            <a href="add-employee.php" id="btn-add-contact" class="btn btn-primary d-flex align-items-center">
-              <i class="ti ti-users text-white me-1 fs-5"></i> Add Contact
-            </a>
-          </div>
-        </div>
-      </div>
       <!-- Modal -->
       <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalTitle"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
             <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Contact</h5>
+              <h5 class="modal-title">Add Employee Details</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div class="add-contact-box">
                 <div class="add-contact-content">
-                  <form id="addContactModalTitle">
+                  <form id="addEmployeeForm">
+                    <!-- Profile Picture Section -->
                     <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-name">
-                          <input type="text" id="c-name" class="form-control" placeholder="Name" />
-                          <span class="validation-text text-danger"></span>
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Add Profile Picture</h4>
+                            <p class="card-subtitle mb-4">Upload a profile picture here.</p>
+                            <div class="text-center">
+                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                                class="img-fluid rounded-circle" width="120" height="120">
+                              <div class="d-flex align-items-center justify-content-center my-4 gap-6">
+                                <button class="btn btn-primary">Upload</button>
+                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                              </div>
+                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-email">
-                          <input type="text" id="c-email" class="form-control" placeholder="Email" />
-                          <span class="validation-text text-danger"></span>
+
+                      <!-- Account Creation Section -->
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Create Account</h4>
+                            <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
+                            <div class="mb-3">
+                              <label for="emailInput" class="form-label">Email address</label>
+                              <input type="email" class="form-control" id="emailInput" placeholder="Enter email">
+                            </div>
+                            <div class="mb-3">
+                              <label for="passwordInput" class="form-label">New Password</label>
+                              <input type="password" class="form-control" id="passwordInput"
+                                placeholder="Enter password">
+                            </div>
+                            <div>
+                              <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
+                              <input type="password" class="form-control" id="confirmPasswordInput"
+                                placeholder="Confirm password">
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-occupation">
-                          <input type="text" id="c-occupation" class="form-control" placeholder="Occupation" />
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="mb-3 contact-phone">
-                          <input type="text" id="c-phone" class="form-control" placeholder="Phone" />
-                          <span class="validation-text text-danger"></span>
+
+                    <!-- Personal Details Section -->
+                    <div class="col-12">
+                      <div class="card w-100 border position-relative overflow-hidden mb-0">
+                        <div class="card-body p-4">
+                          <h4 class="card-title">Personal Details</h4>
+                          <p class="card-subtitle mb-4">Fill in the employee's personal details below.</p>
+                          <div class="row">
+                            <div class="col-lg-4 mb-3">
+                              <label for="firstNameInput" class="form-label">First Name</label>
+                              <input type="text" class="form-control" id="firstNameInput"
+                                placeholder="Enter first name">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="middleInitialInput" class="form-label">Middle Initial</label>
+                              <input type="text" class="form-control" id="middleInitialInput"
+                                placeholder="Enter middle initial">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="lastNameInput" class="form-label">Last Name</label>
+                              <input type="text" class="form-control" id="lastNameInput" placeholder="Enter last name">
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                              <label for="genderInput" class="form-label">Gender</label>
+                              <input type="text" class="form-control" id="genderInput" placeholder="Enter gender">
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                              <label for="dobInput" class="form-label">Date of Birth</label>
+                              <input type="date" class="form-control" id="dobInput" placeholder="Enter date of birth">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="mobileInput" class="form-label">Mobile Number</label>
+                              <input type="text" class="form-control" id="mobileInput"
+                                placeholder="Enter mobile number">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="employmentDateInput" class="form-label">Employment Date</label>
+                              <input type="date" class="form-control" id="employmentDateInput">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="positionInput" class="form-label">Position</label>
+                              <input type="text" class="form-control" id="positionInput" placeholder="Enter position">
+                            </div>
+                            <div class="col-12 mb-3">
+                              <label for="addressInput" class="form-label">Address</label>
+                              <input type="text" class="form-control" id="addressInput" placeholder="Enter address">
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div class="mb-3 contact-location">
-                          <input type="text" id="c-location" class="form-control" placeholder="Location" />
-                        </div>
-                      </div>
-                    </div>
+
                   </form>
                 </div>
               </div>
             </div>
             <div class="modal-footer">
               <div class="d-flex gap-6 m-0">
-                <button id="btn-add" class="btn btn-success">Add</button>
-                <button id="btn-edit" class="btn btn-success">Save</button>
-                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"> Discard
-                </button>
+                <button id="btn-add" class="btn btn-success">Save</button>
+                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
               </div>
-
             </div>
           </div>
         </div>
       </div>
+
       <?php
       include '../includes/db_connection.php';
 
@@ -115,61 +159,76 @@ include '../includes/header.php';
       $sql = "SELECT EmployeeID, FirstName, MiddleInitial, LastName, Gender, Position, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate FROM employees";
       $result = $conn->query($sql);
       ?>
-      <div class="card card-body">
-        <div class="table-responsive">
-          <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Address</th>
-                <th>Mobile No</th>
-                <th>Email Address</th>
-                <th>Employment Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php
-              if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                  $fullName = "{$row['FirstName']} {$row['MiddleInitial']} {$row['LastName']}";
-                  $positionBadge = '';
-                  if ($row['Position'] === 'Driver') {
-                    $positionBadge = "<span class='badge text-bg-primary'>Driver</span>";
-                  } elseif ($row['Position'] === 'Helper/Crew') {
-                    $positionBadge = "<span class='badge text-bg-danger'>Helper/Crew</span>";
-                  } else {
-                    $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
-                  }
-                  $formattedMobileNo = preg_replace('/(\d{4})(\d{3})(\d{4})/', '$1-$2-$3', $row['MobileNo']);
-                  echo "<tr>";
-                  echo "<td><div class='d-flex align-items-center'>";
-                  echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
-                  echo "<div class='ms-3'>";
-                  echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
-                  echo "</div></div></td>";
-                  echo "<td>{$positionBadge}</td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['Address']}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
-                  echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
-                  echo "<td>";
-                  echo "<a href='acc-setting.php?id={$row['EmployeeID']}' class='me-3 text-primary'>"; // Primary color (usually blue) for the edit icon
-                  echo "<i class='fs-4 ti ti-edit'></i></a>";
-                  echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>"; // Danger color (red) for the delete icon
-                  echo "<i class='fs-4 ti ti-trash'></i></a>";
-                  echo "</td>";
-                  echo "</tr>";
-                }
-              } else {
-                echo "<tr><td colspan='7' class='text-center'>No employees found</td></tr>";
-              }
-              $conn->close();
-              ?>
-            </tbody>
-          </table>
+      <div class="card card-body mb-0">
+        <div class="row">
+          <div class="col-md-4 col-xl-3">
+            <form class="position-relative">
+              <input type="text" class="form-control product-search" id="input-search" placeholder="Search" />
+              <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
+            </form>
+          </div>
+          <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+            <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+              data-bs-target="#addContactModal">
+              <i class="ti ti-users text-white me-1 fs-5"></i> Add Employee
+            </a>
+
+          </div>
         </div>
+      </div>
+      <div class="table-responsive card p-0 card-body">
+        <table id="zero_config" class="table table-striped table-bordered  text-nowrap align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Address</th>
+              <th>Mobile No</th>
+              <th>Email Address</th>
+              <th>Employment Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            if ($result->num_rows > 0) {
+              while ($row = $result->fetch_assoc()) {
+                $fullName = "{$row['FirstName']} {$row['MiddleInitial']} {$row['LastName']}";
+                $positionBadge = '';
+                if ($row['Position'] === 'Driver') {
+                  $positionBadge = "<span class='badge text-bg-primary'>Driver</span>";
+                } elseif ($row['Position'] === 'Helper/Crew') {
+                  $positionBadge = "<span class='badge text-bg-danger'>Helper/Crew</span>";
+                } else {
+                  $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
+                }
+                $formattedMobileNo = preg_replace('/(\d{4})(\d{3})(\d{4})/', '$1-$2-$3', $row['MobileNo']);
+                echo "<tr>";
+                echo "<td><div class='d-flex align-items-center'>";
+                echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
+                echo "<div class='ms-3'>";
+                echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
+                echo "</div></div></td>";
+                echo "<td>{$positionBadge}</td>";
+                echo "<td><p class='mb-0 fw-normal'>{$row['Address']}</p></td>";
+                echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
+                echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
+                echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
+                echo "<td>";
+                echo "<a href='acc-setting.php?id={$row['EmployeeID']}' class='me-3 text-primary'>"; // Primary color (usually blue) for the edit icon
+                echo "<i class='fs-4 ti ti-edit'></i></a>";
+                echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>"; // Danger color (red) for the delete icon
+                echo "<i class='fs-4 ti ti-trash'></i></a>";
+                echo "</td>";
+                echo "</tr>";
+              }
+            } else {
+              echo "<tr><td colspan='7' class='text-center'>No employees found</td></tr>";
+            }
+            $conn->close();
+            ?>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -451,6 +510,7 @@ include '../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
+<script src="../assets/js/apps/contact.js"></script>
 </body>
 
 </html>

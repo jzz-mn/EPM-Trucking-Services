@@ -21,10 +21,22 @@ $(function () {
       .show();
   });
 
-  $("#btn-add-contact").on("click", function (event) {
+  $(document).on("click", "#btn-add-contact", function (event) {
     $("#addContactModal #btn-add").show();
     $("#addContactModal #btn-edit").hide();
     $("#addContactModal").modal("show");
+  });
+
+  $(document).on("click", "#btn-add-expense", function (event) {
+    $("#addExpenseModal #btn-add").show();
+    $("#addExpenseModal #btn-edit").hide();
+    $("#addExpenseModal").modal("show");
+  });
+  
+  $(document).on("click", "#btn-add-fuel", function (event) {
+    $("#addFuelExpenseModal #btn-add").show();
+    $("#addFuelExpenseModal #btn-edit").hide();
+    $("#addFuelExpenseModal").modal("show");
   });
 
   function deleteContact() {
