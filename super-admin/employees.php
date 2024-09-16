@@ -41,8 +41,7 @@ include '../includes/header.php';
             <div class="modal-body">
               <div class="add-contact-box">
                 <div class="add-contact-content">
-                  <form id="addEmployeeForm">
-                    <!-- Profile Picture Section -->
+                  <form id="addEmployeeForm" method="POST" action="add_employee.php">
                     <div class="row">
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -61,7 +60,6 @@ include '../includes/header.php';
                           </div>
                         </div>
                       </div>
-
                       <!-- Account Creation Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -70,25 +68,28 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
                             <div class="mb-3">
                               <label for="usernameInput" class="form-label">Username</label>
-                              <input type="text" class="form-control" id="usernameInput" placeholder="Enter username">
+                              <input type="text" class="form-control" id="usernameInput" name="username"
+                                placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
                               <label for="emailInput" class="form-label">Email address</label>
-                              <input type="email" class="form-control" id="emailInput" placeholder="Enter email">
+                              <input type="email" class="form-control" id="emailInput" name="emailAddress"
+                                placeholder="Enter email" required>
                             </div>
                             <div class="mb-3">
                               <label for="passwordInput" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="passwordInput"
-                                placeholder="Enter password">
+                              <input type="password" class="form-control" id="passwordInput" name="password"
+                                placeholder="Enter password" required>
                             </div>
                             <div>
                               <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
                               <input type="password" class="form-control" id="confirmPasswordInput"
-                                placeholder="Confirm password">
+                                name="confirmPassword" placeholder="Confirm password" required>
                             </div>
                           </div>
                         </div>
                       </div>
+
                     </div>
 
                     <!-- Personal Details Section -->
@@ -96,52 +97,57 @@ include '../includes/header.php';
                       <div class="card w-100 border position-relative overflow-hidden mb-0">
                         <div class="card-body p-4">
                           <h4 class="card-title">Personal Details</h4>
-                          <p class="card-subtitle mb-4">Fill in the employee's personal details below.</p>
                           <div class="row">
                             <div class="col-lg-4 mb-3">
                               <label for="firstNameInput" class="form-label">First Name</label>
-                              <input type="text" class="form-control" id="firstNameInput"
-                                placeholder="Enter first name">
+                              <input type="text" class="form-control" id="firstNameInput" name="firstName"
+                                placeholder="Enter first name" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="middleInitialInput" class="form-label">Middle Initial</label>
-                              <input type="text" class="form-control" id="middleInitialInput"
+                              <input type="text" class="form-control" id="middleInitialInput" name="middleInitial"
                                 placeholder="Enter middle initial">
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="lastNameInput" class="form-label">Last Name</label>
-                              <input type="text" class="form-control" id="lastNameInput" placeholder="Enter last name">
+                              <input type="text" class="form-control" id="lastNameInput" name="lastName"
+                                placeholder="Enter last name" required>
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="genderInput" class="form-label">Gender</label>
-                              <input type="text" class="form-control" id="genderInput" placeholder="Enter gender">
+                              <input type="text" class="form-control" id="genderInput" name="gender"
+                                placeholder="Enter gender" required>
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="dobInput" class="form-label">Date of Birth</label>
-                              <input type="date" class="form-control" id="dobInput" placeholder="Enter date of birth">
+                              <input type="date" class="form-control" id="dobInput" name="dob"
+                                placeholder="Enter date of birth" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="mobileInput" class="form-label">Mobile Number</label>
-                              <input type="text" class="form-control" id="mobileInput"
-                                placeholder="Enter mobile number">
+                              <input type="text" class="form-control" id="mobileInput" name="mobileNo"
+                                placeholder="Enter mobile number" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="employmentDateInput" class="form-label">Employment Date</label>
-                              <input type="date" class="form-control" id="employmentDateInput">
+                              <input type="date" class="form-control" id="employmentDateInput" name="employmentDate"
+                                required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="positionInput" class="form-label">Position</label>
-                              <input type="text" class="form-control" id="positionInput" placeholder="Enter position">
+                              <input type="text" class="form-control" id="positionInput" name="position"
+                                placeholder="Enter position" required>
                             </div>
                             <div class="col-12 mb-3">
                               <label for="addressInput" class="form-label">Address</label>
-                              <input type="text" class="form-control" id="addressInput" placeholder="Enter address">
+                              <input type="text" class="form-control" id="addressInput" name="address"
+                                placeholder="Enter address" required>
                             </div>
                             <div class="col-12 mb-3">
                               <div class="d-flex gap-6 m-0 justify-content-end">
-                                <button id="btn-add" class="btn btn-success">Save</button>
                                 <button class="btn bg-danger-subtle text-danger"
                                   data-bs-dismiss="modal">Discard</button>
+                                <button id="btn-add" class="btn btn-primary" type="submit">Save</button>
                               </div>
                             </div>
                           </div>
@@ -149,6 +155,7 @@ include '../includes/header.php';
                       </div>
                     </div>
                   </form>
+
                 </div>
               </div>
             </div>
@@ -515,29 +522,6 @@ include '../includes/header.php';
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
 <script src="../assets/js/apps/contact.js"></script>
 <script>
-  <script>
-    document.getElementById('btn-add').addEventListener('click', function(event) {
-      event.preventDefault(); // Prevent default form submission
-
-    const formData = new FormData(document.getElementById('addEmployeeForm'));
-
-    fetch('add_employee.php', {
-      method: 'POST',
-    body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-      alert(data.message);
-            // Optionally, reset the form or close the modal here
-            // $('#addContactModal').modal('hide');
-        } else {
-      alert(data.message);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-});
-</script>
 
 </script>
 </body>

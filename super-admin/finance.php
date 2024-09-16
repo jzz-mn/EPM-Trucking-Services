@@ -34,8 +34,8 @@ include '../includes/header.php';
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Expense</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Expense</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -104,12 +104,12 @@ include '../includes/header.php';
                               <input type="text" class="form-control" id="mobileFee" placeholder="Enter Mobile Fee">
                             </div>
                           </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                          <button type="submit" class="btn btn-primary">Save</button>
-                          <button type="button" class="btn bg-danger-subtle text-danger"
-                            data-bs-dismiss="modal">Cancel</button>
+                          <div class="col-12 mb-3">
+                            <div class="d-flex gap-6 m-0 justify-content-end">
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                              <button id="btn-add" class="btn btn-primary">Save</button>
+                            </div>
+                          </div>
                         </div>
                       </form>
                     </div>
@@ -120,13 +120,13 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
-      <!-- Modal -->
+      <!-- Add Fuel Expenses -->
       <div class="modal fade" id="addFuelExpenseModal" tabindex="-1" role="dialog"
         aria-labelledby="addFuelExpenseModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Fuel Expense</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Fuel Expense</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -188,11 +188,10 @@ include '../includes/header.php';
                               <input type="text" class="form-control" id="fuelAmount" placeholder="Enter Fuel Amount">
                             </div>
                           </div>
-
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn btn-primary">Save</button>
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
@@ -205,7 +204,6 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
-
     </div>
     <div class="card">
       <div class="card-body p-0">

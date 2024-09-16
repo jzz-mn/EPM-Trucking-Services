@@ -34,8 +34,8 @@ include '../includes/header.php';
         aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Maintenance Record</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Maintenance Record</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -90,8 +90,8 @@ include '../includes/header.php';
                           </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                            <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                               <button class="btn btn-primary">Save</button>
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                             </div>
                           </div>
                         </div>
@@ -109,8 +109,8 @@ include '../includes/header.php';
         aria-labelledby="addTransactionModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Transaction</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Transaction</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -183,8 +183,8 @@ include '../includes/header.php';
 
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn btn-primary">Save</button>
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
@@ -197,8 +197,6 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
-
-
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
         <div class="card-body p-0">

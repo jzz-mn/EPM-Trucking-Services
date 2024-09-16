@@ -34,26 +34,25 @@ include '../includes/header.php';
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Officer Details</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Officer Details</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <div class="row">
-                <!-- Add Profile Picture Section -->
-                <div class="col-lg-6">
+                <div class="col-lg-6 d-flex align-items-stretch">
                   <div class="card w-100 border position-relative overflow-hidden">
                     <div class="card-body p-4">
                       <h4 class="card-title">Add Profile Picture</h4>
                       <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                       <div class="text-center">
                         <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
-                          class="img-fluid rounded-circle" width="120" height="120">
+                          class="img-fluid rounded-circle my-4 " width="140" height="140">
                         <div class="d-flex align-items-center justify-content-center my-4 gap-6">
                           <button class="btn btn-primary">Upload</button>
                           <button class="btn bg-danger-subtle text-danger">Reset</button>
                         </div>
-                        <p class="mb-0">Allowed JPG, GIF, or PNG. Max size of 800K</p>
+                        <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
                       </div>
                     </div>
                   </div>
@@ -66,6 +65,10 @@ include '../includes/header.php';
                       <h4 class="card-title">Create Account</h4>
                       <p class="card-subtitle mb-4">Please enter the officer's login credentials.</p>
                       <form>
+                        <div class="mb-3">
+                          <label for="usernameInput" class="form-label">Username</label>
+                          <input type="text" class="form-control" id="usernameInput" placeholder="Enter username">
+                        </div>
                         <div class="mb-3">
                           <label for="exampleInputEmail" class="form-label">Email Address</label>
                           <input type="email" class="form-control" id="exampleInputEmail" placeholder="Enter email">
@@ -165,26 +168,22 @@ include '../includes/header.php';
                           <input type="text" class="form-control" id="address" placeholder="Address">
                         </div>
                       </div>
+                      <div class="col-12 mb-3">
+                        <div class="d-flex gap-6 m-0 justify-content-end">
+                          <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                          <button id="btn-add" class="btn btn-primary">Save</button>
+                        </div>
+                      </div>
                     </div>
                   </form>
                 </div>
-              </div>
-
-            </div>
-            <div class="modal-footer">
-              <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                <button class="btn btn-primary">Save</button>
-                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-
       <?php
       include '../includes/db_connection.php';
-
       // Fetch officer data from the database
       $sql = "SELECT OfficerID, FirstName, MiddleInitial, LastName, Position, Gender, CityAddress, MobileNo, EmailAddress, College, Program, YearGraduated FROM officers";
       $result = $conn->query($sql);
