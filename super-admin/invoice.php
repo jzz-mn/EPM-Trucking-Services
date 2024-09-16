@@ -29,16 +29,126 @@ include '../includes/db_connection.php'
     </div>
 
     <div class="card overflow-hidden invoice-application">
-      
+
       <div class="d-flex">
 
         <div class="w-100 w-xs-100 chat-container">
           <div class="invoice-inner-part h-100">
             <div class="invoiceing-box">
               <div class="invoice-header d-flex align-items-center border-bottom p-3">
-                <input type="search" class="form-control me-3 w-25" placeholder="Search" aria-label="Search" />
-                <button class="btn btn-primary ms-auto">+ Add Invoice</button>
+                <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
+                  data-bs-target="#addInvoiceModal">
+                  <i class="ti ti-users text-white me-1 fs-5"></i> Add Invoice
+                </a>
               </div>
+
+              <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header d-flex align-items-center bg-primary">
+                      <h5 class="modal-title text-white fs-4">Add Invoice Details</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="add-contact-box">
+                        <div class="add-contact-content">
+                          <form id="addInvoiceForm">
+                            <div class="row">
+                              <div class="col-lg-4 mb-3">
+                                <label for="BillingInvoiceNoInput" class="form-label">Billing Invoice No</label>
+                                <input type="text" class="form-control" id="BillingInvoiceNoInput" placeholder="Enter Billing Invoice Number">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="BillingDateInput" class="form-label">Billing Date</label>
+                                <input type="date" class="form-control" id="BillingDateInput" placeholder="Enter Billing Date">
+                              </div>
+                              <div class="col-12 mb-3">
+                                <label for="BilledToInput" class="form-label">Billed To</label>
+                                <input type="text" class="form-control" id="BilledToInput" placeholder="Billing To">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="GrossAmountInput" class="form-label">Gross Amount</label>
+                                <input type="text" class="form-control" id="GrossAmountInput" placeholder="Enter Gross Amount">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="VAT12Input" class="form-label">VAT 12%</label>
+                                <input type="text" class="form-control" id="VAT12Input" placeholder="Enter VAT 12%">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="EWT2Input" class="form-label">EWT 2%</label>
+                                <input type="text" class="form-control" id="EWT2Input" placeholder="Enter EWT 2%">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="AddTollChargesInput" class="form-label">Add Toll/Charges</label>
+                                <input type="text" class="form-control" id="AddTollChargesInput" placeholder="Enter Toll/Charges">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="AmountNetofTaxInput" class="form-label">Amount Net of Tax</label>
+                                <input type="text" class="form-control" id="AmountNetofTaxInput" placeholder="Enter Amount Net of Tax">
+                              </div>
+                              <div class="col-lg-4 mb-3">
+                                <label for="NetAmountInput" class="form-label">Net Amount</label>
+                                <input type="text" class="form-control" id="NetAmountInput" placeholder="Enter Net Amount">
+                              </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                              <div class="d-flex gap-6 m-0 justify-content-end">
+                                <button id="btn-add-invoice" class="btn btn-success">Save</button>
+                                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <script>
+                document.getElementById('btn-add-invoice').addEventListener('click', function(e) {
+                  e.preventDefault();
+
+                  // Get form values
+                  let billingInvoiceNo = document.getElementById('BillingInvoiceNoInput').value;
+                  let billingDate = document.getElementById('BillingDateInput').value;
+                  let billedTo = document.getElementById('BilledToInput').value; // Correct variable name here
+                  let grossAmount = document.getElementById('GrossAmountInput').value;
+                  let vat12 = document.getElementById('VAT12Input').value;
+                  let ewt2 = document.getElementById('EWT2Input').value;
+                  let addTollCharges = document.getElementById('AddTollChargesInput').value;
+                  let amountNetofTax = document.getElementById('AmountNetofTaxInput').value;
+                  let netAmount = document.getElementById('NetAmountInput').value;
+
+                  // Prepare form data for submission
+                  let formData = new FormData();
+                  formData.append('BillingInvoiceNo', billingInvoiceNo);
+                  formData.append('BillingDate', billingDate);
+                  formData.append('BilledTo', billedTo); // Ensure you're appending 'BilledTo' correctly
+                  formData.append('GrossAmount', grossAmount);
+                  formData.append('VAT12', vat12);
+                  formData.append('EWT2', ewt2);
+                  formData.append('AddTollCharges', addTollCharges);
+                  formData.append('AmountNetofTax', amountNetofTax);
+                  formData.append('NetAmount', netAmount);
+
+                  // Send the form data using AJAX
+                  fetch('add_invoices.php', {
+                      method: 'POST',
+                      body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.success) {
+                        alert('Invoice added successfully.');
+                        $('#addInvoiceModal').modal('hide');
+                        document.getElementById('addInvoiceForm').reset();
+                      } else {
+                        alert(data.message);
+                      }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+              </script>
 
 
               <!-- Responsive Table Container using Bootstrap classes -->
