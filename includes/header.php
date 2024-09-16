@@ -105,13 +105,19 @@
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/analytics-finance.php">
                     <span class="icon-small"></span>
-                    <span class="hide-menu">Analytics Finance</span>
+                    <span class="hide-menu">Finance</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
-                  <a class="sidebar-link" href="../super-admin/analytics-trucks.php">
+                  <a class="sidebar-link" href="../super-admin/analytics-routes.php">
                     <span class="icon-small"></span>
-                    <span class="hide-menu">Analytics Trucks</span>
+                    <span class="hide-menu">Routes</span>
+                  </a>
+                </li>
+                <li class="sidebar-item">
+                  <a class="sidebar-link" href="../super-admin/analytics-maintenance.php">
+                    <span class="icon-small"></span>
+                    <span class="hide-menu">Maintenance</span>
                   </a>
                 </li>
               </ul>
