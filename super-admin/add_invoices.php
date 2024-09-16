@@ -8,7 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Extract and sanitize form data
     $billingInvoiceNo = $_POST['BillingInvoiceNo'];
     $billingDate = $_POST['BillingDate'];
-    $billedTo = $_POST['BilledTo'];  // Correct this field name
+    $billedTo = $_POST['BilledTo'];  
+    $grandSubtotal = $_POST['GrandSubtotal'];
     $grossAmount = $_POST['GrossAmount'];
     $vat12 = $_POST['VAT12'];
     $ewt2 = $_POST['EWT2'];
@@ -24,8 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insert into invoices table
-    $stmt = $conn->prepare('INSERT INTO invoices (BillingInvoiceNo, BillingDate, BilledTo, GrossAmount, VAT12, EWT2, AddTollCharges, AmountNetofTax, NetAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->bind_param('sssdddddd', $billingInvoiceNo, $billingDate, $billedTo, $grossAmount, $vat12, $ewt2, $addTollCharges, $amountNetofTax, $netAmount); // Correct data types
+    $stmt = $conn->prepare('INSERT INTO invoices (BillingInvoiceNo, BillingDate, BilledTo, GrandSubtotal, GrossAmount, VAT12, EWT2, AddTollCharges, AmountNetofTax, NetAmount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->bind_param('sssddddddd', $billingInvoiceNo, $billingDate, $billedTo, $grandSubtotal, $grossAmount, $vat12, $ewt2, $addTollCharges, $amountNetofTax, $netAmount); // Correct data types
 
     if ($stmt->execute()) {
         $response['success'] = true;
