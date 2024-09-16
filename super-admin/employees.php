@@ -29,13 +29,13 @@ include '../includes/header.php';
     </div>
     <h5 class="border-bottom py-2 px-4 mb-4">Employees</h5>
     <div class="widget-content searchable-container list">
-      <!-- Modal -->
+      <!-- Add Employee Modal -->
       <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalTitle"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center">
-              <h5 class="modal-title">Add Employee Details</h5>
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Add Employee Details</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -51,7 +51,7 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
                               <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
-                                class="img-fluid rounded-circle" width="120" height="120">
+                                class="img-fluid rounded-circle my-4 " width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
                                 <button class="btn btn-primary">Upload</button>
                                 <button class="btn bg-danger-subtle text-danger">Reset</button>
@@ -68,6 +68,10 @@ include '../includes/header.php';
                           <div class="card-body p-4">
                             <h4 class="card-title">Create Account</h4>
                             <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
+                            <div class="mb-3">
+                              <label for="usernameInput" class="form-label">Username</label>
+                              <input type="text" class="form-control" id="usernameInput" placeholder="Enter username">
+                            </div>
                             <div class="mb-3">
                               <label for="emailInput" class="form-label">Email address</label>
                               <input type="email" class="form-control" id="emailInput" placeholder="Enter email">
@@ -133,19 +137,19 @@ include '../includes/header.php';
                               <label for="addressInput" class="form-label">Address</label>
                               <input type="text" class="form-control" id="addressInput" placeholder="Enter address">
                             </div>
+                            <div class="col-12 mb-3">
+                              <div class="d-flex gap-6 m-0 justify-content-end">
+                                <button id="btn-add" class="btn btn-success">Save</button>
+                                <button class="btn bg-danger-subtle text-danger"
+                                  data-bs-dismiss="modal">Discard</button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-
                   </form>
                 </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <div class="d-flex gap-6 m-0">
-                <button id="btn-add" class="btn btn-success">Save</button>
-                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
               </div>
             </div>
           </div>
@@ -202,7 +206,6 @@ include '../includes/header.php';
                 } else {
                   $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
                 }
-                $formattedMobileNo = preg_replace('/(\d{4})(\d{3})(\d{4})/', '$1-$2-$3', $row['MobileNo']);
                 echo "<tr>";
                 echo "<td><div class='d-flex align-items-center'>";
                 echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
@@ -211,7 +214,7 @@ include '../includes/header.php';
                 echo "</div></div></td>";
                 echo "<td>{$positionBadge}</td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['Address']}</p></td>";
-                echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
+                echo "<td><p class='mb-0 fw-normal'>{$row['MobileNo']}</p></td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
                 echo "<td>";
@@ -511,6 +514,32 @@ include '../includes/header.php';
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
 <script src="../assets/js/apps/contact.js"></script>
+<script>
+  <script>
+    document.getElementById('btn-add').addEventListener('click', function(event) {
+      event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(document.getElementById('addEmployeeForm'));
+
+    fetch('add_employee.php', {
+      method: 'POST',
+    body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+      alert(data.message);
+            // Optionally, reset the form or close the modal here
+            // $('#addContactModal').modal('hide');
+        } else {
+      alert(data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+
+</script>
 </body>
 
 </html>

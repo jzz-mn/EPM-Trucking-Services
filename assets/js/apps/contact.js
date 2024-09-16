@@ -38,6 +38,17 @@ $(function () {
     $("#addFuelExpenseModal #btn-edit").hide();
     $("#addFuelExpenseModal").modal("show");
   });
+  $(document).on("click", "#btn-add-maintenance", function (event) {
+    $("#addMaintenanceRecordModal #btn-add").show();
+    $("#addMaintenanceRecordModal #btn-edit").hide();
+    $("#addMaintenanceRecordModal").modal("show");
+  });
+  $(document).on("click", "#btn-add-transaction", function (event) {
+    $("#addTransactionModal #btn-add").show();
+    $("#addTransactionModal #btn-edit").hide();
+    $("#addTransactionModal").modal("show");
+  });
+
 
   function deleteContact() {
     $(".delete").on("click", function (event) {

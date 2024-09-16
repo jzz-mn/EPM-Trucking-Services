@@ -29,6 +29,176 @@ include '../includes/header.php';
     </div>
 
     <div class="widget-content searchable-container list">
+      <!-- Add Maintenance Modal -->
+      <div class="modal fade" id="addMaintenanceRecordModal" tabindex="-1" role="dialog"
+        aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center">
+              <h5 class="modal-title">Add Maintenance Record</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Add Maintenance Record</h4>
+                      <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
+                      <form>
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="maintenanceId" class="form-label">Maintenance ID</label>
+                              <input type="text" class="form-control" id="maintenanceId"
+                                placeholder="Enter Maintenance ID">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="maintenanceDate" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="maintenanceDate" placeholder="Select Date">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceCategory" class="form-label">Category</label>
+                              <input type="text" class="form-control" id="maintenanceCategory"
+                                placeholder="Enter Category">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceDescription" class="form-label">Description</label>
+                              <input type="text" class="form-control" id="maintenanceDescription"
+                                placeholder="Enter Description">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceAmount" class="form-label">Amount</label>
+                              <input type="number" class="form-control" id="maintenanceAmount"
+                                placeholder="Enter Amount">
+                            </div>
+                          </div>
+                          <div class="col-lg-12">
+                            <div class="mb-3">
+                              <label for="maintenanceDetails" class="form-label">Details</label>
+                              <input type="text" class="form-control" id="maintenanceDetails"
+                                placeholder="Enter Maintenance Details">
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                              <button class="btn btn-primary">Save</button>
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Add Transaction Modal -->
+      <div class="modal fade" id="addTransactionModal" tabindex="-1" role="dialog"
+        aria-labelledby="addTransactionModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center">
+              <h5 class="modal-title">Add Transaction</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Add Transaction</h4>
+                      <p class="card-subtitle mb-4">Fill out the details to create a new transaction.</p>
+                      <form>
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="transactionID" class="form-label">Transaction ID</label>
+                              <input type="text" class="form-control" id="transactionID"
+                                placeholder="Enter Transaction ID">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="transactionDate" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="transactionDate" placeholder="Enter Date">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="phoneNumber" class="form-label">Phone Number</label>
+                              <input type="text" class="form-control" id="phoneNumber" placeholder="Enter Phone Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="drNumber" class="form-label">DR Number</label>
+                              <input type="text" class="form-control" id="drNumber" placeholder="Enter DR Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="sourceCustomerCode" class="form-label">Source Customer Code</label>
+                              <input type="text" class="form-control" id="sourceCustomerCode"
+                                placeholder="Enter Source Customer Code">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="customerNumber" class="form-label">Customer Number</label>
+                              <input type="text" class="form-control" id="customerNumber"
+                                placeholder="Enter Customer Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="destinationCustomerCode" class="form-label">Destination Customer Code</label>
+                              <input type="text" class="form-control" id="destinationCustomerCode"
+                                placeholder="Enter Destination Customer Code">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="quantityQtl" class="form-label">Quantity (Qtl)</label>
+                              <input type="number" class="form-control" id="quantityQtl" placeholder="Enter Quantity">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="weightKgs" class="form-label">Weight (Kgs)</label>
+                              <input type="number" class="form-control" id="weightKgs" placeholder="Enter Weight">
+                            </div>
+                          </div>
+
+                          <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                              <button class="btn btn-primary">Save</button>
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
         <div class="card-body p-0">
@@ -58,7 +228,8 @@ include '../includes/header.php';
                   </div>
                   <div
                     class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                    <a href="add-maintenance.php" id="btn-add-contact" class="btn btn-primary d-flex align-items-center">
+                    <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                      data-bs-target="#addMaintenanceRecordModal">
                       <i class="ti ti-users text-white me-1 fs-5"></i> Add Maintenance Record
                     </a>
                   </div>
@@ -93,7 +264,8 @@ include '../includes/header.php';
                   </div>
                   <div
                     class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                    <a href="add-transaction.php" id="btn-add-contact" class="btn btn-primary d-flex align-items-center">
+                    <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                      data-bs-target="#addTransactionModal">
                       <i class="ti ti-users text-white me-1 fs-5"></i> Add Transaction
                     </a>
                   </div>
