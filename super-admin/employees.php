@@ -162,6 +162,138 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+      <!-- Edit Employee Modal -->
+      <div class="modal fade" id="editContactModal" tabindex="-1" role="dialog" aria-labelledby="editContactModallTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Edit Employee Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="add-contact-box">
+                <div class="add-contact-content">
+                  <form id="editEmployeeForm" method="POST" action="add_employee.php">
+                    <div class="row">
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Edit Profile Picture</h4>
+                            <p class="card-subtitle mb-4">Upload a profile picture here.</p>
+                            <div class="text-center">
+                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                                class="img-fluid rounded-circle my-4 " width="140" height="140">
+                              <div class="d-flex align-items-center justify-content-center my-4 gap-6">
+                                <button class="btn btn-primary">Upload</button>
+                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                              </div>
+                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Account Creation Section -->
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Edit Account</h4>
+                            <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
+                            <div class="mb-3">
+                              <label for="usernameInput" class="form-label">Username</label>
+                              <input type="text" class="form-control" id="usernameInput" name="username"
+                                placeholder="Enter username" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="emailInput" class="form-label">Email address</label>
+                              <input type="email" class="form-control" id="emailInput" name="emailAddress"
+                                placeholder="Enter email" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="passwordInput" class="form-label">New Password</label>
+                              <input type="password" class="form-control" id="passwordInput" name="password"
+                                placeholder="Enter password" required>
+                            </div>
+                            <div>
+                              <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
+                              <input type="password" class="form-control" id="confirmPasswordInput"
+                                name="confirmPassword" placeholder="Confirm password" required>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- Personal Details Section -->
+                    <div class="col-12">
+                      <div class="card w-100 border position-relative overflow-hidden mb-0">
+                        <div class="card-body p-4">
+                          <h4 class="card-title">Personal Details</h4>
+                          <div class="row">
+                            <div class="col-lg-4 mb-3">
+                              <label for="firstNameInput" class="form-label">First Name</label>
+                              <input type="text" class="form-control" id="firstNameInput" name="firstName"
+                                placeholder="Enter first name" required>
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="middleInitialInput" class="form-label">Middle Initial</label>
+                              <input type="text" class="form-control" id="middleInitialInput" name="middleInitial"
+                                placeholder="Enter middle initial">
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="lastNameInput" class="form-label">Last Name</label>
+                              <input type="text" class="form-control" id="lastNameInput" name="lastName"
+                                placeholder="Enter last name" required>
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                              <label for="genderInput" class="form-label">Gender</label>
+                              <input type="text" class="form-control" id="genderInput" name="gender"
+                                placeholder="Enter gender" required>
+                            </div>
+                            <div class="col-lg-6 mb-3">
+                              <label for="dobInput" class="form-label">Date of Birth</label>
+                              <input type="date" class="form-control" id="dobInput" name="dob"
+                                placeholder="Enter date of birth" required>
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="mobileInput" class="form-label">Mobile Number</label>
+                              <input type="text" class="form-control" id="mobileInput" name="mobileNo"
+                                placeholder="Enter mobile number" required>
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="employmentDateInput" class="form-label">Employment Date</label>
+                              <input type="date" class="form-control" id="employmentDateInput" name="employmentDate"
+                                required>
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="positionInput" class="form-label">Position</label>
+                              <input type="text" class="form-control" id="positionInput" name="position"
+                                placeholder="Enter position" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                              <label for="addressInput" class="form-label">Address</label>
+                              <input type="text" class="form-control" id="addressInput" name="address"
+                                placeholder="Enter address" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                              <div class="d-flex gap-6 m-0 justify-content-end">
+                                <button class="btn bg-danger-subtle text-danger"
+                                  data-bs-dismiss="modal">Discard</button>
+                                <button id="btn-add" class="btn btn-primary" type="submit">Save</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <?php
       include '../includes/db_connection.php';
@@ -183,7 +315,6 @@ include '../includes/header.php';
               data-bs-target="#addContactModal">
               <i class="ti ti-users text-white me-1 fs-5"></i> Add Employee
             </a>
-
           </div>
         </div>
       </div>
@@ -225,11 +356,15 @@ include '../includes/header.php';
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
                 echo "<td>";
-                echo "<a href='acc-setting.php?id={$row['EmployeeID']}' class='me-3 text-primary'>"; // Primary color (usually blue) for the edit icon
+                // Edit button
+                echo "<a data-bs-toggle='modal' data-bs-target='#editContactModal' href='#' class='me-3 text-primary' data-id='{$row['EmployeeID']}'>";
                 echo "<i class='fs-4 ti ti-edit'></i></a>";
-                echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>"; // Danger color (red) for the delete icon
+
+                // Delete button
+                echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>";
                 echo "<i class='fs-4 ti ti-trash'></i></a>";
                 echo "</td>";
+
                 echo "</tr>";
               }
             } else {
