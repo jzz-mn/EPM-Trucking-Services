@@ -163,8 +163,8 @@ include '../includes/db_connection.php'
                       </div>
                       <div class="col-12 mb-3">
                         <div class="d-flex gap-6 m-0 justify-content-end">
-                          <button id="btn-add-invoice" class="btn btn-success">Save</button>
                           <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                          <button id="btn-add-invoice" class="btn btn-primary">Save</button>
                         </div>
                       </div>
                     </form>
@@ -230,8 +230,8 @@ include '../includes/db_connection.php'
                     <!-- Add other fields as needed -->
                   </div>
                   <div class="d-flex gap-6 m-0 justify-content-end">
-                    <button id="btn-update-invoice" class="btn btn-success">Update</button>
                     <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button id="btn-update-invoice" class="btn btn-primary">Update</button>
                   </div>
                 </form>
               </div>
