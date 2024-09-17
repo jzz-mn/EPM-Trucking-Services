@@ -486,10 +486,6 @@ include '../includes/db_connection.php'
 </div>
 </div>
 </div>
-<button class="btn btn-danger p-3 rounded-circle d-flex align-items-center justify-content-center customizer-btn"
-  type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
-  <i class="icon ti ti-settings fs-7"></i>
-</button>
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">

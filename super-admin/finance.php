@@ -237,27 +237,72 @@ include '../includes/header.php';
                     data-bs-target="#addExpenseModal">
                     <i class="ti ti-users text-white me-1 fs-5"></i> Add Expenses
                   </a>
-
                 </div>
               </div>
               <div class="py-3">
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered display text-nowrap">
+                  <table id="" class="table table-striped table-bordered text-nowrap align-middle">
                     <thead>
                       <!-- start row -->
                       <tr>
-                        <th>Name</th>
-                        <th>Position</th>
-                        <th>Office</th>
-                        <th>Age</th>
-                        <th>Start date</th>
-                        <th>Salary</th>
+                        <th>ExpenseID</th>
+                        <th>Date</th>
+                        <th>TollFee</th>
+                        <th>RateAmount</th>
+                        <th>TotalAmount</th>
+                        <th>SalaryAmount</th>
+                        <th>GasAmount</th>
+                        <th>AllowanceAmount</th>
+                        <th>ExtraMealAmount</th>
+                        <th>Mobile</th>
+                        <th>Action</th>
                       </tr>
                       <!-- end row -->
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                      <?php
+                      // Include your database connection
+                      include '../includes/db_connection.php';
+
+                      // Fetch data from the expenses table
+                      $query = "SELECT * FROM expenses";
+                      $result = mysqli_query($conn, $query);
+
+                      if (mysqli_num_rows($result) > 0) {
+                        while ($row = mysqli_fetch_assoc($result)) {
+                          echo "<tr>";
+                          echo "<td>" . $row['ExpenseID'] . "</td>";
+                          echo "<td>" . $row['Date'] . "</td>";
+                          echo "<td>" . $row['TollFee'] . "</td>";
+                          echo "<td>" . $row['RateAmount'] . "</td>";
+                          echo "<td>" . $row['TotalAmount'] . "</td>";
+                          echo "<td>" . $row['SalaryAmount'] . "</td>";
+                          echo "<td>" . $row['GasAmount'] . "</td>";
+                          echo "<td>" . $row['AllowanceAmount'] . "</td>";
+                          echo "<td>" . $row['ExtraMealAmount'] . "</td>";
+                          echo "<td>" . $row['Mobile'] . "</td>";
+                          echo "<td>";
+                          // Edit button
+                          echo "<a href='../includes/delete_employee.php?id={$row['ExpenseID']}' class='me-3 text-primary'>";
+                          echo "<i class='fs-4 ti ti-edit'></i></a>";
+
+                          // Delete button
+                          echo "<a href='../includes/delete_employee.php?id={$row['ExpenseID']}' class='text-danger'>";
+                          echo "<i class='fs-4 ti ti-trash'></i></a>";
+                          echo "</td>";
+                          echo "</tr>";
+                        }
+                      } else {
+                        echo "<tr><td colspan='10'>No records found</td></tr>";
+                      }
+
+                      // Close the database connection
+                      mysqli_close($conn);
+                      ?>
+                    </tbody>
                   </table>
                 </div>
+
               </div>
             </div>
             <div class="tab-pane py-3" id="profile" role="tabpanel">
@@ -582,6 +627,7 @@ include '../includes/header.php';
 <script src="../assets/js/apps/productDetail.js"></script>
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
+<script src="../assets/js/datatable/datatable-advanced.init.js"></script>
 </body>
 
 </html>
