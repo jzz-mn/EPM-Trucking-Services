@@ -330,7 +330,7 @@
                           </div>
                         </div>
                         <div class="message-body">
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../super-admin/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
                           <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
