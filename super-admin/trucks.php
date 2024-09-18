@@ -90,7 +90,7 @@ include '../includes/header.php';
                           </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                            <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                               <button class="btn btn-primary">Save</button>
                             </div>
                           </div>
@@ -269,21 +269,59 @@ include '../includes/header.php';
                   </div>
                 </div>
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered display text-nowrap">
+                  <table id="transactionsTable" class="table table-striped table-bordered display text-nowrap">
                     <thead>
-                      <!-- start row -->
                       <tr>
-                        <th>Name</th>
-                        <th>Position</th>
-                        <th>Office</th>
-                        <th>Age</th>
-                        <th>Start date</th>
-                        <th>Salary</th>
+                        <th>Transaction ID</th>
+                        <th>Invoice ID</th>
+                        <th>Date</th>
+                        <th>Plate Number</th>
+                        <th>DR Number</th>
+                        <th>Source Customer Code</th>
+                        <th>Customer Name</th>
+                        <th>Destination Customer Code</th>
+                        <th>Qty</th>
+                        <th>Kgs</th>
+                        <th>Expense ID</th>
                       </tr>
-                      <!-- end row -->
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                      <?php
+                      // Include database connection
+                      include '../includes/db_connection.php';
+
+                      // Query to retrieve transactions data
+                      $sql = "SELECT TransactionID, InvoiceID, Date, PlateNumber, DRNumber, SourceCustomerCode, CustomerName, DestinationCustomerCode, Qty, Kgs, ExpenseID FROM transactions";
+                      $result = mysqli_query($conn, $sql);
+
+                      // Check if there are rows returned
+                      if (mysqli_num_rows($result) > 0) {
+                        // Loop through the data and output it into the table
+                        while ($row = mysqli_fetch_assoc($result)) {
+                          echo "<tr>";
+                          echo "<td>" . $row['TransactionID'] . "</td>";
+                          echo "<td>" . $row['InvoiceID'] . "</td>";
+                          echo "<td>" . $row['Date'] . "</td>";
+                          echo "<td>" . $row['PlateNumber'] . "</td>";
+                          echo "<td>" . $row['DRNumber'] . "</td>";
+                          echo "<td>" . $row['SourceCustomerCode'] . "</td>";
+                          echo "<td>" . $row['CustomerName'] . "</td>";
+                          echo "<td>" . $row['DestinationCustomerCode'] . "</td>";
+                          echo "<td>" . $row['Qty'] . "</td>";
+                          echo "<td>" . $row['Kgs'] . "</td>";
+                          echo "<td>" . $row['ExpenseID'] . "</td>";
+                          echo "</tr>";
+                        }
+                      } else {
+                        echo "<tr><td colspan='11'>No transactions found</td></tr>";
+                      }
+
+                      // Close the database connection
+                      mysqli_close($conn);
+                      ?>
+                    </tbody>
                   </table>
+
                 </div>
               </div>
             </div>

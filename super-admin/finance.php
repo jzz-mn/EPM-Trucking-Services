@@ -45,73 +45,89 @@ include '../includes/header.php';
                     <div class="card-body p-4">
                       <h4 class="card-title">Add Expenses</h4>
                       <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
-                      <form>
+                      <form id="addExpenseForm" method="POST" action="add_expense.php">
                         <div class="row">
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="expenseId" class="form-label">Expense ID</label>
-                              <input type="text" class="form-control" id="expenseId" placeholder="Enter Expense ID">
+                              <input type="text" class="form-control" id="expenseId" name="expenseId" readonly>
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="expenseDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="expenseDate" placeholder="Enter Date">
+                              <input type="date" class="form-control" id="expenseDate" name="expenseDate">
                             </div>
                           </div>
+
+                          <!-- Other input fields for amounts -->
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="tollFee" class="form-label">Toll Fee</label>
-                              <input type="text" class="form-control" id="tollFee" placeholder="Enter Toll Fee">
+                              <input type="number" class="form-control" id="tollFee" name="tollFee"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="rateAmount" class="form-label">Rate Amount</label>
-                              <input type="text" class="form-control" id="rateAmount" placeholder="Enter Rate Amount">
+                              <input type="number" class="form-control" id="rateAmount" name="rateAmount"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="salaryAmount" class="form-label">Salary Amount</label>
-                              <input type="text" class="form-control" id="salaryAmount"
-                                placeholder="Enter Salary Amount">
+                              <input type="number" class="form-control" id="salaryAmount" name="salaryAmount"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="gasAmount" class="form-label">Gas Amount</label>
-                              <input type="text" class="form-control" id="gasAmount" placeholder="Enter Gas Amount">
+                              <input type="number" class="form-control" id="gasAmount" name="gasAmount"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="allowanceAmount" class="form-label">Allowance Amount</label>
-                              <input type="text" class="form-control" id="allowanceAmount"
-                                placeholder="Enter Allowance Amount">
+                              <input type="number" class="form-control" id="allowanceAmount" name="allowanceAmount"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="extraMealAmount" class="form-label">Extra Meal Amount</label>
-                              <input type="text" class="form-control" id="extraMealAmount"
-                                placeholder="Enter Extra Meal Amount">
+                              <input type="number" class="form-control" id="extraMealAmount" name="extraMealAmount"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="mobileFee" class="form-label">Mobile Fee</label>
-                              <input type="text" class="form-control" id="mobileFee" placeholder="Enter Mobile Fee">
+                              <input type="number" class="form-control" id="mobileFee" name="mobileFee"
+                                oninput="calculateTotal()">
                             </div>
                           </div>
+
+                          <!-- Total Amount Field -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="totalAmount" class="form-label">Total Amount</label>
+                              <input type="number" class="form-control" id="totalAmount" name="totalAmount" readonly>
+                            </div>
+                          </div>
+
                           <div class="col-12 mb-3">
                             <div class="d-flex gap-6 m-0 justify-content-end">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
-                              <button id="btn-add" class="btn btn-primary">Save</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
                       </form>
+
                     </div>
                   </div>
                 </div>
@@ -628,6 +644,21 @@ include '../includes/header.php';
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+<script>
+  function calculateTotal() {
+    var tollFee = parseFloat(document.getElementById("tollFee").value) || 0;
+    var rateAmount = parseFloat(document.getElementById("rateAmount").value) || 0;
+    var salaryAmount = parseFloat(document.getElementById("salaryAmount").value) || 0;
+    var gasAmount = parseFloat(document.getElementById("gasAmount").value) || 0;
+    var allowanceAmount = parseFloat(document.getElementById("allowanceAmount").value) || 0;
+    var extraMealAmount = parseFloat(document.getElementById("extraMealAmount").value) || 0;
+    var mobileFee = parseFloat(document.getElementById("mobileFee").value) || 0;
+
+    var total = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
+    document.getElementById("totalAmount").value = total.toFixed(2);
+  }
+
+</script>
 </body>
 
 </html>
