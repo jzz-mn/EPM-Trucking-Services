@@ -34,6 +34,13 @@ mysqli_stmt_bind_result($stmtOfficer, $dbFirstName, $dbMiddleInitial, $dbLastNam
 mysqli_stmt_fetch($stmtOfficer);
 mysqli_stmt_close($stmtOfficer);
 
+$queryEmployees = "SELECT DateOfBirth, Position, EmploymentDate FROM employees WHERE EmployeeID = (SELECT EmployeeID FROM useraccounts WHERE UserID = ?)";
+$stmtEmployees = mysqli_prepare($conn, $queryEmployees);
+mysqli_stmt_bind_param($stmtEmployees, "s", $userID);
+mysqli_stmt_execute($stmtEmployees);
+mysqli_stmt_bind_result($stmtEmployees, $dbDateOfBirth, $dbPosition, $dbEmploymentDate);
+mysqli_stmt_fetch($stmtEmployees);
+mysqli_stmt_close($stmtEmployees);
 // Close database connection
 mysqli_close($conn);
 ?>
@@ -72,9 +79,9 @@ mysqli_close($conn);
                     <div class="col-lg-6">
                         <div class="card w-100 border position-relative overflow-hidden">
                             <div class="card-body p-4">
-                                <h4 class="card-title">Profile Picture</h4>
+                                <h4 class="card-title mb-4">Profile Picture</h4>
                                 <div class="text-center">
-                                    <img src="../assets/images/profile/user-1.jpg" alt="Profile Image" class="img-fluid rounded-circle" width="280" height="280">
+                                    <img src="../assets/images/profile/user-1.jpg" alt="Profile Image" class="img-fluid rounded-circle mb-1" width="300" height="300">
                                 </div>
                             </div>
                         </div>
@@ -132,16 +139,16 @@ mysqli_close($conn);
                                                 <input type="text" class="form-control" id="LastName" value="<?php echo htmlspecialchars($dbLastName); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="Gender" class="form-label">Gender</label>
                                                 <input type="text" class="form-control" id="Gender" value="<?php echo htmlspecialchars($dbGender); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="CityAddress" class="form-label">Address</label>
-                                                <input type="text" class="form-control" id="CityAddress" value="<?php echo htmlspecialchars($dbCityAddress); ?>" readonly>
+                                                <label for="DateOfBirth" class="form-label">Date of Birth</label>
+                                                <input type="text" class="form-control" id="DateOfBirth" value="<?php echo htmlspecialchars($dbDateOfBirth); ?>" readonly>
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
@@ -168,6 +175,25 @@ mysqli_close($conn);
                                                 <input type="text" class="form-control" id="YearGraduated" value="<?php echo htmlspecialchars($dbYearGraduated); ?>" readonly>
                                             </div>
                                         </div>
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="Position" class="form-label">Position</label>
+                                                <input type="text" class="form-control" id="Position" value="<?php echo htmlspecialchars($dbPosition); ?>" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="MobileNo" class="form-label">Employment Date</label>
+                                                <input type="text" class="form-control" id="MobileNo" value="<?php echo htmlspecialchars($dbEmploymentDate); ?>" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="CityAddress" class="form-label">Address</label>
+                                                <input type="text" class="form-control" id="CityAddress" value="<?php echo htmlspecialchars($dbCityAddress); ?>" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
                                     </div>
                                 </form>
                             </div>
