@@ -127,12 +127,12 @@ include '../includes/header.php';
                             <div class="mb-3">
                               <label for="transactionID" class="form-label">Transaction ID</label>
                               <input type="text" class="form-control" id="transactionID" name="transactionID" value="<?php
-                              include '../includes/db_connection.php';
-                              $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
-                              $result = mysqli_query($conn, $query);
-                              $row = mysqli_fetch_assoc($result);
-                              echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
-                              ?>" readonly>
+                                                                                                                      include '../includes/db_connection.php';
+                                                                                                                      $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
+                                                                                                                      $result = mysqli_query($conn, $query);
+                                                                                                                      $row = mysqli_fetch_assoc($result);
+                                                                                                                      echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
+                                                                                                                      ?>" readonly>
                             </div>
                           </div>
 
@@ -338,6 +338,7 @@ include '../includes/header.php';
                         <th>Qty</th>
                         <th>Kgs</th>
                         <th>Expense ID</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -365,10 +366,16 @@ include '../includes/header.php';
                           echo "<td>" . $row['Qty'] . "</td>";
                           echo "<td>" . $row['Kgs'] . "</td>";
                           echo "<td>" . $row['ExpenseID'] . "</td>";
+                          echo "<td>";
+                          // Edit button
+                          echo "<a href='javascript:void(0)' class='btn btn-primary btn-sm me-2' onclick='openEditModal({$row['TransactionID']})'><i class='ti ti-edit'></i></a>";
+                          // Delete button
+                          echo "<a href='#' class='btn btn-danger btn-sm' onclick='openDeleteModal({$row['TransactionID']}); return false;'><i class='ti ti-trash'></i></a>";
+                          echo "</td>";
                           echo "</tr>";
                         }
                       } else {
-                        echo "<tr><td colspan='11'>No transactions found</td></tr>";
+                        echo "<tr><td colspan='12'>No transactions found</td></tr>";
                       }
 
                       // Close the database connection
@@ -376,8 +383,8 @@ include '../includes/header.php';
                       ?>
                     </tbody>
                   </table>
-
                 </div>
+
               </div>
             </div>
           </div>
@@ -386,6 +393,63 @@ include '../includes/header.php';
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="deleteTransactionModal" tabindex="-1" role="dialog" aria-labelledby="deleteTransactionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white" id="deleteTransactionModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this transaction? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteTransactionBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Store the transaction ID to delete
+  let transactionIDToDelete = null;
+
+  // Function to open delete modal and pass the transaction ID
+  function openDeleteModal(transactionID) {
+    transactionIDToDelete = transactionID; // Store transaction ID to delete
+    $('#deleteTransactionModal').modal('show'); // Show modal
+  }
+
+  // Handle the delete action when "Delete" button in modal is clicked
+  document.getElementById('confirmDeleteTransactionBtn').addEventListener('click', function() {
+    if (transactionIDToDelete !== null) {
+      // Send AJAX request to delete the transaction
+      fetch('delete_transaction.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id=${transactionIDToDelete}` // Send transaction ID as POST data
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            $('#deleteTransactionModal').modal('hide'); // Hide the modal
+            alert('Transaction deleted successfully.');
+            location.reload(); // Reload to reflect changes
+          } else {
+            alert('Failed to delete transaction: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting transaction:', error);
+          alert('Error deleting transaction.');
+        });
+    }
+  });
+</script>
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">
