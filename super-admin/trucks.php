@@ -127,12 +127,12 @@ include '../includes/header.php';
                             <div class="mb-3">
                               <label for="transactionID" class="form-label">Transaction ID</label>
                               <input type="text" class="form-control" id="transactionID" name="transactionID" value="<?php
-                                                                                                                      include '../includes/db_connection.php';
-                                                                                                                      $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
-                                                                                                                      $result = mysqli_query($conn, $query);
-                                                                                                                      $row = mysqli_fetch_assoc($result);
-                                                                                                                      echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
-                                                                                                                      ?>" readonly>
+                              include '../includes/db_connection.php';
+                              $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
+                              $result = mysqli_query($conn, $query);
+                              $row = mysqli_fetch_assoc($result);
+                              echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
+                              ?>" readonly>
                             </div>
                           </div>
 
@@ -251,6 +251,154 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+      <!-- Edit Transaction Modal -->
+      <div class="modal fade" id="updateTransactionModal" tabindex="-1" role="dialog"
+        aria-labelledby="updateTransactionModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Edit Transaction</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Edit Transaction</h4>
+                      <p class="card-subtitle mb-4">Fill out the details to create a new transaction.</p>
+                      <form action="update_transaction.php" method="POST">
+                      <input type="hidden" id="transactionID" name="transactionID">
+
+                        <div class="row">
+                          <!-- Transaction ID -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="transactionID" class="form-label">Transaction ID</label>
+                              <input type="text" class="form-control" id="transactionID" name="transactionID" value="<?php
+                              include '../includes/db_connection.php';
+                              $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
+                              $result = mysqli_query($conn, $query);
+                              $row = mysqli_fetch_assoc($result);
+                              echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
+                              ?>" readonly>
+                            </div>
+                          </div>
+
+                          <!-- Date -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="transactionDate" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="transactionDate" name="transactionDate"
+                                placeholder="Enter Date">
+                            </div>
+                          </div>
+                          <!-- Billing Invoice Number (Dropdown) -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="invoiceID" class="form-label">Billing Invoice Number</label>
+                              <select class="form-select" id="invoiceID" name="invoiceID">
+                                <option value="" disabled selected>Select Billing Invoice Number</option>
+                                <?php
+                                include '../includes/db_connection.php';
+                                $invoiceQuery = "SELECT DISTINCT BillingInvoiceNo FROM invoices ORDER BY BillingInvoiceNo DESC";
+                                $invoiceResult = mysqli_query($conn, $invoiceQuery);
+                                while ($row = mysqli_fetch_assoc($invoiceResult)) {
+                                  echo "<option value='{$row['BillingInvoiceNo']}'>{$row['BillingInvoiceNo']}</option>";
+                                }
+                                ?>
+                              </select>
+                            </div>
+                          </div>
+                          <!-- Expense ID (Dropdown) -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="expenseID" class="form-label">Expense ID</label>
+                              <select class="form-select" id="expenseID" name="expenseID">
+                                <option value="" disabled selected>Select Expense ID</option>
+                                <?php
+                                $expenseQuery = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC";
+                                $expenseResult = mysqli_query($conn, $expenseQuery);
+                                while ($row = mysqli_fetch_assoc($expenseResult)) {
+                                  echo "<option value='{$row['ExpenseID']}'>{$row['ExpenseID']}</option>";
+                                }
+                                ?>
+                              </select>
+                            </div>
+                          </div>
+                          <!-- Phone Number -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="phoneNumber" class="form-label">Phone Number</label>
+                              <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
+                                placeholder="Enter Phone Number">
+                            </div>
+                          </div>
+                          <!-- DR Number -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="drNumber" class="form-label">DR Number</label>
+                              <input type="text" class="form-control" id="drNumber" name="drNumber"
+                                placeholder="Enter DR Number">
+                            </div>
+                          </div>
+                          <!-- Source Customer Code -->
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="sourceCustomerCode" class="form-label">Source Customer Code</label>
+                              <input type="text" class="form-control" id="sourceCustomerCode" name="sourceCustomerCode"
+                                placeholder="Enter Source Customer Code">
+                            </div>
+                          </div>
+                          <!-- Customer Number -->
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="customerNumber" class="form-label">Customer Name</label>
+                              <input type="text" class="form-control" id="customerNumber" name="customerNumber"
+                                placeholder="Enter Customer Name">
+                            </div>
+                          </div>
+                          <!-- Destination Customer Code -->
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="destinationCustomerCode" class="form-label">Destination Customer Code</label>
+                              <input type="text" class="form-control" id="destinationCustomerCode"
+                                name="destinationCustomerCode" placeholder="Enter Destination Customer Code">
+                            </div>
+                          </div>
+                          <!-- Quantity -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="quantityQtl" class="form-label">Quantity (Qtl)</label>
+                              <input type="number" class="form-control" id="quantityQtl" name="quantityQtl"
+                                placeholder="Enter Quantity">
+                            </div>
+                          </div>
+                          <!-- Weight -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="weightKgs" class="form-label">Weight (Kgs)</label>
+                              <input type="number" class="form-control" id="weightKgs" name="weightKgs"
+                                placeholder="Enter Weight">
+                            </div>
+                          </div>
+                          <!-- Submit and Cancel -->
+                          <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                              < <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
@@ -343,16 +491,11 @@ include '../includes/header.php';
                     </thead>
                     <tbody>
                       <?php
-                      // Include database connection
                       include '../includes/db_connection.php';
-
-                      // Query to retrieve transactions data
                       $sql = "SELECT TransactionID, InvoiceID, Date, PlateNumber, DRNumber, SourceCustomerCode, CustomerName, DestinationCustomerCode, Qty, Kgs, ExpenseID FROM transactions";
                       $result = mysqli_query($conn, $sql);
 
-                      // Check if there are rows returned
                       if (mysqli_num_rows($result) > 0) {
-                        // Loop through the data and output it into the table
                         while ($row = mysqli_fetch_assoc($result)) {
                           echo "<tr>";
                           echo "<td>" . $row['TransactionID'] . "</td>";
@@ -367,10 +510,10 @@ include '../includes/header.php';
                           echo "<td>" . $row['Kgs'] . "</td>";
                           echo "<td>" . $row['ExpenseID'] . "</td>";
                           echo "<td>";
-                          // Edit button
-                          echo "<a href='javascript:void(0)' class='btn btn-primary btn-sm me-2' onclick='openEditModal({$row['TransactionID']})'><i class='ti ti-edit'></i></a>";
-                          // Delete button
-                          echo "<a href='#' class='btn btn-danger btn-sm' onclick='openDeleteModal({$row['TransactionID']}); return false;'><i class='ti ti-trash'></i></a>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#updateTransactionModal' onclick='populateModal(" . json_encode($row) . ")'>";
+                          echo "<i class='fs-4 ti ti-edit'></i></a>";
+                          echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']}); return false;'>";
+                          echo "<i class='fs-4 ti ti-trash'></i></a>";
                           echo "</td>";
                           echo "</tr>";
                         }
@@ -378,10 +521,10 @@ include '../includes/header.php';
                         echo "<tr><td colspan='12'>No transactions found</td></tr>";
                       }
 
-                      // Close the database connection
                       mysqli_close($conn);
                       ?>
                     </tbody>
+
                   </table>
                 </div>
 
@@ -394,7 +537,8 @@ include '../includes/header.php';
   </div>
 </div>
 
-<div class="modal fade" id="deleteTransactionModal" tabindex="-1" role="dialog" aria-labelledby="deleteTransactionModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteTransactionModal" tabindex="-1" role="dialog"
+  aria-labelledby="deleteTransactionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header bg-danger">
@@ -423,16 +567,16 @@ include '../includes/header.php';
   }
 
   // Handle the delete action when "Delete" button in modal is clicked
-  document.getElementById('confirmDeleteTransactionBtn').addEventListener('click', function() {
+  document.getElementById('confirmDeleteTransactionBtn').addEventListener('click', function () {
     if (transactionIDToDelete !== null) {
       // Send AJAX request to delete the transaction
       fetch('delete_transaction.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: `id=${transactionIDToDelete}` // Send transaction ID as POST data
-        })
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `id=${transactionIDToDelete}` // Send transaction ID as POST data
+      })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -729,6 +873,21 @@ include '../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <script src="../assets/libs/fullcalendar/index.global.min.js"></script>
 <script src="../assets/js/apps/contact.js"></script>
+<script>
+  function populateModal(transactionData) {
+    document.getElementById('transactionID').value = transactionData.TransactionID;
+    document.getElementById('invoiceID').value = transactionData.InvoiceID;
+    document.getElementById('transactionDate').value = transactionData.Date;
+    document.getElementById('drNumber').value = transactionData.DRNumber;
+    document.getElementById('sourceCustomerCode').value = transactionData.SourceCustomerCode;
+    document.getElementById('customerNumber').value = transactionData.CustomerName;
+    document.getElementById('destinationCustomerCode').value = transactionData.DestinationCustomerCode;
+    document.getElementById('quantityQtl').value = transactionData.Qty;
+    document.getElementById('weightKgs').value = transactionData.Kgs;
+    document.getElementById('expenseID').value = transactionData.ExpenseID;
+  }
+</script>
+
 </body>
 
 </html>

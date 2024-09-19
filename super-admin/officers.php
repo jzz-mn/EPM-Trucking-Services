@@ -29,7 +29,7 @@ include '../includes/header.php';
     </div>
     <h5 class="border-bottom py-2 px-4 mb-4">Officers</h5>
     <div class="widget-content searchable-container list">
-      <!-- Modal -->
+      <!-- Add Officer Modal -->
       <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addOfficerModalTitle"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -184,6 +184,159 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+      <!-- Edit Officer Modal -->
+      <div class="modal fade" id="editContactModal" tabindex="-1" role="dialog" aria-labelledby="editContactModalTitle"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Edit Officer Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="edit-contact-box">
+                <div class="edit-contact-content">
+                  <form id="editOfficerForm" method="POST" action="">
+                    <div class="row">
+                      <!-- Profile Picture Section -->
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Edit Profile Picture</h4>
+                            <p class="card-subtitle mb-4">Upload a profile picture here.</p>
+                            <div class="text-center">
+                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                                class="img-fluid rounded-circle my-4" width="140" height="140">
+                              <div class="d-flex align-items-center justify-content-center my-4 gap-6">
+                                <button class="btn btn-primary">Upload</button>
+                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                              </div>
+                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Edit Account Section -->
+                      <div class="col-lg-6">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
+                            <h4 class="card-title">Edit Account</h4>
+                            <p class="card-subtitle mb-4">Update officer's login credentials.</p>
+                            <div class="mb-3">
+                              <label for="usernameInput" class="form-label">Username</label>
+                              <input type="text" class="form-control" id="usernameInput" name="username"
+                                placeholder="Enter username" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="exampleInputEmail" class="form-label">Email Address</label>
+                              <input type="email" class="form-control" id="exampleInputEmail" name="emailAddress"
+                                placeholder="Enter email" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="exampleInputPassword" class="form-label">New Password</label>
+                              <input type="password" class="form-control" id="exampleInputPassword" name="password"
+                                placeholder="Enter password" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="exampleInputConfirmPassword" class="form-label">Deactivate Account</label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Personal Details Section -->
+                    <div class="card w-100 border position-relative overflow-hidden mt-4">
+                      <div class="card-body p-4">
+                        <h4 class="card-title">Personal Details</h4>
+                        <p class="card-subtitle mb-4">Update officer's personal details below.</p>
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="firstName" class="form-label">First Name</label>
+                              <input type="text" class="form-control" id="firstName" name="firstName"
+                                placeholder="First Name" required>
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="middleInitial" class="form-label">Middle Initial</label>
+                              <input type="text" class="form-control" id="middleInitial" name="middleInitial"
+                                placeholder="Middle Initial">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="lastName" class="form-label">Last Name</label>
+                              <input type="text" class="form-control" id="lastName" name="lastName"
+                                placeholder="Last Name" required>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="gender" class="form-label">Gender</label>
+                              <input type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
+                                required>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="college" class="form-label">College</label>
+                              <input type="text" class="form-control" id="college" name="college" placeholder="College">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="program" class="form-label">Program</label>
+                              <input type="text" class="form-control" id="program" name="program" placeholder="Program">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="yearGraduated" class="form-label">Year Graduated</label>
+                              <input type="text" class="form-control" id="yearGraduated" name="yearGraduated"
+                                placeholder="Year Graduated">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="mobile" class="form-label">Mobile Number</label>
+                              <input type="tel" class="form-control" id="mobile" name="mobileNo"
+                                placeholder="Mobile Number" required>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="position" class="form-label">Position</label>
+                              <input type="text" class="form-control" id="position" name="position"
+                                placeholder="Position" required>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="address" class="form-label">Address</label>
+                              <input type="text" class="form-control" id="address" name="address" placeholder="Address"
+                                required>
+                            </div>
+                          </div>
+                          <div class="col-12 mb-3">
+                            <div class="d-flex gap-6 m-0 justify-content-end">
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                              <button id="btn-update" class="btn btn-primary" type="submit">Update</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <?php
@@ -215,15 +368,25 @@ include '../includes/header.php';
           <tr>
             <th>Name</th>
             <th>Position</th>
+            <th>Gender</th>
             <th>City Address</th>
             <th>Mobile No</th>
             <th>Email Address</th>
             <th>College</th>
+            <th>Year Graduated</th>
+            <th>Activation Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <?php
+          // Your query to join the two tables based on officerID
+          $query = "SELECT o.FirstName, o.MiddleInitial, o.LastName, o.Position, o.Gender, o.CityAddress, 
+                       o.MobileNo, o.EmailAddress, o.College, o.YearGraduated, ua.ActivationStatus
+                FROM officers o
+                JOIN useraccounts ua ON o.OfficerID = ua.officerID";
+          $result = $conn->query($query);
+
           if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
               // Combine first name, middle initial, and last name
@@ -242,6 +405,15 @@ include '../includes/header.php';
               // Format the mobile number (assuming a similar format)
               $formattedMobileNo = preg_replace('/(\d{4})(\d{3})(\d{4})/', '$1-$2-$3', $row['MobileNo']);
 
+              // Handle ActivationStatus display
+              $activationStatus = '';
+              if ($row['ActivationStatus'] === 'Activated') {
+                $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
+              } elseif ($row['ActivationStatus'] === 'Deactivated') {
+                $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
+              }
+
+              // Output table rows
               echo "<tr>";
               echo "<td><div class='d-flex align-items-center'>";
               echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
@@ -249,26 +421,28 @@ include '../includes/header.php';
               echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
               echo "</div></div></td>";
               echo "<td>{$positionBadge}</td>";
+              echo "<td><p class='mb-0 fw-normal'>{$row['Gender']}</p></td>";
               echo "<td><p class='mb-0 fw-normal'>{$row['CityAddress']}</p></td>";
               echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
               echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
               echo "<td><p class='mb-0 fw-normal'>{$row['College']}</p></td>";
+              echo "<td><p class='mb-0 fw-normal'>{$row['YearGraduated']}</p></td>";
+              echo "<td>{$activationStatus}</td>";
               echo "<td>";
-              echo "<a href='acc-setting.php?id={$row['OfficerID']}' class='me-3 text-primary'>"; // Primary color for the edit icon
+              echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editContactModal'>";
               echo "<i class='fs-4 ti ti-edit'></i></a>";
-              echo "<a href='../includes/delete_officer.php?id={$row['OfficerID']}' class='text-danger'>"; // Danger color for the delete icon
-              echo "<i class='fs-4 ti ti-trash'></i></a>";
               echo "</td>";
               echo "</tr>";
             }
           } else {
-            echo "<tr><td colspan='7' class='text-center'>No officers found</td></tr>";
+            echo "<tr><td colspan='10' class='text-center'>No officers found</td></tr>";
           }
           $conn->close();
           ?>
         </tbody>
       </table>
     </div>
+
   </div>
 </div>
 </div>
