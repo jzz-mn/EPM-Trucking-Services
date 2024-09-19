@@ -1,19 +1,5 @@
 <?php
-// Include the database connection
 include '../includes/db_connection.php';
-
-// Get the last ExpenseID
-$query = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC LIMIT 1";
-$result = mysqli_query($conn, $query);
-$row = mysqli_fetch_assoc($result);
-$nextExpenseId = isset($row['ExpenseID']) ? $row['ExpenseID'] + 1 : 1;
-?>
-
-<script>
-    document.getElementById("expenseId").value = "<?php echo $nextExpenseId; ?>";
-</script>
-<?php
-include('db_connection.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve form data

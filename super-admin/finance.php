@@ -26,6 +26,17 @@ include '../includes/header.php';
         </div>
       </div>
     </div>
+    <?php
+    // Include the database connection
+    include '../includes/db_connection.php';
+
+    // Get the last ExpenseID
+    $query = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC LIMIT 1";
+    $result = mysqli_query($conn, $query);
+    $row = mysqli_fetch_assoc($result);
+    $nextExpenseId = isset($row['ExpenseID']) ? $row['ExpenseID'] + 1 : 1;
+    ?>
+
 
     <div class="widget-content searchable-container list">
       <h5 class="border-bottom py-2 px-4 mb-4">Finances</h5>
@@ -49,8 +60,8 @@ include '../includes/header.php';
                         <div class="row">
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="expenseId" class="form-label">Expense ID</label>
-                              <input type="text" class="form-control" id="expenseId" name="expenseId" readonly>
+                              <label for="nextExpenseID" class="form-label">Expense ID</label>
+                              <input type="text" class="form-control" id="nextExpenseID" name="nextExpenseID" readonly>
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -136,6 +147,7 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+
       <!-- Add Fuel Expenses -->
       <div class="modal fade" id="addFuelExpenseModal" tabindex="-1" role="dialog"
         aria-labelledby="addFuelExpenseModalTitle" aria-hidden="true">
@@ -644,6 +656,9 @@ include '../includes/header.php';
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="../assets/js/datatable/datatable-basic.init.js"></script>
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+<script>
+  document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
+</script>
 <script>
   function calculateTotal() {
     var tollFee = parseFloat(document.getElementById("tollFee").value) || 0;
