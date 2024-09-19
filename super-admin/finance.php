@@ -311,12 +311,13 @@ include '../includes/header.php';
                           echo "<td>" . $row['Mobile'] . "</td>";
                           echo "<td>";
                           // Edit button
-                          echo "<a href='../includes/delete_employee.php?id={$row['ExpenseID']}' class='me-3 text-primary'>";
+                          echo "<a href='../includes/delete_employee.php?id={$row['ExpenseID']}' class='btn btn-primary btn-sm me-2'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
 
-                          // Delete button
-                          echo "<a href='../includes/delete_employee.php?id={$row['ExpenseID']}' class='text-danger'>";
+                          // Delete button inside your table
+                          echo "<a href='#' class='btn btn-danger btn-sm' onclick='openDeleteExpenseModal({$row['ExpenseID']});  return false;'>";
                           echo "<i class='fs-4 ti ti-trash'></i></a>";
+
                           echo "</td>";
                           echo "</tr>";
                         }
@@ -330,6 +331,69 @@ include '../includes/header.php';
                     </tbody>
                   </table>
                 </div>
+
+
+
+                <!-- Delete Expense Modal -->
+                <div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog" aria-labelledby="deleteExpenseModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header bg-danger">
+                        <h5 class="modal-title text-white" id="deleteExpenseModalLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <p>Are you sure you want to delete this expense? This action cannot be undone.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteExpenseBtn">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <script>
+                  // Store the ID of the expense to delete
+                  let expenseIDToDelete = null;
+
+                  // Function to open the modal and pass the ExpenseID
+                  function openDeleteExpenseModal(expenseID) {
+                    expenseIDToDelete = expenseID; // Set the expense ID to delete
+                    $('#deleteExpenseModal').modal('show'); // Display the modal
+                  }
+
+                  // Handle the delete button click inside the modal
+                  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function() {
+                    if (expenseIDToDelete !== null) {
+                      // Send AJAX request to delete the expense
+                      fetch('delete_expense.php', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                          },
+                          body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                          if (data.success) {
+                            // Hide the modal after successful deletion
+                            $('#deleteExpenseModal').modal('hide');
+                            // Reload the page or remove the deleted expense row
+                            alert('Expense deleted successfully.');
+                            location.reload(); // Reload to reflect changes
+                          } else {
+                            alert('Failed to delete expense: ' + data.message);
+                          }
+                        })
+                        .catch(error => console.error('Error deleting expense:', error));
+                    }
+                  });
+                </script>
+
+
+
+
 
               </div>
             </div>
@@ -374,6 +438,8 @@ include '../includes/header.php';
   </div>
 </div>
 </div>
+
+
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">
@@ -672,7 +738,6 @@ include '../includes/header.php';
     var total = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
     document.getElementById("totalAmount").value = total.toFixed(2);
   }
-
 </script>
 </body>
 
