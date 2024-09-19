@@ -30,8 +30,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $employeeID = $conn->insert_id;
 
         // Insert into `useraccounts` table
-        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin)
-                          VALUES (?, ?, 'Employee', ?, ?, NULL, NULL)";
+        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus)
+                          VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, 'Activated')";
                           
         $stmtUser = $conn->prepare($sqlInsertUser);
         $stmtUser->bind_param('sssi', $username, $password, $emailAddress, $employeeID);
