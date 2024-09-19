@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If the password field is provided, append it to the SQL query
     if (!empty($password)) {
         // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $hashedPassword = ($password);
         $sql_user .= ", password = ?";
     }
 
