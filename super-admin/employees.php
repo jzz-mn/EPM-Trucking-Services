@@ -271,10 +271,17 @@ include '../includes/header.php';
                               <input type="text" class="form-control" id="editPositionInput" name="position"
                                 placeholder="Enter position" required>
                             </div>
-                            <div class="col-12 mb-3">
+                            <div class="col-7 mb-3">
                               <label for="editAddressInput" class="form-label">Address</label>
                               <input type="text" class="form-control" id="editAddressInput" name="address"
                                 placeholder="Enter address" required>
+                            </div>
+                            <div class="col-lg-4 mb-3">
+                              <label for="editActivationStatus" class="form-label">Activation Status</label>
+                              <select class="form-select" id="editActivationStatus" name="activationStatus" required>
+                                <option value="Activated">Activated</option>
+                                <option value="Deactivated">Deactivated</option>
+                              </select>
                             </div>
                             <div class="col-12 mb-3">
                               <div class="d-flex gap-6 justify-content-end">
@@ -320,7 +327,7 @@ include '../includes/header.php';
         </div>
       </div>
       <div class="table-responsive card p-0 card-body">
-        <table id="zero_config" class="table table-striped table-bordered  text-nowrap align-middle">
+        <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle">
           <thead>
             <tr>
               <th>Name</th>
@@ -329,11 +336,20 @@ include '../includes/header.php';
               <th>Mobile No</th>
               <th>Email Address</th>
               <th>Employment Date</th>
+              <th>Activation Status</th> <!-- Activation Status added -->
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <?php
+            $query = "
+                SELECT e.EmployeeID, e.FirstName, e.MiddleInitial, e.LastName, e.Position, e.Address, e.MobileNo, e.EmailAddress, e.EmploymentDate,
+                       ua.ActivationStatus
+                FROM employees e
+                LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
+
+            $result = $conn->query($query);
+
             if ($result->num_rows > 0) {
               while ($row = $result->fetch_assoc()) {
                 $fullName = "{$row['FirstName']} {$row['MiddleInitial']} {$row['LastName']}";
@@ -345,6 +361,17 @@ include '../includes/header.php';
                 } else {
                   $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
                 }
+
+                // Handle ActivationStatus like in officers.php
+                $activationStatus = '';
+                if ($row['ActivationStatus'] === 'Activated') {
+                  $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
+                } elseif ($row['ActivationStatus'] === 'Deactivated') {
+                  $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
+                } else {
+                  $activationStatus = 'Unknown';  // Fallback in case of an unexpected value
+                }
+
                 echo "<tr>";
                 echo "<td><div class='d-flex align-items-center'>";
                 echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
@@ -356,35 +383,33 @@ include '../includes/header.php';
                 echo "<td><p class='mb-0 fw-normal'>{$row['MobileNo']}</p></td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
                 echo "<td><p class='mb-0 fw-normal'>{$row['EmploymentDate']}</p></td>";
+                echo "<td>{$activationStatus}</td>";  // Output ActivationStatus
                 echo "<td>";
-                // Edit button
                 echo "<a data-bs-toggle='modal' data-bs-target='#editContactModal' href='#' class='me-3 text-primary' data-id='{$row['EmployeeID']}'>";
                 echo "<i class='fs-4 ti ti-edit'></i></a>";
-
-                // Delete button
                 echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>";
                 echo "<i class='fs-4 ti ti-trash'></i></a>";
                 echo "</td>";
-
                 echo "</tr>";
               }
             } else {
-              echo "<tr><td colspan='7' class='text-center'>No employees found</td></tr>";
+              echo "<tr><td colspan='8' class='text-center'>No employees found</td></tr>";
             }
             $conn->close();
             ?>
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const employeeID = this.getAttribute('data-id');
         fetch(`../super-admin/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -406,6 +431,9 @@ include '../includes/header.php';
             // Populate the user account details
             document.getElementById('editUsernameInput').value = data.Username;
             document.getElementById('editEmailInput').value = data.accountEmail;
+
+            const activationStatus = data.ActivationStatus === 'Active' ? 'Activated' : 'Deactivated';
+            document.getElementById('editActivationStatus').value = activationStatus;
           })
           .catch(error => console.error('Error fetching employee data:', error));
       });
@@ -413,15 +441,15 @@ include '../includes/header.php';
 
     // Handle form submission to edit employee details
     const editForm = document.getElementById('editEmployeeForm');
-    editForm.addEventListener('submit', function (e) {
+    editForm.addEventListener('submit', function(e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       const formData = new FormData(editForm);
 
       fetch('../super-admin/edit_employee.php', {
-        method: 'POST',
-        body: formData
-      })
+          method: 'POST',
+          body: formData
+        })
         .then(response => response.json())
         .then(data => {
           // Log the entire response to check its structure

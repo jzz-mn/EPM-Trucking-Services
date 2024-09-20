@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $emailAddress = isset($_POST['emailAddress']) ? trim($_POST['emailAddress']) : '';
     $password = isset($_POST['password']) ? trim($_POST['password']) : ''; // Optionally use the provided password directly
+    $activationStatus = isset($_POST['activationStatus']) ? trim($_POST['activationStatus']) : ''; // Add ActivationStatus
 
     // First, update the employees table
     $sql_employee = "UPDATE employees 
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Then, update the useraccounts table
-    $sql_user = "UPDATE useraccounts SET username = ?, emailAddress = ?";
+    $sql_user = "UPDATE useraccounts SET username = ?, emailAddress = ?, ActivationStatus = ?"; // Added ActivationStatus
 
     // If the password field is provided, append it to the SQL query
     if (!empty($password)) {
@@ -55,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt_user = $conn->prepare($sql_user);
     if ($stmt_user) {
         if (!empty($password)) {
-            $stmt_user->bind_param('sssi', $username, $emailAddress, $hashedPassword, $employeeID);
+            $stmt_user->bind_param('sssii', $username, $emailAddress, $activationStatus, $hashedPassword, $employeeID);
         } else {
-            $stmt_user->bind_param('ssi', $username, $emailAddress, $employeeID);
+            $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
         }
 
         if (!$stmt_user->execute()) {
@@ -72,4 +73,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If both updates are successful, return success message
     echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
 }
-?>
