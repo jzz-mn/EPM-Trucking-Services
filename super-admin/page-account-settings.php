@@ -1,12 +1,11 @@
 <?php
-// Start the session at the very beginning
 session_start();
 
-// Include the header and database connection
 include '../includes/header.php';
 include '../includes/db_connection.php';
 
-// Check if the user is not logged in
+?>
+<?php
 if (!isset($_SESSION['UserID'])) {
     // Redirect to login page if no session exists
     header('location: ../login/login.php');

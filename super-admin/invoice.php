@@ -37,6 +37,7 @@ include '../includes/db_connection.php'
           <div class="invoice-inner-part h-100">
             <div class="invoiceing-box">
               <div class="invoice-header d-flex align-items-center border-bottom p-3">
+                
                 <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
                   data-bs-target="#addInvoiceModal">
                   <i class="ti ti-users text-white me-1 fs-5"></i> Add Invoice
@@ -44,7 +45,7 @@ include '../includes/db_connection.php'
               </div>
 
 
-              <!-- Responsive Table Container using Bootstrap classes -->
+
               <div class="table-responsive mt-3">
                 <table id="invoice_table" class="table w-100 table-striped table-bordered table-hover text-nowrap">
                   <thead>
@@ -461,11 +462,43 @@ include '../includes/db_connection.php'
         </script>
 
         <!-- DataTables Initialization Script -->
+      
         <script>
           $(document).ready(function() {
-            $('#invoice_table').DataTable(); // Initialize DataTables for the invoices table
+            $('#invoice_table').DataTable({
+              dom: 'Bfrtip', // Include the buttons
+              buttons: [{
+                  extend: 'copyHtml5',
+                  text: 'Copy',
+                  className: 'btn btn-primary'
+                },
+                {
+                  extend: 'csvHtml5',
+                  text: 'CSV',
+                  className: 'btn btn-primary'
+                },
+                {
+                  extend: 'excelHtml5',
+                  text: 'Excel',
+                  className: 'btn btn-primary'
+                },
+                {
+                  extend: 'pdfHtml5',
+                  text: 'PDF',
+                  className: 'btn btn-primary'
+                },
+                {
+                  extend: 'print',
+                  text: 'Print',
+                  className: 'btn btn-primary'
+                }
+              ]
+            });
           });
         </script>
+
+        <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+
 
       </div>
     </div>
@@ -669,6 +702,26 @@ include '../includes/db_connection.php'
 <script src="../assets/libs/fullcalendar/index.global.min.js"></script>
 <script src="../assets/js/apps/invoice.js"></script>
 <script src="../assets/js/apps/jquery.PrintArea.js"></script>
+<!-- DataTables CSS -->
+<link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css" rel="stylesheet">
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+
+<!-- Buttons extension for DataTables -->
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+
+<!-- JSZip and pdfmake for Excel and PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
 </body>
 
 </html>
