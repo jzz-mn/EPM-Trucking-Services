@@ -266,40 +266,39 @@ include '../includes/header.php';
                   <div class="card w-100 border position-relative overflow-hidden mb-0">
                     <div class="card-body p-4">
                       <h4 class="card-title">Edit Transaction</h4>
-                      <p class="card-subtitle mb-4">Fill out the details to create a new transaction.</p>
+                      <p class="card-subtitle mb-4">Fill out the details to update the transaction.</p>
+
+                      <!-- Form for updating transaction -->
                       <form action="update_transaction.php" method="POST">
-                      <input type="hidden" id="transactionID" name="transactionID">
+                        <!-- Hidden field for Transaction ID -->
 
                         <div class="row">
-                          <!-- Transaction ID -->
+                          <!-- Transaction ID (Read-only) -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="transactionID" class="form-label">Transaction ID</label>
-                              <input type="text" class="form-control" id="transactionID" name="transactionID" value="<?php
-                              include '../includes/db_connection.php';
-                              $query = 'SELECT MAX(TransactionID) AS lastID FROM transactions';
-                              $result = mysqli_query($conn, $query);
-                              $row = mysqli_fetch_assoc($result);
-                              echo isset($row['lastID']) ? $row['lastID'] + 1 : 1;
-                              ?>" readonly>
+                              <label for="updateTransactionID" class="form-label">Transaction ID</label>
+                              <input type="text" class="form-control" id="updateTransactionID" name="transactionID"
+                                readonly>
                             </div>
                           </div>
+
 
                           <!-- Date -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="transactionDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="transactionDate" name="transactionDate"
-                                placeholder="Enter Date">
+                              <label for="updateTransactionDate" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="updateTransactionDate" name="transactionDate">
                             </div>
                           </div>
+
                           <!-- Billing Invoice Number (Dropdown) -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="invoiceID" class="form-label">Billing Invoice Number</label>
-                              <select class="form-select" id="invoiceID" name="invoiceID">
+                              <label for="updateInvoiceID" class="form-label">Billing Invoice Number</label>
+                              <select class="form-select" id="updateInvoiceID" name="invoiceID">
                                 <option value="" disabled selected>Select Billing Invoice Number</option>
                                 <?php
+                                // Populate the dropdown as before
                                 include '../includes/db_connection.php';
                                 $invoiceQuery = "SELECT DISTINCT BillingInvoiceNo FROM invoices ORDER BY BillingInvoiceNo DESC";
                                 $invoiceResult = mysqli_query($conn, $invoiceQuery);
@@ -310,11 +309,12 @@ include '../includes/header.php';
                               </select>
                             </div>
                           </div>
+
                           <!-- Expense ID (Dropdown) -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="expenseID" class="form-label">Expense ID</label>
-                              <select class="form-select" id="expenseID" name="expenseID">
+                              <label for="updateExpenseID" class="form-label">Expense ID</label>
+                              <select class="form-select" id="updateExpenseID" name="expenseID">
                                 <option value="" disabled selected>Select Expense ID</option>
                                 <?php
                                 $expenseQuery = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC";
@@ -326,71 +326,82 @@ include '../includes/header.php';
                               </select>
                             </div>
                           </div>
-                          <!-- Phone Number -->
+
+                          <!-- Plate Number -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="phoneNumber" class="form-label">Phone Number</label>
-                              <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
-                                placeholder="Enter Phone Number">
+                              <label for="updatePlateNumber" class="form-label">Plate Number</label>
+                              <input type="text" class="form-control" id="updatePlateNumber" name="plateNumber"
+                                placeholder="Enter Plate Number">
                             </div>
                           </div>
+
                           <!-- DR Number -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="drNumber" class="form-label">DR Number</label>
-                              <input type="text" class="form-control" id="drNumber" name="drNumber"
+                              <label for="updateDRNumber" class="form-label">DR Number</label>
+                              <input type="text" class="form-control" id="updateDRNumber" name="drNumber"
                                 placeholder="Enter DR Number">
                             </div>
                           </div>
+
                           <!-- Source Customer Code -->
-                          <div class="col-lg-4">
+                          <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="sourceCustomerCode" class="form-label">Source Customer Code</label>
-                              <input type="text" class="form-control" id="sourceCustomerCode" name="sourceCustomerCode"
-                                placeholder="Enter Source Customer Code">
+                              <label for="updateSourceCustomerCode" class="form-label">Source Customer Code</label>
+                              <input type="text" class="form-control" id="updateSourceCustomerCode"
+                                name="sourceCustomerCode" placeholder="Enter Source Customer Code">
                             </div>
                           </div>
-                          <!-- Customer Number -->
-                          <div class="col-lg-4">
+
+                          <!-- Customer Name -->
+                          <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="customerNumber" class="form-label">Customer Name</label>
-                              <input type="text" class="form-control" id="customerNumber" name="customerNumber"
+                              <label for="updateCustomerName" class="form-label">Customer Name</label>
+                              <input type="text" class="form-control" id="updateCustomerName" name="customerName"
                                 placeholder="Enter Customer Name">
                             </div>
                           </div>
+
                           <!-- Destination Customer Code -->
-                          <div class="col-lg-4">
+                          <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="destinationCustomerCode" class="form-label">Destination Customer Code</label>
-                              <input type="text" class="form-control" id="destinationCustomerCode"
+                              <label for="updateDestinationCustomerCode" class="form-label">Destination Customer
+                                Code</label>
+                              <input type="text" class="form-control" id="updateDestinationCustomerCode"
                                 name="destinationCustomerCode" placeholder="Enter Destination Customer Code">
                             </div>
                           </div>
+
                           <!-- Quantity -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="quantityQtl" class="form-label">Quantity (Qtl)</label>
-                              <input type="number" class="form-control" id="quantityQtl" name="quantityQtl"
-                                placeholder="Enter Quantity">
+                              <label for="updateQuantityQtl" class="form-label">Quantity (Qtl)</label>
+                              <input type="number" class="form-control" id="updateQuantityQtl" name="quantityQtl"
+                                step="0.01" placeholder="Enter Quantity">
                             </div>
                           </div>
-                          <!-- Weight -->
+
+                          <!-- Weight (Kgs) -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="weightKgs" class="form-label">Weight (Kgs)</label>
-                              <input type="number" class="form-control" id="weightKgs" name="weightKgs"
-                                placeholder="Enter Weight">
+                              <label for="updateWeightKgs" class="form-label">Weight (Kgs)</label>
+                              <input type="number" class="form-control" id="updateWeightKgs" name="weightKgs"
+                                step="0.01" placeholder="Enter Weight">
+
                             </div>
                           </div>
-                          <!-- Submit and Cancel -->
+
+                          <!-- Submit and Cancel Buttons -->
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              < <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button type="button" class="btn bg-danger-subtle text-danger"
+                                data-bs-dismiss="modal">Cancel</button>
                               <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                           </div>
-                        </div>
-                      </form>
+                        </div> <!-- End of row -->
+                      </form> <!-- End of form -->
                     </div>
                   </div>
                 </div>
@@ -399,6 +410,7 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+
 
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
@@ -510,8 +522,9 @@ include '../includes/header.php';
                           echo "<td>" . $row['Kgs'] . "</td>";
                           echo "<td>" . $row['ExpenseID'] . "</td>";
                           echo "<td>";
-                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#updateTransactionModal' onclick='populateModal(" . json_encode($row) . ")'>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#updateTransactionModal' onclick='loadTransactionData({$row['TransactionID']})'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
+
                           echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']}); return false;'>";
                           echo "<i class='fs-4 ti ti-trash'></i></a>";
                           echo "</td>";
@@ -874,20 +887,31 @@ include '../includes/header.php';
 <script src="../assets/libs/fullcalendar/index.global.min.js"></script>
 <script src="../assets/js/apps/contact.js"></script>
 <script>
-  function populateModal(transactionData) {
-    document.getElementById('transactionID').value = transactionData.TransactionID;
-    document.getElementById('invoiceID').value = transactionData.InvoiceID;
-    document.getElementById('transactionDate').value = transactionData.Date;
-    document.getElementById('drNumber').value = transactionData.DRNumber;
-    document.getElementById('sourceCustomerCode').value = transactionData.SourceCustomerCode;
-    document.getElementById('customerNumber').value = transactionData.CustomerName;
-    document.getElementById('destinationCustomerCode').value = transactionData.DestinationCustomerCode;
-    document.getElementById('quantityQtl').value = transactionData.Qty;
-    document.getElementById('weightKgs').value = transactionData.Kgs;
-    document.getElementById('expenseID').value = transactionData.ExpenseID;
+  function loadTransactionData(transactionID) {
+    // Make an AJAX request to fetch transaction data
+    $.ajax({
+      url: 'get_transaction_data.php', // Create this PHP file to return transaction data
+      method: 'POST',
+      data: { transactionID: transactionID },
+      dataType: 'json',
+      success: function (response) {
+        // Populate the modal fields with the response data
+        $('#updateTransactionID').val(response.TransactionID);
+        $('#updateTransactionDate').val(response.Date);
+        $('#updateInvoiceID').val(response.InvoiceID);
+        $('#updatePlateNumber').val(response.PlateNumber);
+        $('#updateDRNumber').val(response.DRNumber);
+        $('#updateSourceCustomerCode').val(response.SourceCustomerCode);
+        $('#updateCustomerName').val(response.CustomerName);
+        $('#updateDestinationCustomerCode').val(response.DestinationCustomerCode);
+        $('#updateQuantityQtl').val(response.Qty);
+        $('#updateWeightKgs').val(response.Kgs);
+        $('#updateExpenseID').val(response.ExpenseID);
+      }
+    });
   }
-</script>
 
+</script>
 </body>
 
 </html>

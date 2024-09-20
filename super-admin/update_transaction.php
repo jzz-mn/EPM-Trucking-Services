@@ -28,6 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     mysqli_close($conn);
-    header("Location: transactions.php"); // Redirect after updating
+    header("Location: trucks.php"); // Redirect after updating
 }
 ?>
