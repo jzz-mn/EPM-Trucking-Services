@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
 
@@ -16,7 +17,10 @@
   <title>EPM Trucking Services</title>
 </head>
 
+
+
 <body class="link-sidebar">
+
   <!-- Preloader -->
   <div class="preloader">
     <img src="../assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
@@ -70,7 +74,7 @@
                 <span class="hide-menu">Records</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
-              <li class="sidebar-item">
+                <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/employees.php">
                     <span class="icon-small"></span>
                     <span class="hide-menu">Employees</span>
@@ -307,25 +311,54 @@
                   <!-- ------------------------------- -->
                   <!-- start profile Dropdown -->
                   <!-- ------------------------------- -->
+                  <?php
+                  // Start the session only if it's not already active
+                  if (session_status() == PHP_SESSION_NONE) {
+                    session_start();
+                  }
+
+                  // Include database connection
+                  include '../includes/db_connection.php';
+
+                  // Check if the user is not logged in
+                  if (!isset($_SESSION['UserID'])) {
+                    header('location: ../login/login.php');
+                    exit();
+                  }
+
+                  // Fetch current logged-in user's ID
+                  $userID = $_SESSION['UserID'];
+
+                  // Query useraccounts table to get account information
+                  $queryAccount = "SELECT Username, EmailAddress FROM useraccounts WHERE UserID = ?";
+                  $stmtAccount = mysqli_prepare($conn, $queryAccount);
+                  mysqli_stmt_bind_param($stmtAccount, "s", $userID);
+                  mysqli_stmt_execute($stmtAccount);
+                  mysqli_stmt_bind_result($stmtAccount, $dbUsername, $dbEmail);
+                  mysqli_stmt_fetch($stmtAccount);
+                  mysqli_stmt_close($stmtAccount);
+
+                  // Close database connection
+                  mysqli_close($conn);
+                  ?>
+
+
+                  <!-- Dropdown menu -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
-                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
-                          alt="matdash-img" />
+                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35" alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1">
+                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
-                            alt="matdash-img" />
+                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56" alt="user-img" />
                           <div>
-                            <h5 class="mb-0 fs-12">David McMichael <span class="text-success fs-11">Pro</span>
-                            </h5>
+                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span class="text-success fs-11">Pro</span></h5>
                             <p class="mb-0 text-dark">
-                              david@wrappixel.com
+                              <?php echo htmlspecialchars($dbEmail); ?>
                             </p>
                           </div>
                         </div>
@@ -333,22 +366,15 @@
                           <a href="../super-admin/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Subscription
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Statements <span class="badge bg-danger-subtle text-danger rounded ms-8">4</span>
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            Account Settings
-                          </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
                         </div>
                       </div>
                     </div>
                   </li>
+
+
                   <!-- ------------------------------- -->
                   <!-- end profile Dropdown -->
                   <!-- ------------------------------- -->
