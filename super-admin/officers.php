@@ -446,7 +446,6 @@ include '../includes/header.php';
 
   </div>
 </div>
-</div>
 
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
@@ -610,7 +609,6 @@ include '../includes/header.php';
     document.documentElement.setAttribute("data-color-theme", e);
   }
 </script>
-</div>
 
 <!--  Search Bar -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
@@ -709,7 +707,6 @@ include '../includes/header.php';
       </div>
     </div>
   </div>
-</div>
 </div>
 <div class="dark-transparent sidebartoggler"></div>
 <!-- Import Js Files -->

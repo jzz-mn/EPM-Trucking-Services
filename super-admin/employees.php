@@ -180,15 +180,15 @@ include '../includes/header.php';
                     <input type="hidden" id="editEmployeeID" name="employeeID">
                     <div class="row">
                       <!-- Same fields as the add form, with IDs prefixed by 'edit' -->
-                      <div class="col-lg-6">
-                        <div class="card w-100 border">
-                          <div class="card-body">
+                      <!-- Profile Picture Section -->
+                      <div class="col-lg-6 d-flex align-items-stretch">
+                        <div class="card w-100 border position-relative overflow-hidden">
+                          <div class="card-body p-4">
                             <h4 class="card-title">Edit Profile Picture</h4>
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
-                              <img id="editProfilePicture" src="../assets/images/profile/user-1.jpg"
-                                alt="profile-img" class="img-fluid rounded-circle my-4" width="140"
-                                height="140">
+                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                                class="img-fluid rounded-circle my-4" width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
                                 <button class="btn btn-primary">Upload</button>
                                 <button class="btn bg-danger-subtle text-danger">Reset</button>
@@ -205,22 +205,21 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Please enter the employee's login credentials.</p>
                             <div class="mb-3">
                               <label for="editUsernameInput" class="form-label">Username</label>
-                              <input type="text" class="form-control" id="editUsernameInput"
-                                name="username" placeholder="Enter username" required>
+                              <input type="text" class="form-control" id="editUsernameInput" name="username"
+                                placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
                               <label for="editEmailInput" class="form-label">Email address</label>
-                              <input type="email" class="form-control" id="editEmailInput"
-                                name="emailAddress" placeholder="Enter email" required>
+                              <input type="email" class="form-control" id="editEmailInput" name="emailAddress"
+                                placeholder="Enter email" required>
                             </div>
                             <div class="mb-3">
                               <label for="editPasswordInput" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="editPasswordInput"
-                                name="password" placeholder="Enter password">
+                              <input type="password" class="form-control" id="editPasswordInput" name="password"
+                                placeholder="Enter password">
                             </div>
                             <div>
-                              <label for="editConfirmPasswordInput"
-                                class="form-label">Confirm Password</label>
+                              <label for="editConfirmPasswordInput" class="form-label">Confirm Password</label>
                               <input type="password" class="form-control" id="editConfirmPasswordInput"
                                 name="confirmPassword" placeholder="Confirm password">
                             </div>
@@ -235,18 +234,18 @@ include '../includes/header.php';
                           <div class="row">
                             <div class="col-lg-4 mb-3">
                               <label for="editFirstNameInput" class="form-label">First Name</label>
-                              <input type="text" class="form-control" id="editFirstNameInput"
-                                name="firstName" placeholder="Enter first name" required>
+                              <input type="text" class="form-control" id="editFirstNameInput" name="firstName"
+                                placeholder="Enter first name" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editMiddleInitialInput" class="form-label">Middle Initial</label>
-                              <input type="text" class="form-control" id="editMiddleInitialInput"
-                                name="middleInitial" placeholder="Enter middle initial">
+                              <input type="text" class="form-control" id="editMiddleInitialInput" name="middleInitial"
+                                placeholder="Enter middle initial">
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editLastNameInput" class="form-label">Last Name</label>
-                              <input type="text" class="form-control" id="editLastNameInput"
-                                name="lastName" placeholder="Enter last name" required>
+                              <input type="text" class="form-control" id="editLastNameInput" name="lastName"
+                                placeholder="Enter last name" required>
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="editGenderInput" class="form-label">Gender</label>
@@ -255,18 +254,17 @@ include '../includes/header.php';
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="editDobInput" class="form-label">Date of Birth</label>
-                              <input type="date" class="form-control" id="editDobInput"
-                                name="dateOfBirth" required>
+                              <input type="date" class="form-control" id="editDobInput" name="dateOfBirth" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editMobileInput" class="form-label">Mobile Number</label>
-                              <input type="text" class="form-control" id="editMobileInput"
-                                name="mobileNo" placeholder="Enter mobile number" required>
+                              <input type="text" class="form-control" id="editMobileInput" name="mobileNo"
+                                placeholder="Enter mobile number" required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editEmploymentDateInput" class="form-label">Employment Date</label>
-                              <input type="date" class="form-control" id="editEmploymentDateInput"
-                                name="employmentDate" required>
+                              <input type="date" class="form-control" id="editEmploymentDateInput" name="employmentDate"
+                                required>
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editPositionInput" class="form-label">Position</label>
@@ -280,7 +278,8 @@ include '../includes/header.php';
                             </div>
                             <div class="col-12 mb-3">
                               <div class="d-flex gap-6 justify-content-end">
-                                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                                <button class="btn bg-danger-subtle text-danger"
+                                  data-bs-dismiss="modal">Discard</button>
                                 <button id="btn-edit" class="btn btn-primary" type="submit">Save Changes</button>
                               </div>
                             </div>
@@ -382,10 +381,10 @@ include '../includes/header.php';
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function() {
+      button.addEventListener('click', function () {
         const employeeID = this.getAttribute('data-id');
         fetch(`../super-admin/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -414,15 +413,15 @@ include '../includes/header.php';
 
     // Handle form submission to edit employee details
     const editForm = document.getElementById('editEmployeeForm');
-    editForm.addEventListener('submit', function(e) {
+    editForm.addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       const formData = new FormData(editForm);
 
       fetch('../super-admin/edit_employee.php', {
-          method: 'POST',
-          body: formData
-        })
+        method: 'POST',
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
           // Log the entire response to check its structure
