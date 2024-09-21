@@ -386,7 +386,7 @@ include '../includes/header.php';
               </div>
               <div class="py-3">
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered text-nowrap align-middle">
+                  <table id="file_export" class="table table-striped table-bordered text-nowrap align-middle">
                     <thead>
                       <!-- start row -->
                       <tr>
@@ -833,10 +833,14 @@ include '../includes/header.php';
 
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-<script src="../assets/js/apps/productDetail.js"></script>
 <script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../assets/js/datatable/datatable-basic.init.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
 <script>
   document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
