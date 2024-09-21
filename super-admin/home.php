@@ -19,7 +19,7 @@ include '../includes/header.php';
                       class="d-flex align-items-center justify-content-center round-48 rounded text-bg-primary flex-shrink-0 mb-3 mx-auto">
                       <iconify-icon icon="solar:dollar-minimalistic-linear" class="fs-7 text-white"></iconify-icon>
                     </div>
-                    <h6 class="fw-normal fs-3 mb-1">Total Orders</h6>
+                    <h6 class="fw-normal fs-3 mb-1">Total Expenses</h6>
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       16,689</h4>
                     <a href="javascript:void(0)" class="btn btn-white fs-2 fw-semibold text-nowrap">View
@@ -34,7 +34,7 @@ include '../includes/header.php';
                       class="d-flex align-items-center justify-content-center round-48 rounded text-bg-warning flex-shrink-0 mb-3 mx-auto">
                       <iconify-icon icon="solar:recive-twice-square-linear" class="fs-7 text-white"></iconify-icon>
                     </div>
-                    <h6 class="fw-normal fs-3 mb-1">Return Item</h6>
+                    <h6 class="fw-normal fs-3 mb-1">Total Revenue</h6>
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       148</h4>
                     <a href="javascript:void(0)" class="btn btn-white fs-2 fw-semibold text-nowrap">View
@@ -49,7 +49,7 @@ include '../includes/header.php';
                       class="d-flex align-items-center justify-content-center round-48 rounded text-bg-secondary flex-shrink-0 mb-3 mx-auto">
                       <iconify-icon icon="ic:outline-backpack" class="fs-7 text-white"></iconify-icon>
                     </div>
-                    <h6 class="fw-normal fs-3 mb-1">Annual Budget</h6>
+                    <h6 class="fw-normal fs-3 mb-1">Total Profit</h6>
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       $156K</h4>
                     <a href="javascript:void(0)" class="btn btn-white fs-2 fw-semibold text-nowrap">View
@@ -64,7 +64,7 @@ include '../includes/header.php';
                       class="d-flex align-items-center justify-content-center round-48 rounded text-bg-danger flex-shrink-0 mb-3 mx-auto">
                       <iconify-icon icon="ic:baseline-sync-problem" class="fs-7 text-white"></iconify-icon>
                     </div>
-                    <h6 class="fw-normal fs-3 mb-1">Cancel Orders</h6>
+                    <h6 class="fw-normal fs-3 mb-1">Total Transactions</h6>
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       64</h4>
                     <a href="javascript:void(0)" class="btn btn-white fs-2 fw-semibold text-nowrap">View
@@ -79,7 +79,7 @@ include '../includes/header.php';
                       class="d-flex align-items-center justify-content-center round-48 rounded text-bg-success flex-shrink-0 mb-3 mx-auto">
                       <iconify-icon icon="ic:outline-forest" class="fs-7 text-white"></iconify-icon>
                     </div>
-                    <h6 class="fw-normal fs-3 mb-1">Total Income</h6>
+                    <h6 class="fw-normal fs-3 mb-1">Total Fuel Consumption</h6>
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       $36,715</h4>
                     <a href="javascript:void(0)" class="btn btn-white fs-2 fw-semibold text-nowrap">View
