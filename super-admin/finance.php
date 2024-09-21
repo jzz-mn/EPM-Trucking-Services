@@ -165,7 +165,7 @@ include '../includes/header.php';
                     <div class="card-body p-4">
                       <h4 class="card-title">Add Fuel Expense</h4>
                       <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
-                      <form>
+                      <form id="fuelExpenseForm">
                         <div class="row">
                           <div class="col-lg-4">
                             <div class="mb-3">
@@ -202,25 +202,28 @@ include '../includes/header.php';
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="liters" class="form-label">Liters</label>
-                              <input type="number" class="form-control" id="liters" placeholder="Enter Liters">
+                              <input type="number" step="0.01" class="form-control" id="liters"
+                                placeholder="Enter Liters">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="unitPrice" class="form-label">Unit Price</label>
-                              <input type="text" class="form-control" id="unitPrice" placeholder="Enter Unit Price">
+                              <input type="number" step="0.01" class="form-control" id="unitPrice"
+                                placeholder="Enter Unit Price">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="fuelAmount" class="form-label">Fuel Amount</label>
-                              <input type="text" class="form-control" id="fuelAmount" placeholder="Enter Fuel Amount">
+                              <input type="text" class="form-control" id="fuelAmount" placeholder="Fuel Amount"
+                                readonly>
                             </div>
                           </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button class="btn btn-primary">Save</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
@@ -233,6 +236,21 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+
+      <script>
+        // Function to calculate and display fuel amount
+        function calculateFuelAmount() {
+          const liters = parseFloat(document.getElementById('liters').value) || 0;
+          const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+          const fuelAmount = (liters * unitPrice).toFixed(2); // Calculating and keeping two decimal places
+          document.getElementById('fuelAmount').value = fuelAmount; // Display in the Fuel Amount field
+        }
+
+        // Attach event listeners to the 'liters' and 'unitPrice' inputs to trigger calculation
+        document.getElementById('liters').addEventListener('input', calculateFuelAmount);
+        document.getElementById('unitPrice').addEventListener('input', calculateFuelAmount);
+      </script>
+
       <!-- Edit Fuel Expenses Modal -->
       <div class="modal fade" id="editFuelExpenseModal" tabindex="-1" role="dialog"
         aria-labelledby="editFuelExpenseModalTitle" aria-hidden="true">
@@ -347,7 +365,90 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
-
+      <!-- Edit Fuel Expenses -->
+      <div class="modal fade" id="editFuelExpenseModal" tabindex="-1" role="dialog"
+        aria-labelledby="editFuelExpenseModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Edit Fuel Expense</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Edit Fuel Expense</h4>
+                      <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
+                      <form>
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="dieselId" class="form-label">Diesel ID</label>
+                              <input type="text" class="form-control" id="dieselId" placeholder="Enter Diesel ID">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="date" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="date" placeholder="Enter Date">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="controlNumber" class="form-label">Control Number</label>
+                              <input type="text" class="form-control" id="controlNumber"
+                                placeholder="Enter Control Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="plateNumber" class="form-label">Plate Number</label>
+                              <input type="text" class="form-control" id="plateNumber" placeholder="Enter Plate Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="seriesNumber" class="form-label">Series Number</label>
+                              <input type="text" class="form-control" id="seriesNumber"
+                                placeholder="Enter Series Number">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="liters" class="form-label">Liters</label>
+                              <input type="number" class="form-control" id="liters" placeholder="Enter Liters">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="unitPrice" class="form-label">Unit Price</label>
+                              <input type="text" class="form-control" id="unitPrice" placeholder="Enter Unit Price">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="fuelAmount" class="form-label">Fuel Amount</label>
+                              <input type="text" class="form-control" id="fuelAmount" placeholder="Enter Fuel Amount">
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button class="btn btn-primary">Save</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
     <div class="card">
@@ -385,8 +486,9 @@ include '../includes/header.php';
                 </div>
               </div>
               <div class="py-3">
+                <!-- Expense Table -->
                 <div class="table-responsive">
-                  <table id="file_export" class="table table-striped table-bordered text-nowrap align-middle">
+                  <table id="" class="table table-striped table-bordered text-nowrap align-middle">
                     <thead>
                       <!-- start row -->
                       <tr>
@@ -399,7 +501,7 @@ include '../includes/header.php';
                         <th>GasAmount</th>
                         <th>AllowanceAmount</th>
                         <th>ExtraMealAmount</th>
-                        <th>Mobile</th>
+                        <th>MobileFeeAmount</th>
                         <th>Action</th>
                       </tr>
                       <!-- end row -->
@@ -425,7 +527,7 @@ include '../includes/header.php';
                           echo "<td>" . $row['GasAmount'] . "</td>";
                           echo "<td>" . $row['AllowanceAmount'] . "</td>";
                           echo "<td>" . $row['ExtraMealAmount'] . "</td>";
-                          echo "<td>" . $row['MobileFeeAmount'] . "</td>";
+                          echo "<td>" . $row['Mobile'] . "</td>";
                           echo "<td>";
                           // Edit button
                           echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
@@ -446,9 +548,6 @@ include '../includes/header.php';
                     </tbody>
                   </table>
                 </div>
-
-
-
                 <!-- Delete Expense Modal -->
                 <div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog"
                   aria-labelledby="deleteExpenseModalLabel" aria-hidden="true">
@@ -468,49 +567,6 @@ include '../includes/header.php';
                     </div>
                   </div>
                 </div>
-
-                <script>
-                  // Store the ID of the expense to delete
-                  let expenseIDToDelete = null;
-
-                  // Function to open the modal and pass the ExpenseID
-                  function openDeleteExpenseModal(expenseID) {
-                    expenseIDToDelete = expenseID; // Set the expense ID to delete
-                    $('#deleteExpenseModal').modal('show'); // Display the modal
-                  }
-
-                  // Handle the delete button click inside the modal
-                  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function () {
-                    if (expenseIDToDelete !== null) {
-                      // Send AJAX request to delete the expense
-                      fetch('delete_expense.php', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
-                      })
-                        .then(response => response.json())
-                        .then(data => {
-                          if (data.success) {
-                            // Hide the modal after successful deletion
-                            $('#deleteExpenseModal').modal('hide');
-                            // Reload the page or remove the deleted expense row
-                            alert('Expense deleted successfully.');
-                            location.reload(); // Reload to reflect changes
-                          } else {
-                            alert('Failed to delete expense: ' + data.message);
-                          }
-                        })
-                        .catch(error => console.error('Error deleting expense:', error));
-                    }
-                  });
-                </script>
-
-
-
-
-
               </div>
             </div>
             <div class="tab-pane py-3" id="profile" role="tabpanel">
@@ -529,23 +585,59 @@ include '../includes/header.php';
                   </a>
                 </div>
               </div>
+              <!-- Fuel Table -->
               <div class="table-responsive">
                 <table id="" class="table table-striped table-bordered display text-nowrap">
                   <thead>
-                    <!-- start row -->
                     <tr>
-                      <th>Name</th>
-                      <th>Position</th>
-                      <th>Office</th>
-                      <th>Age</th>
-                      <th>Start date</th>
-                      <th>Salary</th>
+                      <th>Expense ID</th>
+                      <th>Date</th>
+                      <th>Unit Price</th>
+                      <th>Gas Amount</th>
+                      <th>Liters</th>
+                      <th>Actions</th>
                     </tr>
-                    <!-- end row -->
                   </thead>
-                  <tbody></tbody>
+                  <tbody>
+                    <?php
+                    // Include the database connection
+                    include '../includes/db_connection.php';
+
+                    // Create the SQL query to fetch data from the fuel table
+                    $sql = "SELECT ExpenseID, Date, UnitPrice, GasAmount, Liters FROM fuel";
+                    $result = $conn->query($sql);
+
+                    if ($result->num_rows > 0) {
+                      // Loop through each row and display in the table
+                      while ($row = $result->fetch_assoc()) {
+                        echo "<tr>";
+                        echo "<td>" . $row['ExpenseID'] . "</td>";
+                        echo "<td>" . $row['Date'] . "</td>";
+                        echo "<td>" . $row['UnitPrice'] . "</td>";
+                        echo "<td>" . $row['GasAmount'] . "</td>";
+                        echo "<td>" . $row['Liters'] . "</td>";
+                        // Edit button
+                        echo "<td>";
+                        echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
+                        echo "<i class='fs-4 ti ti-edit'></i></a>";
+                        // Delete button inside your table
+                        echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']});  return false;'>";
+                        echo "<i class='fs-4 ti ti-trash'></i></a>";
+                        echo "</td>";
+                        echo "</tr>";
+                      }
+                    } else {
+                      echo "<tr><td colspan='5'>No records found</td></tr>";
+                    }
+
+                    // Close the database connection
+                    $conn->close();
+                    ?>
+
+                  </tbody>
                 </table>
               </div>
+
             </div>
           </div>
         </div>
@@ -841,6 +933,7 @@ include '../includes/header.php';
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
+
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
 <script>
   document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
@@ -889,7 +982,41 @@ include '../includes/header.php';
     document.getElementById("updateTotalAmount").value = totalAmount.toFixed(2); // Rounds to 2 decimal places
   }
 
-</script>
-</body>
+  // Store the ID of the expense to delete
+  let expenseIDToDelete = null;
 
-</html>
+  // Function to open the modal and pass the ExpenseID
+  function openDeleteExpenseModal(expenseID) {
+    expenseIDToDelete = expenseID; // Set the expense ID to delete
+    $('#deleteExpenseModal').modal('show'); // Display the modal
+  }
+
+  // Handle the delete button click inside the modal
+  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function () {
+    if (expenseIDToDelete !== null) {
+      // Send AJAX request to delete the expense
+      fetch('delete_expense.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Hide the modal after successful deletion
+            $('#deleteExpenseModal').modal('hide');
+            // Reload the page or remove the deleted expense row
+            alert('Expense deleted successfully.');
+            location.reload(); // Reload to reflect changes
+          } else {
+            alert('Failed to delete expense: ' + data.message);
+          }
+        })
+        .catch(error => console.error('Error deleting expense:', error));
+    }
+  });
+</body >
+
+</html >

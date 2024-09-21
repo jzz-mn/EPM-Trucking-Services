@@ -30,6 +30,23 @@ include '../includes/header.php';
     </div>
 
     <div class="widget-content searchable-container list">
+      <?php
+      // Include your database connection file
+      include '../includes/db_connection.php';
+
+      // Query to get the last Maintenance ID
+      $query = "SELECT MAX(MaintenanceID) AS lastMaintenanceID FROM truckmaintenance";
+      $result = $conn->query($query);
+
+      // Initialize the next Maintenance ID
+      $nextMaintenanceID = 1; // Default to 1 if there are no records
+      
+      if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $nextMaintenanceID = $row['lastMaintenanceID'] + 1;
+      }
+      ?>
+
       <!-- Add Maintenance Modal -->
       <div class="modal fade" id="addMaintenanceRecordModal" tabindex="-1" role="dialog"
         aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
@@ -46,53 +63,51 @@ include '../includes/header.php';
                     <div class="card-body p-4">
                       <h4 class="card-title">Add Maintenance Record</h4>
                       <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
-                      <form>
+                      <form action="add_maintenance.php" method="POST">
                         <div class="row">
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="maintenanceId" class="form-label">Maintenance ID</label>
-                              <input type="text" class="form-control" id="maintenanceId"
-                                placeholder="Enter Maintenance ID">
+                              <input type="text" class="form-control" id="maintenanceId" name="maintenanceId"
+                                value="<?php echo $nextMaintenanceID; ?>" readonly>
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="maintenanceDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="maintenanceDate" placeholder="Select Date">
+                              <input type="date" class="form-control" id="maintenanceDate" name="maintenanceDate"
+                                placeholder="Select Date" required>
                             </div>
                           </div>
-                          <div class="col-lg-4">
+                          <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="maintenanceCategory" class="form-label">Category</label>
-                              <input type="text" class="form-control" id="maintenanceCategory"
-                                placeholder="Enter Category">
+                              <select class="form-control" id="maintenanceCategory" name="maintenanceCategory" required>
+                                <option value="COOL AIR MAINTENANCE">COOL AIR MAINTENANCE</option>
+                                <option value="LEGALIZATION FEE">LEGALIZATION FEE</option>
+                                <option value="OFFICE FEE">OFFICE FEE</option>
+                              </select>
                             </div>
                           </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="maintenanceDescription" class="form-label">Description</label>
-                              <input type="text" class="form-control" id="maintenanceDescription"
-                                placeholder="Enter Description">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
+                          
+                          <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="maintenanceAmount" class="form-label">Amount</label>
-                              <input type="number" class="form-control" id="maintenanceAmount"
-                                placeholder="Enter Amount">
+                              <input type="number" class="form-control" id="maintenanceAmount" name="maintenanceAmount"
+                                placeholder="Enter Amount" step="0.01" required>
                             </div>
                           </div>
                           <div class="col-lg-12">
                             <div class="mb-3">
-                              <label for="maintenanceDetails" class="form-label">Details</label>
-                              <input type="text" class="form-control" id="maintenanceDetails"
-                                placeholder="Enter Maintenance Details">
+                              <label for="maintenanceDescription" class="form-label">Description</label>
+                              <input type="text" class="form-control" id="maintenanceDescription"
+                                name="maintenanceDescription" placeholder="Enter Description" required>
                             </div>
                           </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button class="btn btn-primary">Save</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
@@ -105,6 +120,8 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
+
+
       <!-- Add Transaction Modal -->
       <div class="modal fade" id="addTransactionModal" tabindex="-1" role="dialog"
         aria-labelledby="addTransactionModalTitle" aria-hidden="true">
@@ -268,11 +285,7 @@ include '../includes/header.php';
                     <div class="card-body p-4">
                       <h4 class="card-title">Edit Transaction</h4>
                       <p class="card-subtitle mb-4">Fill out the details to update the transaction.</p>
-
-                      <!-- Form for updating transaction -->
                       <form action="update_transaction.php" method="POST">
-                        <!-- Hidden field for Transaction ID -->
-
                         <div class="row">
                           <!-- Transaction ID (Read-only) -->
                           <div class="col-lg-6">
@@ -411,7 +424,81 @@ include '../includes/header.php';
           </div>
         </div>
       </div>
-
+      <!-- Edit Maintenance Modal -->
+      <div class="modal fade" id="updateMaintenanceRecordModal" tabindex="-1" role="dialog"
+        aria-labelledby="updateMaintenanceRecordModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header d-flex align-items-center bg-primary">
+              <h5 class="modal-title text-white fs-4">Edit Maintenance Record</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Edit Maintenance Record</h4>
+                      <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
+                      <form>
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="maintenanceId" class="form-label">Maintenance ID</label>
+                              <input type="text" class="form-control" id="maintenanceId"
+                                placeholder="Enter Maintenance ID">
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="maintenanceDate" class="form-label">Date</label>
+                              <input type="date" class="form-control" id="maintenanceDate" placeholder="Select Date">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceCategory" class="form-label">Category</label>
+                              <input type="text" class="form-control" id="maintenanceCategory"
+                                placeholder="Enter Category">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceDescription" class="form-label">Description</label>
+                              <input type="text" class="form-control" id="maintenanceDescription"
+                                placeholder="Enter Description">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="mb-3">
+                              <label for="maintenanceAmount" class="form-label">Amount</label>
+                              <input type="number" class="form-control" id="maintenanceAmount"
+                                placeholder="Enter Amount">
+                            </div>
+                          </div>
+                          <div class="col-lg-12">
+                            <div class="mb-3">
+                              <label for="maintenanceDetails" class="form-label">Details</label>
+                              <input type="text" class="form-control" id="maintenanceDetails"
+                                placeholder="Enter Maintenance Details">
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button class="btn btn-primary">Save</button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
@@ -449,23 +536,64 @@ include '../includes/header.php';
                   </div>
                 </div>
                 <div class="py-3">
+                  <!-- Maintenance Table -->
+                  <?php
+                  include '../includes/db_connection.php';
+
+                  // Query to fetch data from truckmaintenance table
+                  $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount FROM truckmaintenance";
+                  $result = $conn->query($query);
+                  ?>
                   <div class="table-responsive">
                     <table id="" class="table table-striped table-bordered display text-nowrap">
                       <thead>
                         <!-- start row -->
                         <tr>
-                          <th>Name</th>
-                          <th>Position</th>
-                          <th>Office</th>
-                          <th>Age</th>
-                          <th>Start date</th>
-                          <th>Salary</th>
+                          <th>Maintenance ID</th>
+                          <th>Year</th>
+                          <th>Month</th>
+                          <th>Category</th>
+                          <th>Description</th>
+                          <th>Amount</th>
+                          <th>Actions</th>
                         </tr>
                         <!-- end row -->
                       </thead>
-                      <tbody></tbody>
+                      <tbody>
+                        <?php
+                        // Check if the query returned any results
+                        if ($result->num_rows > 0) {
+                          // Output data of each row
+                          while ($row = $result->fetch_assoc()) {
+                            echo "<tr>";
+                            echo "<td>" . $row['MaintenanceID'] . "</td>";
+                            echo "<td>" . $row['Year'] . "</td>";
+                            echo "<td>" . $row['Month'] . "</td>";
+                            echo "<td>" . $row['Category'] . "</td>";
+                            echo "<td>" . $row['Description'] . "</td>";
+                            echo "<td>" . $row['Amount'] . "</td>";
+                            echo "<td>";
+                            echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#updateMaintenanceRecordModal'>";
+                            echo "<i class='fs-4 ti ti-edit'></i></a>";
+
+                            echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['MaintenanceID']}); return false;'>";
+                            echo "<i class='fs-4 ti ti-trash'></i></a>";
+                            echo "</td>";
+                            echo "</tr>";
+                          }
+                        } else {
+                          echo "<tr><td colspan='5'>No records found</td></tr>";
+                        }
+                        ?>
+                      </tbody>
                     </table>
                   </div>
+
+                  <?php
+                  // Close the database connection
+                  $conn->close();
+                  ?>
+
                 </div>
               </div>
               <div class="tab-pane py-3" id="profile" role="tabpanel">

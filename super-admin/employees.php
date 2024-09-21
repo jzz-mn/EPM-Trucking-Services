@@ -179,7 +179,6 @@ include '../includes/header.php';
                   <form id="editEmployeeForm" method="POST" action="../super-admin/edit_employee.php">
                     <input type="hidden" id="editEmployeeID" name="employeeID">
                     <div class="row">
-                      <!-- Same fields as the add form, with IDs prefixed by 'edit' -->
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -327,7 +326,7 @@ include '../includes/header.php';
         </div>
       </div>
       <div class="table-responsive card p-0 card-body">
-        <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle">
+        <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle text-center">
           <thead>
             <tr>
               <th>Name</th>
@@ -342,8 +341,7 @@ include '../includes/header.php';
           </thead>
           <tbody>
             <?php
-            $query = "
-                SELECT e.EmployeeID, e.FirstName, e.MiddleInitial, e.LastName, e.Position, e.Address, e.MobileNo, e.EmailAddress, e.EmploymentDate,
+            $query = "SELECT e.EmployeeID, e.FirstName, e.MiddleInitial, e.LastName, e.Position, e.Address, e.MobileNo, e.EmailAddress, e.EmploymentDate,
                        ua.ActivationStatus
                 FROM employees e
                 LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
@@ -369,7 +367,7 @@ include '../includes/header.php';
                 } elseif ($row['ActivationStatus'] === 'Deactivated') {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 } else {
-                  $activationStatus = 'Unknown';  // Fallback in case of an unexpected value
+                  $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 }
 
                 echo "<tr>";
@@ -387,8 +385,6 @@ include '../includes/header.php';
                 echo "<td>";
                 echo "<a data-bs-toggle='modal' data-bs-target='#editContactModal' href='#' class='me-3 text-primary' data-id='{$row['EmployeeID']}'>";
                 echo "<i class='fs-4 ti ti-edit'></i></a>";
-                echo "<a href='../includes/delete_employee.php?id={$row['EmployeeID']}' class='text-danger'>";
-                echo "<i class='fs-4 ti ti-trash'></i></a>";
                 echo "</td>";
                 echo "</tr>";
               }
@@ -406,10 +402,10 @@ include '../includes/header.php';
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function() {
+      button.addEventListener('click', function () {
         const employeeID = this.getAttribute('data-id');
         fetch(`../super-admin/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -421,7 +417,7 @@ include '../includes/header.php';
             document.getElementById('editGenderInput').value = data.Gender;
 
             // Ensure the Date of Birth is in correct format for date input (YYYY-MM-DD)
-            document.getElementById('editDobInput').value = data.DateOfBirth ? data.DateOfBirth.split(' ')[0] : '';
+            document.getElementById('editDobInput').value = data.DateOfBirth;
 
             document.getElementById('editMobileInput').value = data.MobileNo;
             document.getElementById('editEmploymentDateInput').value = data.EmploymentDate;
@@ -441,15 +437,15 @@ include '../includes/header.php';
 
     // Handle form submission to edit employee details
     const editForm = document.getElementById('editEmployeeForm');
-    editForm.addEventListener('submit', function(e) {
+    editForm.addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       const formData = new FormData(editForm);
 
       fetch('../super-admin/edit_employee.php', {
-          method: 'POST',
-          body: formData
-        })
+        method: 'POST',
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
           // Log the entire response to check its structure
