@@ -60,7 +60,7 @@ include '../includes/db_connection.php'
                       <th>EWT 2%</th>
                       <th>Add Toll/Charges</th>
                       <th>Amount Net of Tax</th>
-                      <th>Net of Tax</th>
+                      <th>Net Amount</th>
                       <th>Actions</th>
                     </tr>
                   </thead>

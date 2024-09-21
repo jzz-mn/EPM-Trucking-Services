@@ -425,7 +425,7 @@ include '../includes/header.php';
                           echo "<td>" . $row['GasAmount'] . "</td>";
                           echo "<td>" . $row['AllowanceAmount'] . "</td>";
                           echo "<td>" . $row['ExtraMealAmount'] . "</td>";
-                          echo "<td>" . $row['Mobile'] . "</td>";
+                          echo "<td>" . $row['MobileFeeAmount'] . "</td>";
                           echo "<td>";
                           // Edit button
                           echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
