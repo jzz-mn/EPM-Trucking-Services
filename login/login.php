@@ -38,8 +38,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $_SESSION['Role'] = $row['Role'];
                     $_SESSION['EmailAddress'] = $row['EmailAddress'];
 
-                    // Redirect to a different page (e.g., dashboard)
-                    header("Location: ../super-admin/home.php");
+                    // Redirect to the appropriate home page based on role
+                    if ($row['Role'] === 'SuperAdmin') {
+                        header("Location: ../super-admin/home.php");
+                    } elseif ($row['Role'] === 'Officer') {
+                        header("Location: ../officer/home.php");
+                    } elseif ($row['Role'] === 'Employee') {
+                        header("Location: ../employee/maintenance.php");
+                    } else {
+                        $error_message = "User role not recognized!";
+                    }
                     exit();
                 } else {
                     $error_message = "Invalid password!";
@@ -58,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">
