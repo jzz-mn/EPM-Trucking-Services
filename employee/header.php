@@ -268,7 +268,7 @@
                           </div>
                         </div>
                         <div class="message-body">
-                          <a href="../officer/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../employee/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
                           <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
