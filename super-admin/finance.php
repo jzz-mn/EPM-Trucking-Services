@@ -549,24 +549,7 @@ include '../includes/header.php';
                   </table>
                 </div>
                 <!-- Delete Expense Modal -->
-                <div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog"
-                  aria-labelledby="deleteExpenseModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header bg-danger">
-                        <h5 class="modal-title text-white" id="deleteExpenseModalLabel">Confirm Delete</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <p>Are you sure you want to delete this expense? This action cannot be undone.</p>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteExpenseBtn">Delete</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
             <div class="tab-pane py-3" id="profile" role="tabpanel">
@@ -645,9 +628,25 @@ include '../includes/header.php';
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog" aria-labelledby="deleteExpenseModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white" id="deleteExpenseModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this expense? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteExpenseBtn">Delete</button>
+      </div>
+    </div>
+  </div>
 </div>
-
-
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">
@@ -912,7 +911,6 @@ include '../includes/header.php';
 </div>
 
 
-</div>
 <div class="dark-transparent sidebartoggler"></div>
 <script src="../assets/js/vendor.min.js"></script>
 <!-- Import Js Files -->
@@ -925,16 +923,8 @@ include '../includes/header.php';
 
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
-
-<script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+<script src="../assets/libs/fullcalendar/index.global.min.js"></script>
+<script src="../assets/js/apps/contact.js"></script>
 <script>
   document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
 </script>
