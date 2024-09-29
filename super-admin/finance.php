@@ -12,7 +12,7 @@ include '../includes/header.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="./">
+                  <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
@@ -955,6 +955,7 @@ include '../includes/header.php';
     document.getElementById("updateMobile").value = expense.Mobile;
     document.getElementById("updateTotalAmount").value = expense.TotalAmount;
   }
+
   function computeTotalAmount() {
     // Get the values from the input fields
     const tollFee = parseFloat(document.getElementById("updateTollFee").value) || 0;
@@ -982,16 +983,16 @@ include '../includes/header.php';
   }
 
   // Handle the delete button click inside the modal
-  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function () {
+  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function() {
     if (expenseIDToDelete !== null) {
       // Send AJAX request to delete the expense
       fetch('delete_expense.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
-      })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
+        })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -1007,6 +1008,7 @@ include '../includes/header.php';
         .catch(error => console.error('Error deleting expense:', error));
     }
   });
-</body >
+</script>
+</body>
 
-</html >
+</html>

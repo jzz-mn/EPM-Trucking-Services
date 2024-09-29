@@ -13,8 +13,8 @@ include '../employee/header.php';
             <!-- Removed Sidebar --><nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="./">
-                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                <a class="text-muted text-decoration-none d-flex" href="../employee/home.php">
+                <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
                 <li class="breadcrumb-item" aria-current="page">

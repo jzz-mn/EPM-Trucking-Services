@@ -15,8 +15,8 @@ include '../includes/db_connection.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="./">
-                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
               </ol>
