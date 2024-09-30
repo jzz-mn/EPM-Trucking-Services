@@ -13,8 +13,8 @@ include '../includes/header.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
-                <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                  <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
+                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
                 <li class="breadcrumb-item" aria-current="page">
@@ -76,13 +76,12 @@ include '../includes/header.php';
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="email" class="form-control" id="exampleInputEmail" name="emailAddress"
+                              <input type="email" class="form-control" id="exampleInputEmail" name="userEmailAddress"
                                 placeholder="Enter email" required>
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputPassword" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="exampleInputPassword" name="password"
-                                placeholder="Enter password" required>
+                              <input type="password" class="form-control" id="exampleInputPassword" name="password" placeholder="Enter new password">
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputConfirmPassword" class="form-label">Confirm Password</label>
@@ -197,7 +196,8 @@ include '../includes/header.php';
             <div class="modal-body">
               <div class="edit-contact-box">
                 <div class="edit-contact-content">
-                  <form id="editOfficerForm" method="POST" action="">
+                  <form id="editOfficerForm" method="POST" action="edit_officer.php">
+                  <input type="hidden" name="officerID" value="">
                     <div class="row">
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -226,13 +226,11 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Update officer's login credentials.</p>
                             <div class="mb-3">
                               <label for="usernameInput" class="form-label">Username</label>
-                              <input type="text" class="form-control" id="usernameInput" name="username"
-                                placeholder="Enter username" required>
+                              <input type="text" class="form-control" id="usernameInput" name="username" placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="email" class="form-control" id="exampleInputEmail" name="emailAddress"
-                                placeholder="Enter email" required>
+                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress" placeholder="Enter Email Address">
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputPassword" class="form-label">New Password</label>
@@ -240,7 +238,11 @@ include '../includes/header.php';
                                 placeholder="Enter password" required>
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputConfirmPassword" class="form-label">Deactivate Account</label>
+                              <label for="exampleActivationStatus" class="form-label">Status</label>
+                              <select class="form-control" id="activationStatus" name="activationStatus">
+                                <option value="Activated">Activated</option>
+                                <option value="Deactivated">Deactivated</option>
+                              </select>
                             </div>
                           </div>
                         </div>
@@ -382,10 +384,10 @@ include '../includes/header.php';
         <tbody>
           <?php
           // Your query to join the two tables based on officerID
-          $query = "SELECT o.FirstName, o.MiddleInitial, o.LastName, o.Position, o.Gender, o.CityAddress, 
-                       o.MobileNo, o.EmailAddress, o.College, o.YearGraduated, ua.ActivationStatus
-                FROM officers o
-                JOIN useraccounts ua ON o.OfficerID = ua.officerID";
+          $query = "SELECT o.OfficerID, o.FirstName, o.MiddleInitial, o.LastName, o.Position, o.Gender, o.CityAddress, 
+          o.MobileNo, o.EmailAddress, o.College, o.YearGraduated, ua.ActivationStatus
+          FROM officers o
+          JOIN useraccounts ua ON o.OfficerID = ua.officerID";
           $result = $conn->query($query);
 
           if ($result->num_rows > 0) {
@@ -430,7 +432,7 @@ include '../includes/header.php';
               echo "<td><p class='mb-0 fw-normal'>{$row['YearGraduated']}</p></td>";
               echo "<td>{$activationStatus}</td>";
               echo "<td>";
-              echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editContactModal'>";
+              echo "<a href='#' class='me-3 text-primary edit-button' data-officerid='{$row['OfficerID']}' data-bs-toggle='modal' data-bs-target='#editContactModal'>";
               echo "<i class='fs-4 ti ti-edit'></i></a>";
               echo "</td>";
               echo "</tr>";
@@ -446,6 +448,86 @@ include '../includes/header.php';
 
   </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('.edit-button').on('click', function() {
+      var officerID = $(this).data('officerid');
+
+      $.ajax({
+        url: 'fetch_officer.php',
+        type: 'POST',
+        data: {
+          officerID: officerID
+        },
+        dataType: 'json',
+        success: function(data) {
+          if (data.success) {
+            // Populate the modal fields
+            $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
+            $('#editOfficerForm input[name="firstName"]').val(data.officer.FirstName);
+            $('#editOfficerForm input[name="middleInitial"]').val(data.officer.MiddleInitial);
+            $('#editOfficerForm input[name="lastName"]').val(data.officer.LastName);
+            $('#editOfficerForm input[name="gender"]').val(data.officer.Gender);
+            $('#editOfficerForm input[name="college"]').val(data.officer.College);
+            $('#editOfficerForm input[name="program"]').val(data.officer.Program);
+            $('#editOfficerForm input[name="yearGraduated"]').val(data.officer.YearGraduated);
+            $('#editOfficerForm input[name="mobileNo"]').val(data.officer.MobileNo);
+            $('#editOfficerForm input[name="position"]').val(data.officer.Position);
+            $('#editOfficerForm input[name="address"]').val(data.officer.CityAddress);
+            $('#editOfficerForm input[name="emailAddress"]').val(data.officer.EmailAddress);
+            $('#editOfficerForm input[name="username"]').val(data.officer.Username);
+            $('#editOfficerForm input[name="userEmailAddress"]').val(data.officer.UserEmail);
+            $('#editOfficerForm input[name="password"]').val(data.officer.Password);
+            $('#editOfficerForm input[name="activationStatus"]').val(data.officer.ActivationStatus);
+            $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
+
+            
+
+
+          } else {
+            alert('Failed to fetch officer data.');
+          }
+        },
+        error: function() {
+          alert('Error in AJAX request.');
+        }
+      });
+    });
+  });
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#editOfficerForm').submit(function(event) {
+        event.preventDefault(); // Prevent the form from submitting via the browser.
+        var formData = $(this).serialize(); // Get form data.
+
+        $.ajax({
+            type: "POST",
+            url: "edit_officer.php",
+            data: formData,
+            dataType: "json",
+            success: function(response) {
+                if(response.user_message) {
+                    $('#editContactModal').modal('hide'); // Hide the modal if success
+                    window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
+                } else {
+                    alert('Failed to update: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('Error updating officer.');
+            }
+        });
+    });
+});
+</script>
+
 
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
