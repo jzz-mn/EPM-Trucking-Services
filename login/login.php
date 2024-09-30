@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } elseif ($row['Role'] === 'Officer') {
                         header("Location: ../officer/home.php");
                     } elseif ($row['Role'] === 'Employee') {
-                        header("Location: ../employee/maintenance.php");
+                        header("Location: ../employee/home.php");
                     } else {
                         $error_message = "User role not recognized!";
                     }

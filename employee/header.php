@@ -1,6 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
+<html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Orange_Theme" data-layout="vertical">
 
 <head>
   <!-- Required meta tags -->
@@ -19,7 +18,7 @@
 
 
 
-
+<body class="link-sidebar">
 
   <!-- Preloader -->
   <div class="preloader">
@@ -27,28 +26,61 @@
   </div>
   <div id="main-wrapper">
     <!-- Sidebar Start -->
-    
+    <aside class="left-sidebar with-vertical">
       <!-- ---------------------------------- -->
       <!-- Start Vertical Layout Sidebar -->
       <!-- ---------------------------------- -->
 
       <div>
 
-        
+        <div class="brand-logo d-flex align-items-center">
+          <a href="../employee/home.php" class="text-nowrap logo-img">
+            <img src="../assets/images/logos/epm-logo-no-bg.png" alt="Logo" />
+          </a>
 
-       
+        </div>
 
+        <!-- ---------------------------------- -->
+        <!-- Dashboard -->
+        <!-- ---------------------------------- -->
+        <nav class="sidebar-nav scroll-sidebar" data-simplebar>
+          <ul class="sidebar-menu" id="sidebarnav">
+            <!-- ---------------------------------- -->
+            <!-- Home -->
+            <!-- ---------------------------------- -->
+            <li class="nav-small-cap">
+              <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
+              <span class="hide-menu">Menu</span>
+            </li>
+            <!-- ---------------------------------- -->
+            <!-- Dashboard -->
+            <!-- ---------------------------------- -->
+            <li class="sidebar-item">
+              <a id="get-url" aria-expanded="false">
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../employee/home.php" aria-expanded="false">
+                <iconify-icon icon="mdi:home-outline"></iconify-icon>
+                <span class="hide-menu">Home</span>
+              </a>
+            </li>
 
-            
-            
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="../employee/maintenance.php">
+              <iconify-icon icon="mdi:truck-outline"></iconify-icon>
+              <span class="hide-menu">Maintenance</span>
+              </a>
+            </li>
+
 
           </ul>
         </nav>
 
       </div>
-
+    </aside>
     <!--  Sidebar End -->
-    <div class="page-wrapper m-5">
+    <div class="page-wrapper">
       <!--  Header Start -->
       <header class="topbar">
         <div class="with-vertical">
@@ -57,13 +89,11 @@
           <!-- ---------------------------------- -->
           <nav class="navbar navbar-expand-lg p-0">
             <ul class="navbar-nav">
-            <div class="brand-logo d-flex align-items-center">
-          <a href="../officer/home.php" class="text-nowrap logo-img">
-            <img src="../assets/images/logos/epm-logo-no-bg.png" alt="Logo" />
-          </a>
-
-        </div>
-              
+              <li class="nav-item nav-icon-hover-bg rounded-circle d-flex">
+                <a class="nav-link  sidebartoggler" id="headerCollapse" href="javascript:void(0)">
+                  <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-6"></iconify-icon>
+                </a>
+              </li>
               <li class="nav-item d-none d-xl-flex nav-icon-hover-bg rounded-circle">
                 <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#exampleModal">
                   <iconify-icon icon="solar:magnifer-linear" class="fs-6"></iconify-icon>
@@ -299,7 +329,7 @@
             aria-labelledby="offcanvasWithBothOptionsLabel">
             <nav class="sidebar-nav scroll-sidebar">
               <div class="offcanvas-header justify-content-between">
-                <a href="../officer/home.php" class="text-nowrap logo-img">
+                <a href="../employee/home.php" class="text-nowrap logo-img">
                   <img src="../assets/images/logos/logo-icon.svg" alt="Logo" />
                 </a>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -315,7 +345,7 @@
                     </a>
                     <ul aria-expanded="false" class="collapse first-level my-3 ps-3">
                       <li class="sidebar-item py-2">
-                        <a href="../officer/app-chat.html" class="d-flex align-items-center">
+                        <a href="../employee/app-chat.html" class="d-flex align-items-center">
                           <div
                             class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:chat-line-bold-duotone" class="fs-7 text-primary"></iconify-icon>
@@ -327,7 +357,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/invoice.php" class="d-flex align-items-center">
+                        <a href="../employee/invoice.php" class="d-flex align-items-center">
                           <div
                             class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:bill-list-bold-duotone"
@@ -340,7 +370,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/app-email.html" class="d-flex align-items-center">
+                        <a href="../employee/app-email.html" class="d-flex align-items-center">
                           <div
                             class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:letter-bold-duotone" class="fs-7 text-danger"></iconify-icon>
@@ -352,7 +382,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/page-user-profile.html" class="d-flex align-items-center">
+                        <a href="../employee/page-user-profile.html" class="d-flex align-items-center">
                           <div
                             class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:user-bold-duotone" class="fs-7 text-success"></iconify-icon>
@@ -364,7 +394,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/app-calendar.html" class="d-flex align-items-center">
+                        <a href="../employee/app-calendar.html" class="d-flex align-items-center">
                           <div
                             class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:calendar-minimalistic-bold-duotone"
@@ -377,7 +407,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/app-contact.html" class="d-flex align-items-center">
+                        <a href="../employee/app-contact.html" class="d-flex align-items-center">
                           <div
                             class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:smartphone-2-bold-duotone"
@@ -390,7 +420,7 @@
                         </a>
                       </li>
                       <li class="sidebar-item py-2">
-                        <a href="../officer/app-notes.html" class="d-flex align-items-center">
+                        <a href="../employee/app-notes.html" class="d-flex align-items-center">
                           <div
                             class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
                             <iconify-icon icon="solar:notes-bold-duotone" class="fs-7 text-warning"></iconify-icon>
@@ -442,7 +472,7 @@
                             <div class="row">
                               <div class="col-6">
                                 <div class="position-relative">
-                                  <a href="../officer/app-chat.html"
+                                  <a href="../employee/app-chat.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -454,7 +484,7 @@
                                       <span class="fs-11 d-block text-body-color">New messages arrived</span>
                                     </div>
                                   </a>
-                                  <a href="../officer/invoice.php"
+                                  <a href="../employee/maintenance.php"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -466,8 +496,8 @@
                                       <span class="fs-11 d-block text-body-color">Get latest invoice</span>
                                     </div>
                                   </a>
-                                  
-                                  <a href="../officer/app-email.html"
+
+                                  <a href="../employee/app-email.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -483,7 +513,7 @@
                               </div>
                               <div class="col-6">
                                 <div class="position-relative">
-                                  <a href="../officer/page-user-profile.html"
+                                  <a href="../employee/page-user-profile.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -495,7 +525,7 @@
                                       <span class="fs-11 d-block text-body-color">learn more information</span>
                                     </div>
                                   </a>
-                                  <a href="../officer/app-calendar.html"
+                                  <a href="../employee/app-calendar.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -507,7 +537,7 @@
                                       <span class="fs-11 d-block text-body-color">Get dates</span>
                                     </div>
                                   </a>
-                                  <a href="../officer/app-contact.html"
+                                  <a href="../employee/app-contact.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -519,7 +549,7 @@
                                       <span class="fs-11 d-block text-body-color">Add new contact</span>
                                     </div>
                                   </a>
-                                  <a href="../officer/app-notes.html"
+                                  <a href="../employee/app-notes.html"
                                     class="d-flex align-items-center pb-9 position-relative">
                                     <div
                                       class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
@@ -729,7 +759,7 @@
                           <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
                             Account Settings
                           </a>
-                          <a href="../officer/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../employee/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
                         </div>

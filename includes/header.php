@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
 
@@ -62,79 +61,81 @@
             </li>
             <li class="sidebar-item">
               <a class="sidebar-link" href="../super-admin/home.php" aria-expanded="false">
-                <iconify-icon icon="solar:screencast-2-line-duotone" class=""></iconify-icon>
+                <iconify-icon icon="mdi:home-outline"></iconify-icon>
                 <span class="hide-menu">Home</span>
               </a>
             </li>
 
-
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-                <iconify-icon icon="solar:cart-3-line-duotone" class=""></iconify-icon>
+                <iconify-icon icon="mdi:folder-outline"></iconify-icon>
                 <span class="hide-menu">Records</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/employees.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:account-group-outline"></iconify-icon>
                     <span class="hide-menu">Employees</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/officers.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>
                     <span class="hide-menu">Officers</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/finance.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:finance"></iconify-icon>
                     <span class="hide-menu">Finance</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/trucks.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:truck-outline"></iconify-icon>
                     <span class="hide-menu">Trucks</span>
                   </a>
                 </li>
               </ul>
             </li>
+
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-                <iconify-icon icon="solar:widget-4-line-duotone"></iconify-icon>
+                <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
                 <span class="hide-menu">Analytics</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/analytics-finance.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:chart-line"></iconify-icon>
                     <span class="hide-menu">Finance</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/analytics-routes.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:map-marker-path"></iconify-icon>
                     <span class="hide-menu">Routes</span>
                   </a>
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../super-admin/analytics-maintenance.php">
-                    <span class="icon-small"></span>
+                    <iconify-icon icon="mdi:tools"></iconify-icon>
                     <span class="hide-menu">Maintenance</span>
                   </a>
                 </li>
               </ul>
             </li>
+
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../super-admin/invoice.php"><iconify-icon
-                  icon="solar:bill-list-line-duotone"></iconify-icon>
+              <a class="sidebar-link" href="../super-admin/invoice.php">
+                <iconify-icon icon="mdi:receipt"></iconify-icon>
                 <span class="hide-menu">Invoice</span>
               </a>
             </li>
+
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../super-admin/activity-logs.php"><iconify-icon
-                  icon="solar:phone-line-duotone"></iconify-icon>
+              <a class="sidebar-link" href="../super-admin/activity-logs.php">
+                <iconify-icon icon="mdi:history"></iconify-icon>
                 <span class="hide-menu">Activity Logs</span>
               </a>
             </li>
