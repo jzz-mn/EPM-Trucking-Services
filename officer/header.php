@@ -69,8 +69,8 @@
 
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-              <iconify-icon icon="mdi:folder-outline"></iconify-icon>
-              <span class="hide-menu">Records</span>
+                <iconify-icon icon="mdi:folder-outline"></iconify-icon>
+                <span class="hide-menu">Records</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
@@ -101,8 +101,8 @@
             </li>
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-              <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
-              <span class="hide-menu">Analytics</span>
+                <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
+                <span class="hide-menu">Analytics</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
@@ -128,8 +128,8 @@
 
             <li class="sidebar-item">
               <a class="sidebar-link" href="../officer/invoice.php">
-              <iconify-icon icon="mdi:receipt"></iconify-icon>
-              <span class="hide-menu">Invoice</span>
+                <iconify-icon icon="mdi:receipt"></iconify-icon>
+                <span class="hide-menu">Invoice</span>
               </a>
             </li>
 
@@ -172,6 +172,10 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
               <div class="d-flex align-items-center justify-content-between">
                 <ul class="navbar-nav flex-row mx-auto ms-lg-auto align-items-center justify-content-center">
+                  <li class="nav-item">
+                    <a class="btn btn-primary" href="add_data.php">Add Data</a>
+                  </li>
+
                   <li class="nav-item dropdown">
                     <a href="javascript:void(0)"
                       class="nav-link nav-icon-hover-bg rounded-circle d-flex d-lg-none align-items-center justify-content-center"
@@ -342,16 +346,20 @@
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
-                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35" alt="user-img" />
+                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
+                          alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop1">
+                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
+                      aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56" alt="user-img" />
+                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
+                            alt="user-img" />
                           <div>
-                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span class="text-success fs-11">Pro</span></h5>
+                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span
+                                class="text-success fs-11">Pro</span></h5>
                             <p class="mb-0 text-dark">
                               <?php echo htmlspecialchars($dbEmail); ?>
                             </p>
