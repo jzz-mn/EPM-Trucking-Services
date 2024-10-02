@@ -146,6 +146,21 @@
       </div>
     </aside>
     <!--  Sidebar End -->
+
+    
+  <style>
+    /* Override visited and active link styles */
+    .sidebar-link iconify-icon {
+      color: inherit; /* Retain the original color */
+    }
+
+    .sidebar-link:visited iconify-icon, .sidebar-link:active iconify-icon {
+      color: inherit !important; /* Prevent color change after click */
+    }
+  </style>
+  
+
+    
     <div class="page-wrapper">
       <!--  Header Start -->
       <header class="topbar">
