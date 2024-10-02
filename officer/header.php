@@ -69,8 +69,8 @@
 
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-              <iconify-icon icon="mdi:folder-outline"></iconify-icon>
-              <span class="hide-menu">Records</span>
+                <iconify-icon icon="mdi:folder-outline"></iconify-icon>
+                <span class="hide-menu">Records</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
@@ -101,8 +101,8 @@
             </li>
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
-              <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
-              <span class="hide-menu">Analytics</span>
+                <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
+                <span class="hide-menu">Analytics</span>
               </a>
               <ul aria-expanded="false" class="collapse first-level">
                 <li class="sidebar-item">
@@ -128,8 +128,8 @@
 
             <li class="sidebar-item">
               <a class="sidebar-link" href="../officer/invoice.php">
-              <iconify-icon icon="mdi:receipt"></iconify-icon>
-              <span class="hide-menu">Invoice</span>
+                <iconify-icon icon="mdi:receipt"></iconify-icon>
+                <span class="hide-menu">Invoice</span>
               </a>
             </li>
 
@@ -140,6 +140,22 @@
       </div>
     </aside>
     <!--  Sidebar End -->
+
+    <style>
+      /* Override visited and active link styles */
+      .sidebar-link iconify-icon {
+        color: inherit;
+        /* Retain the original color */
+      }
+
+      .sidebar-link:visited iconify-icon,
+      .sidebar-link:active iconify-icon {
+        color: inherit !important;
+        /* Prevent color change after click */
+      }
+    </style>
+
+
     <div class="page-wrapper">
       <!--  Header Start -->
       <header class="topbar">
