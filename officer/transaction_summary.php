@@ -4,7 +4,8 @@ include '../officer/header.php';
 include '../includes/db_connection.php';
 
 // Function to round up Total KGs to the nearest 1000
-function roundUpKGs($kgs) {
+function roundUpKGs($kgs)
+{
     return ceil($kgs / 1000) * 1000;
 }
 
