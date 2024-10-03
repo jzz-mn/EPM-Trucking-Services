@@ -326,36 +326,7 @@
                   <!-- ------------------------------- -->
                   <!-- start profile Dropdown -->
                   <!-- ------------------------------- -->
-                  <?php
-                  // Start the session only if it's not already active
-                  if (session_status() == PHP_SESSION_NONE) {
-                    session_start();
-                  }
-
-                  // Include database connection
-                  include '../includes/db_connection.php';
-
-                  // Check if the user is not logged in
-                  if (!isset($_SESSION['UserID'])) {
-                    header('location: ../login/login.php');
-                    exit();
-                  }
-
-                  // Fetch current logged-in user's ID
-                  $userID = $_SESSION['UserID'];
-
-                  // Query useraccounts table to get account information
-                  $queryAccount = "SELECT Username, EmailAddress FROM useraccounts WHERE UserID = ?";
-                  $stmtAccount = mysqli_prepare($conn, $queryAccount);
-                  mysqli_stmt_bind_param($stmtAccount, "s", $userID);
-                  mysqli_stmt_execute($stmtAccount);
-                  mysqli_stmt_bind_result($stmtAccount, $dbUsername, $dbEmail);
-                  mysqli_stmt_fetch($stmtAccount);
-                  mysqli_stmt_close($stmtAccount);
-
-                  // Close database connection
-                  mysqli_close($conn);
-                  ?>
+                  
 
 
                   <!-- Dropdown menu -->

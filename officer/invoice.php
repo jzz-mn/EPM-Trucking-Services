@@ -2,7 +2,7 @@
 session_start();
 include '../officer/header.php';
 include '../includes/db_connection.php'
-?>
+  ?>
 <div class="body-wrapper">
   <div class="container-fluid">
     <div class="card card-body py-3">
@@ -13,7 +13,7 @@ include '../includes/db_connection.php'
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
@@ -30,22 +30,16 @@ include '../includes/db_connection.php'
     </div>
 
     <div class="card overflow-hidden invoice-application">
-
       <div class="d-flex">
-
         <div class="w-100 w-xs-100 chat-container">
           <div class="invoice-inner-part h-100">
             <div class="invoiceing-box">
               <div class="invoice-header d-flex align-items-center border-bottom p-3">
-                
                 <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
                   data-bs-target="#addInvoiceModal">
                   <i class="ti ti-users text-white me-1 fs-5"></i> Add Invoice
                 </a>
               </div>
-
-
-
               <div class="table-responsive mt-3">
                 <table id="invoice_table" class="table w-100 table-striped table-bordered table-hover text-nowrap">
                   <thead>
@@ -110,7 +104,8 @@ include '../includes/db_connection.php'
           </div>
         </div>
 
-        <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle" aria-hidden="true">
+        <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle"
+          aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header d-flex align-items-center bg-primary">
@@ -121,48 +116,6 @@ include '../includes/db_connection.php'
                 <div class="add-contact-box">
                   <div class="add-contact-content">
                     <form id="addInvoiceForm">
-                      <div class="row">
-                        <div class="col-lg-4 mb-3">
-                          <label for="BillingInvoiceNoInput" class="form-label">Billing Invoice No</label>
-                          <input type="text" class="form-control" id="BillingInvoiceNoInput" placeholder="Enter Billing Invoice Number">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="BillingDateInput" class="form-label">Billing Date</label>
-                          <input type="date" class="form-control" id="BillingDateInput" placeholder="Enter Billing Date">
-                        </div>
-                        <div class="col-12 mb-3">
-                          <label for="BilledToInput" class="form-label">Billed To</label>
-                          <input type="text" class="form-control" id="BilledToInput" placeholder="Billing To">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="GrandSubtotalInput" class="form-label">Grand Subtotal</label>
-                          <input type="text" class="form-control" id="GrandSubtotalInput" placeholder="Enter Grand Subtotal">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="GrossAmountInput" class="form-label">Gross Amount</label>
-                          <input type="text" class="form-control" id="GrossAmountInput" placeholder="Enter Gross Amount">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="VAT12Input" class="form-label">VAT 12%</label>
-                          <input type="text" class="form-control" id="VAT12Input" placeholder="VAT 12%" readonly>
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="EWT2Input" class="form-label">EWT 2%</label>
-                          <input type="text" class="form-control" id="EWT2Input" placeholder="EWT 2%" readonly>
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="AddTollChargesInput" class="form-label">Add Toll/Charges</label>
-                          <input type="text" class="form-control" id="AddTollChargesInput" placeholder="Enter Toll/Charges">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="AmountNetofTaxInput" class="form-label">Amount Net of Tax</label>
-                          <input type="text" class="form-control" id="AmountNetofTaxInput" placeholder="Enter Amount Net of Tax">
-                        </div>
-                        <div class="col-lg-4 mb-3">
-                          <label for="NetAmountInput" class="form-label">Net Amount</label>
-                          <input type="text" class="form-control" id="NetAmountInput" placeholder="Enter Net Amount">
-                        </div>
-                      </div>
                       <div class="col-12 mb-3">
                         <div class="d-flex gap-6 m-0 justify-content-end">
                           <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
@@ -178,7 +131,8 @@ include '../includes/db_connection.php'
         </div>
 
         <!-- Edit Invoice Modal -->
-        <div class="modal fade" id="editInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="editInvoiceModalTitle" aria-hidden="true">
+        <div class="modal fade" id="editInvoiceModal" tabindex="-1" role="dialog"
+          aria-labelledby="editInvoiceModalTitle" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header d-flex align-items-center bg-primary">
@@ -203,11 +157,13 @@ include '../includes/db_connection.php'
                     </div>
                     <div class="col-lg-4 mb-3">
                       <label for="editGrandSubtotalInput" class="form-label">Grand Subtotal</label>
-                      <input type="text" class="form-control" id="editGrandSubtotalInput" placeholder="Enter Grand Subtotal">
+                      <input type="text" class="form-control" id="editGrandSubtotalInput"
+                        placeholder="Enter Grand Subtotal">
                     </div>
                     <div class="col-lg-4 mb-3">
                       <label for="editGrossAmountInput" class="form-label">Gross Amount</label>
-                      <input type="text" class="form-control" id="editGrossAmountInput" placeholder="Enter Gross Amount">
+                      <input type="text" class="form-control" id="editGrossAmountInput"
+                        placeholder="Enter Gross Amount">
                     </div>
                     <div class="col-lg-4 mb-3">
                       <label for="editVAT12Input" class="form-label">VAT 12%</label>
@@ -242,7 +198,8 @@ include '../includes/db_connection.php'
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div class="modal fade" id="deleteInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="deleteInvoiceModalLabel" aria-hidden="true">
+        <div class="modal fade" id="deleteInvoiceModal" tabindex="-1" role="dialog"
+          aria-labelledby="deleteInvoiceModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
               <div class="modal-header bg-danger">
@@ -260,13 +217,9 @@ include '../includes/db_connection.php'
           </div>
         </div>
 
-
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-
         <script>
           //Add Functions
-          document.getElementById('btn-add-invoice').addEventListener('click', function(e) {
+          document.getElementById('btn-add-invoice').addEventListener('click', function (e) {
             e.preventDefault();
 
             // Get form values
@@ -296,9 +249,9 @@ include '../includes/db_connection.php'
 
             // Send the form data using AJAX
             fetch('add_invoices.php', {
-                method: 'POST',
-                body: formData
-              })
+              method: 'POST',
+              body: formData
+            })
               .then(response => response.json())
               .then(data => {
                 // Check if the server returned a success message
@@ -376,7 +329,7 @@ include '../includes/db_connection.php'
           document.getElementById('editGrossAmountInput').addEventListener('input', calculateEditVATandEWT);
 
           // When updating the invoice
-          document.getElementById('btn-update-invoice').addEventListener('click', function(e) {
+          document.getElementById('btn-update-invoice').addEventListener('click', function (e) {
             e.preventDefault();
 
             // Get form values
@@ -408,9 +361,9 @@ include '../includes/db_connection.php'
 
             // Submit the data via AJAX
             fetch('update_invoice.php', {
-                method: 'POST',
-                body: formData
-              })
+              method: 'POST',
+              body: formData
+            })
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
@@ -434,16 +387,16 @@ include '../includes/db_connection.php'
             $('#deleteInvoiceModal').modal('show'); // Show the modal
           }
 
-          document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+          document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
             if (invoiceIDToDelete !== null) {
               // Make AJAX request to delete the invoice
               fetch('delete_invoice.php', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                  },
-                  body: `id=${invoiceIDToDelete}` // Pass the invoice ID
-                })
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `id=${invoiceIDToDelete}` // Pass the invoice ID
+              })
                 .then(response => response.json())
                 .then(data => {
                   if (data.success) {
@@ -462,36 +415,36 @@ include '../includes/db_connection.php'
         </script>
 
         <!-- DataTables Initialization Script -->
-      
+
         <script>
-          $(document).ready(function() {
+          $(document).ready(function () {
             $('#invoice_table').DataTable({
               dom: 'Bfrtip', // Include the buttons
               buttons: [{
-                  extend: 'copyHtml5',
-                  text: 'Copy',
-                  className: 'btn btn-primary'
-                },
-                {
-                  extend: 'csvHtml5',
-                  text: 'CSV',
-                  className: 'btn btn-primary'
-                },
-                {
-                  extend: 'excelHtml5',
-                  text: 'Excel',
-                  className: 'btn btn-primary'
-                },
-                {
-                  extend: 'pdfHtml5',
-                  text: 'PDF',
-                  className: 'btn btn-primary'
-                },
-                {
-                  extend: 'print',
-                  text: 'Print',
-                  className: 'btn btn-primary'
-                }
+                extend: 'copyHtml5',
+                text: 'Copy',
+                className: 'btn btn-primary'
+              },
+              {
+                extend: 'csvHtml5',
+                text: 'CSV',
+                className: 'btn btn-primary'
+              },
+              {
+                extend: 'excelHtml5',
+                text: 'Excel',
+                className: 'btn btn-primary'
+              },
+              {
+                extend: 'pdfHtml5',
+                text: 'PDF',
+                className: 'btn btn-primary'
+              },
+              {
+                extend: 'print',
+                text: 'Print',
+                className: 'btn btn-primary'
+              }
               ]
             });
           });
