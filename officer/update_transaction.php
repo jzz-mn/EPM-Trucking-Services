@@ -1,33 +1,31 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    include '../includes/db_connection.php';
+include '../includes/db_connection.php';
 
-    $transactionID = $_POST['transactionID'];
-    $invoiceID = $_POST['invoiceID'];
-    $date = $_POST['transactionDate'];
-    $plateNumber = $_POST['plateNumber'];
-    $drNumber = $_POST['drNumber'];
-    $sourceCustomerCode = $_POST['sourceCustomerCode'];
-    $customerNumber = $_POST['customerNumber'];
-    $destinationCustomerCode = $_POST['destinationCustomerCode'];
-    $quantityQtl = $_POST['quantityQtl'];
-    $weightKgs = $_POST['weightKgs'];
-    $expenseID = $_POST['expenseID'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Get the updated data from the form
+  $transactionId = $_POST['transactionId'];
+  $transactionDate = $_POST['transactionDate'];
+  $drNo = $_POST['drNo'];
+  $outletName = $_POST['outletName'];
+  $qty = $_POST['qty'];
+  $kgs = $_POST['kgs'];
 
-    // Update query
-    $sql = "UPDATE transactions 
-            SET InvoiceID='$invoiceID', Date='$date', PlateNumber='$plateNumber', DRNumber='$drNumber', 
-                SourceCustomerCode='$sourceCustomerCode', CustomerName='$customerNumber', 
-                DestinationCustomerCode='$destinationCustomerCode', Qty='$quantityQtl', Kgs='$weightKgs', ExpenseID='$expenseID' 
-            WHERE TransactionID='$transactionID'";
+  // Update the record in the database
+  $sql = "UPDATE transactions 
+          SET TransactionDate='$transactionDate', DRno='$drNo', OutletName='$outletName', Qty='$qty', KGs='$kgs'
+          WHERE TransactionID='$transactionId'";
 
-    if (mysqli_query($conn, $sql)) {
-        echo "Transaction updated successfully!";
-    } else {
-        echo "Error: " . $sql . "<br>" . mysqli_error($conn);
-    }
+  if (mysqli_query($conn, $sql)) {
+    // Redirect back to the page or show success message
+    header("Location: trucks.php");
+    exit();
+  } else {
+    echo "Error updating record: " . mysqli_error($conn);
+  }
 
-    mysqli_close($conn);
-    header("Location: trucks.php"); // Redirect after updating
+  // Close the database connection
+  mysqli_close($conn);
+} else {
+  echo "Invalid request.";
 }
 ?>

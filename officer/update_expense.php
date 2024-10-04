@@ -5,20 +5,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Get the updated data from the form
   $expenseId = $_POST['updateExpenseID'];
   $date = $_POST['updateDate'];
-  $tollFee = $_POST['updateTollFee'];
-  $rateAmount = $_POST['updateRateAmount'];
   $salaryAmount = $_POST['updateSalaryAmount'];
-  $gasAmount = $_POST['updateGasAmount'];
-  $allowanceAmount = $_POST['updateAllowanceAmount'];
-  $extraMealAmount = $_POST['updateExtraMealAmount'];
-  $mobile = $_POST['updateMobile'];
-  $totalAmount = $tollFee + $rateAmount + $salaryAmount + $gasAmount + $allowanceAmount + $extraMealAmount + $mobile;
+  $tollFeeAmount = $_POST['updateTollFeeAmount'];
+  $mobileAmount = $_POST['updateMobileAmount'];
+  $otherAmount = $_POST['updateOtherAmount'];
+  $totalExpense = $salaryAmount + $tollFeeAmount + $mobileAmount + $otherAmount;
 
   // Update the record in the database
   $sql = "UPDATE expenses 
-          SET Date='$date', TollFee='$tollFee', RateAmount='$rateAmount', SalaryAmount='$salaryAmount', 
-              GasAmount='$gasAmount', AllowanceAmount='$allowanceAmount', ExtraMealAmount='$extraMealAmount', 
-              Mobile='$mobile', TotalAmount='$totalAmount' 
+          SET Date='$date', TollFeeAmount='$tollFeeAmount', SalaryAmount='$salaryAmount', 
+              MobileAmount='$mobileAmount', OtherAmount='$otherAmount' , TotalExpense ='$totalExpense'
           WHERE ExpenseID='$expenseId'";
 
   if (mysqli_query($conn, $sql)) {
