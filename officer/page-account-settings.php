@@ -155,51 +155,37 @@ mysqli_close($conn);
                                         </div>
                                         <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="DateOfBirth" class="form-label">Date of Birth</label>
-                                                <input type="text" class="form-control" id="DateOfBirth"
-                                                    value="<?php echo htmlspecialchars($dbDateOfBirth); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
                                                 <label for="MobileNo" class="form-label">Mobile Number</label>
                                                 <input type="text" class="form-control" id="MobileNo"
                                                     value="<?php echo htmlspecialchars($dbMobileNo); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="College" class="form-label">College</label>
                                                 <input type="text" class="form-control" id="College"
                                                     value="<?php echo htmlspecialchars($dbCollege); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="Program" class="form-label">Program</label>
                                                 <input type="text" class="form-control" id="Program"
                                                     value="<?php echo htmlspecialchars($dbProgram); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="YearGraduated" class="form-label">Year Graduated</label>
                                                 <input type="text" class="form-control" id="YearGraduated"
                                                     value="<?php echo htmlspecialchars($dbYearGraduated); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="Position" class="form-label">Position</label>
                                                 <input type="text" class="form-control" id="Position"
                                                     value="<?php echo htmlspecialchars($dbPosition); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
-                                                <label for="MobileNo" class="form-label">Employment Date</label>
-                                                <input type="text" class="form-control" id="MobileNo"
-                                                    value="<?php echo htmlspecialchars($dbEmploymentDate); ?>" readonly>
                                             </div>
                                         </div>
                                         <div class="col-lg-12">

@@ -42,7 +42,7 @@
                     <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
                   </div>
                   <a href="javascript:void(0)" class="btn btn-muted w-100 py-8 mb-3">Forgot Password</a>
-                  <a href="../login/login.php" class="btn text-primary w-100 py-8">Back to Login</a>
+                  <a href="../login/login.php" class="text-primary w-100 text-center d-block">Back to Login</a>
                 </form>
               </div>
             </div>

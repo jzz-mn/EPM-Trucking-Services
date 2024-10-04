@@ -24,22 +24,41 @@ mysqli_stmt_bind_result($stmtAccount, $dbUsername, $dbEmail, $dbRole, $dbPasswor
 mysqli_stmt_fetch($stmtAccount);
 mysqli_stmt_close($stmtAccount);
 
-// Query officers table to get personal details
-$queryOfficer = "SELECT FirstName, MiddleInitial, LastName, Position, Gender, CityAddress, MobileNo, College, Program, YearGraduated FROM officers WHERE OfficerID = (SELECT OfficerID FROM useraccounts WHERE UserID = ?)";
-$stmtOfficer = mysqli_prepare($conn, $queryOfficer);
-mysqli_stmt_bind_param($stmtOfficer, "s", $userID);
-mysqli_stmt_execute($stmtOfficer);
-mysqli_stmt_bind_result($stmtOfficer, $dbFirstName, $dbMiddleInitial, $dbLastName, $dbPosition, $dbGender, $dbCityAddress, $dbMobileNo, $dbCollege, $dbProgram, $dbYearGraduated);
-mysqli_stmt_fetch($stmtOfficer);
-mysqli_stmt_close($stmtOfficer);
+$queryEmployees = "
+    SELECT FirstName, MiddleInitial, LastName, Gender, Position, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate 
+    FROM employees 
+    WHERE EmployeeID = (SELECT EmployeeID FROM useraccounts WHERE UserID = ?)";
 
-$queryEmployees = "SELECT DateOfBirth, Position, EmploymentDate FROM employees WHERE EmployeeID = (SELECT EmployeeID FROM useraccounts WHERE UserID = ?)";
+// Prepare the query
 $stmtEmployees = mysqli_prepare($conn, $queryEmployees);
+
+// Bind the UserID parameter
 mysqli_stmt_bind_param($stmtEmployees, "s", $userID);
+
+// Execute the query
 mysqli_stmt_execute($stmtEmployees);
-mysqli_stmt_bind_result($stmtEmployees, $dbDateOfBirth, $dbPosition, $dbEmploymentDate);
+
+// Bind the result variables
+mysqli_stmt_bind_result(
+    $stmtEmployees, 
+    $dbFirstName, 
+    $dbMiddleInitial, 
+    $dbLastName, 
+    $dbGender, 
+    $dbPosition, 
+    $dbDateOfBirth, 
+    $dbAddress, 
+    $dbMobileNo, 
+    $dbEmailAddress, 
+    $dbEmploymentDate
+);
+
+// Fetch the result
 mysqli_stmt_fetch($stmtEmployees);
+
+// Close the statement
 mysqli_stmt_close($stmtEmployees);
+
 // Close database connection
 mysqli_close($conn);
 ?>
@@ -54,7 +73,7 @@ mysqli_close($conn);
                         <nav aria-label="breadcrumb" class="ms-auto">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item d-flex align-items-center">
-                                <a class="text-muted text-decoration-none d-flex" href="../employee/maintenance.php">
+                                <a class="text-muted text-decoration-none d-flex" href="../employee/home.php">
                                 <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                                     </a>
                                 </li>
@@ -155,58 +174,37 @@ mysqli_close($conn);
                                         </div>
                                         <div class="col-lg-6">
                                             <div class="mb-3">
+                                                <label for="Position" class="form-label">Position</label>
+                                                <input type="text" class="form-control" id="Position"
+                                                    value="<?php echo htmlspecialchars($dbPosition); ?>" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
                                                 <label for="DateOfBirth" class="form-label">Date of Birth</label>
                                                 <input type="text" class="form-control" id="DateOfBirth"
                                                     value="<?php echo htmlspecialchars($dbDateOfBirth); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="MobileNo" class="form-label">Mobile Number</label>
                                                 <input type="text" class="form-control" id="MobileNo"
                                                     value="<?php echo htmlspecialchars($dbMobileNo); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
-                                                <label for="College" class="form-label">College</label>
-                                                <input type="text" class="form-control" id="College"
-                                                    value="<?php echo htmlspecialchars($dbCollege); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
-                                                <label for="Program" class="form-label">Program</label>
-                                                <input type="text" class="form-control" id="Program"
-                                                    value="<?php echo htmlspecialchars($dbProgram); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
-                                                <label for="YearGraduated" class="form-label">Year Graduated</label>
-                                                <input type="text" class="form-control" id="YearGraduated"
-                                                    value="<?php echo htmlspecialchars($dbYearGraduated); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
-                                                <label for="Position" class="form-label">Position</label>
-                                                <input type="text" class="form-control" id="Position"
-                                                    value="<?php echo htmlspecialchars($dbPosition); ?>" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <div class="mb-3">
-                                                <label for="MobileNo" class="form-label">Employment Date</label>
-                                                <input type="text" class="form-control" id="MobileNo"
+                                                <label for="EmploymentDate" class="form-label">Employment Date</label>
+                                                <input type="text" class="form-control" id="EmploymentDate"
                                                     value="<?php echo htmlspecialchars($dbEmploymentDate); ?>" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-lg-12">
+                                        <div class="col-lg-6">
                                             <div class="mb-3">
                                                 <label for="CityAddress" class="form-label">Address</label>
                                                 <input type="text" class="form-control" id="CityAddress"
-                                                    value="<?php echo htmlspecialchars($dbCityAddress); ?>" readonly>
+                                                    value="<?php echo htmlspecialchars($dbAddress); ?>" readonly>
                                             </div>
                                         </div>
                                     </div>
@@ -274,54 +272,6 @@ mysqli_close($conn);
             </div>
 
             <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Colors</h6>
-
-            <div class="d-flex flex-row flex-wrap gap-3 customizer-box color-pallete" role="group">
-                <input type="radio" class="btn-check" name="color-theme-layout" id="Blue_Theme" autocomplete="off" />
-                <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-                    onclick="handleColorTheme('Blue_Theme')" for="Blue_Theme" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="BLUE_THEME">
-                    <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-1">
-                        <i class="ti ti-check text-white d-flex icon fs-5"></i>
-                    </div>
-                </label>
-
-                <input type="radio" class="btn-check" name="color-theme-layout" id="Aqua_Theme" autocomplete="off" />
-                <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-                    onclick="handleColorTheme('Aqua_Theme')" for="Aqua_Theme" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="AQUA_THEME">
-                    <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-2">
-                        <i class="ti ti-check text-white d-flex icon fs-5"></i>
-                    </div>
-                </label>
-
-                <input type="radio" class="btn-check" name="color-theme-layout" id="Purple_Theme" autocomplete="off" />
-                <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-                    onclick="handleColorTheme('Purple_Theme')" for="Purple_Theme" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="PURPLE_THEME">
-                    <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-3">
-                        <i class="ti ti-check text-white d-flex icon fs-5"></i>
-                    </div>
-                </label>
-
-                <input type="radio" class="btn-check" name="color-theme-layout" id="green-theme-layout"
-                    autocomplete="off" />
-                <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-                    onclick="handleColorTheme('Green_Theme')" for="green-theme-layout" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="GREEN_THEME">
-                    <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-4">
-                        <i class="ti ti-check text-white d-flex icon fs-5"></i>
-                    </div>
-                </label>
-
-                <input type="radio" class="btn-check" name="color-theme-layout" id="cyan-theme-layout"
-                    autocomplete="off" />
-                <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-                    onclick="handleColorTheme('Cyan_Theme')" for="cyan-theme-layout" data-bs-toggle="tooltip"
-                    data-bs-placement="top" data-bs-title="CYAN_THEME">
-                    <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-5">
-                        <i class="ti ti-check text-white d-flex icon fs-5"></i>
-                    </div>
-                </label>
 
                 <input type="radio" class="btn-check" name="color-theme-layout" id="orange-theme-layout"
                     autocomplete="off" />

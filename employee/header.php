@@ -68,8 +68,8 @@
 
             <li class="sidebar-item">
               <a class="sidebar-link" href="../employee/maintenance.php">
-              <iconify-icon icon="mdi:truck-outline"></iconify-icon>
-              <span class="hide-menu">Maintenance</span>
+                <iconify-icon icon="mdi:truck-outline"></iconify-icon>
+                <span class="hide-menu">Maintenance</span>
               </a>
             </li>
 
@@ -82,16 +82,19 @@
     <!--  Sidebar End -->
 
     <style>
-    /* Override visited and active link styles */
-    .sidebar-link iconify-icon {
-      color: inherit; /* Retain the original color */
-    }
+      /* Override visited and active link styles */
+      .sidebar-link iconify-icon {
+        color: inherit;
+        /* Retain the original color */
+      }
 
-    .sidebar-link:visited iconify-icon, .sidebar-link:active iconify-icon {
-      color: inherit !important; /* Prevent color change after click */
-    }
-  </style>
-  
+      .sidebar-link:visited iconify-icon,
+      .sidebar-link:active iconify-icon {
+        color: inherit !important;
+        /* Prevent color change after click */
+      }
+    </style>
+
 
     <div class="page-wrapper">
       <!--  Header Start -->
@@ -304,23 +307,30 @@
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
                           <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56" alt="user-img" />
                           <div>
-                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span class="text-success fs-11">Pro</span></h5>
+                            <h5 class="mb-0 fs-12">
+                              <?php echo htmlspecialchars($dbUsername); ?> <span class="text-success fs-11">Pro</span>
+                            </h5>
                             <p class="mb-0 text-dark">
                               <?php echo htmlspecialchars($dbEmail); ?>
                             </p>
                           </div>
                         </div>
                         <div class="message-body">
-                          <a href="../employee/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../employee/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1"
+                            style="transition: color 0.3s;" onmouseover="this.style.color='#FA896B';"
+                            onmouseout="this.style.color='';">
                             My Profile
                           </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1"
+                            style="transition: color 0.3s;" onmouseover="this.style.color='#FA896B';"
+                            onmouseout="this.style.color='';">
                             Sign Out
                           </a>
                         </div>
                       </div>
                     </div>
                   </li>
+
 
 
                   <!-- ------------------------------- -->

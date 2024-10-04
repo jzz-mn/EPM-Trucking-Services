@@ -647,6 +647,90 @@ include '../officer/header.php';
 </div>
 </div>
 
+<script>
+  document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
+</script>
+<script>
+  function calculateTotal() {
+    var tollFee = parseFloat(document.getElementById("tollFee").value) || 0;
+    var rateAmount = parseFloat(document.getElementById("rateAmount").value) || 0;
+    var salaryAmount = parseFloat(document.getElementById("salaryAmount").value) || 0;
+    var gasAmount = parseFloat(document.getElementById("gasAmount").value) || 0;
+    var allowanceAmount = parseFloat(document.getElementById("allowanceAmount").value) || 0;
+    var extraMealAmount = parseFloat(document.getElementById("extraMealAmount").value) || 0;
+    var mobileFee = parseFloat(document.getElementById("mobileFee").value) || 0;
+
+    var total = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
+    document.getElementById("totalAmount").value = total.toFixed(2);
+  }
+
+  function populateEditForm(expense) {
+    // Set values in the modal based on the selected expense row
+    document.getElementById("updateExpenseID").value = expense.ExpenseID;
+    document.getElementById("updateDate").value = expense.Date;
+    document.getElementById("updateTollFee").value = expense.TollFee;
+    document.getElementById("updateRateAmount").value = expense.RateAmount;
+    document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
+    document.getElementById("updateGasAmount").value = expense.GasAmount;
+    document.getElementById("updateAllowanceAmount").value = expense.AllowanceAmount;
+    document.getElementById("updateExtraMealAmount").value = expense.ExtraMealAmount;
+    document.getElementById("updateMobile").value = expense.Mobile;
+    document.getElementById("updateTotalAmount").value = expense.TotalAmount;
+  }
+  function computeTotalAmount() {
+    // Get the values from the input fields
+    const tollFee = parseFloat(document.getElementById("updateTollFee").value) || 0;
+    const rateAmount = parseFloat(document.getElementById("updateRateAmount").value) || 0;
+    const salaryAmount = parseFloat(document.getElementById("updateSalaryAmount").value) || 0;
+    const gasAmount = parseFloat(document.getElementById("updateGasAmount").value) || 0;
+    const allowanceAmount = parseFloat(document.getElementById("updateAllowanceAmount").value) || 0;
+    const extraMealAmount = parseFloat(document.getElementById("updateExtraMealAmount").value) || 0;
+    const mobileFee = parseFloat(document.getElementById("updateMobile").value) || 0;
+
+    // Calculate the total amount
+    const totalAmount = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
+
+    // Set the total amount in the totalAmount input field
+    document.getElementById("updateTotalAmount").value = totalAmount.toFixed(2); // Rounds to 2 decimal places
+  }
+
+  // Store the ID of the expense to delete
+  let expenseIDToDelete = null;
+
+  // Function to open the modal and pass the ExpenseID
+  function openDeleteExpenseModal(expenseID) {
+    expenseIDToDelete = expenseID; // Set the expense ID to delete
+    $('#deleteExpenseModal').modal('show'); // Display the modal
+  }
+
+  // Handle the delete button click inside the modal
+  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function () {
+    if (expenseIDToDelete !== null) {
+      // Send AJAX request to delete the expense
+      fetch('delete_expense.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Hide the modal after successful deletion
+            $('#deleteExpenseModal').modal('hide');
+            // Reload the page or remove the deleted expense row
+            alert('Expense deleted successfully.');
+            location.reload(); // Reload to reflect changes
+          } else {
+            alert('Failed to delete expense: ' + data.message);
+          }
+        })
+        .catch(error => console.error('Error deleting expense:', error));
+    }
+  });
+  </script>
+
 
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
@@ -935,89 +1019,7 @@ include '../officer/header.php';
 
 
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
-<script>
-  document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
-</script>
-<script>
-  function calculateTotal() {
-    var tollFee = parseFloat(document.getElementById("tollFee").value) || 0;
-    var rateAmount = parseFloat(document.getElementById("rateAmount").value) || 0;
-    var salaryAmount = parseFloat(document.getElementById("salaryAmount").value) || 0;
-    var gasAmount = parseFloat(document.getElementById("gasAmount").value) || 0;
-    var allowanceAmount = parseFloat(document.getElementById("allowanceAmount").value) || 0;
-    var extraMealAmount = parseFloat(document.getElementById("extraMealAmount").value) || 0;
-    var mobileFee = parseFloat(document.getElementById("mobileFee").value) || 0;
 
-    var total = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
-    document.getElementById("totalAmount").value = total.toFixed(2);
-  }
-
-  function populateEditForm(expense) {
-    // Set values in the modal based on the selected expense row
-    document.getElementById("updateExpenseID").value = expense.ExpenseID;
-    document.getElementById("updateDate").value = expense.Date;
-    document.getElementById("updateTollFee").value = expense.TollFee;
-    document.getElementById("updateRateAmount").value = expense.RateAmount;
-    document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
-    document.getElementById("updateGasAmount").value = expense.GasAmount;
-    document.getElementById("updateAllowanceAmount").value = expense.AllowanceAmount;
-    document.getElementById("updateExtraMealAmount").value = expense.ExtraMealAmount;
-    document.getElementById("updateMobile").value = expense.Mobile;
-    document.getElementById("updateTotalAmount").value = expense.TotalAmount;
-  }
-  function computeTotalAmount() {
-    // Get the values from the input fields
-    const tollFee = parseFloat(document.getElementById("updateTollFee").value) || 0;
-    const rateAmount = parseFloat(document.getElementById("updateRateAmount").value) || 0;
-    const salaryAmount = parseFloat(document.getElementById("updateSalaryAmount").value) || 0;
-    const gasAmount = parseFloat(document.getElementById("updateGasAmount").value) || 0;
-    const allowanceAmount = parseFloat(document.getElementById("updateAllowanceAmount").value) || 0;
-    const extraMealAmount = parseFloat(document.getElementById("updateExtraMealAmount").value) || 0;
-    const mobileFee = parseFloat(document.getElementById("updateMobile").value) || 0;
-
-    // Calculate the total amount
-    const totalAmount = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
-
-    // Set the total amount in the totalAmount input field
-    document.getElementById("updateTotalAmount").value = totalAmount.toFixed(2); // Rounds to 2 decimal places
-  }
-
-  // Store the ID of the expense to delete
-  let expenseIDToDelete = null;
-
-  // Function to open the modal and pass the ExpenseID
-  function openDeleteExpenseModal(expenseID) {
-    expenseIDToDelete = expenseID; // Set the expense ID to delete
-    $('#deleteExpenseModal').modal('show'); // Display the modal
-  }
-
-  // Handle the delete button click inside the modal
-  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function () {
-    if (expenseIDToDelete !== null) {
-      // Send AJAX request to delete the expense
-      fetch('delete_expense.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Hide the modal after successful deletion
-            $('#deleteExpenseModal').modal('hide');
-            // Reload the page or remove the deleted expense row
-            alert('Expense deleted successfully.');
-            location.reload(); // Reload to reflect changes
-          } else {
-            alert('Failed to delete expense: ' + data.message);
-          }
-        })
-        .catch(error => console.error('Error deleting expense:', error));
-    }
-  });
-  </script>
   
 </body >
 
