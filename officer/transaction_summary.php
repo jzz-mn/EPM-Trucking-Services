@@ -6,6 +6,12 @@ include '../includes/db_connection.php';
 // Function to round up Total KGs to the nearest 1000
 function roundUpKGs($kgs)
 {
+    if ($kgs <= 0) {
+        return 0; // Handle as per your business logic
+    }
+    if ($kgs <= 1199) {
+        return 1000;
+    }
     return ceil($kgs / 1000) * 1000;
 }
 
@@ -56,8 +62,16 @@ $stmt->close();
 // Calculate Total KGs
 $total_kgs = array_sum(array_column($transactions, 'kgs'));
 
+// Store Original Total KGs in session
+$_SESSION['total_kgs'] = $total_kgs;
+
 // Round up Total KGs as per the rules
 $rounded_total_kgs = roundUpKGs($total_kgs);
+$_SESSION['rounded_total_kgs'] = $rounded_total_kgs;
+
+
+// Store Rounded Total KGs in session
+$_SESSION['rounded_total_kgs'] = $rounded_total_kgs;
 
 // Retrieve ClusterID using the OutletName from the first transaction
 $first_outlet_name = $transactions[0]['outletName'];
@@ -70,6 +84,7 @@ $customer_result = $stmt->get_result();
 if ($customer_result->num_rows > 0) {
     $customer = $customer_result->fetch_assoc();
     $cluster_id = $customer['ClusterID'];
+    $_SESSION['cluster_id'] = $cluster_id; // Store ClusterID in session
 } else {
     // Handle the case where the OutletName does not exist in the Customers table
     $cluster_id = null;
@@ -99,12 +114,14 @@ if ($cluster_id) {
     if ($cluster_result->num_rows > 0) {
         $cluster = $cluster_result->fetch_assoc();
         $rate_amount = $cluster['RateAmount']; // Retrieved based on rounded KGs and UnitPrice
+        $_SESSION['rate_amount'] = $rate_amount; // Store RateAmount in session
     } else {
         throw new Exception("No matching cluster found for ClusterID '{$cluster_id}', UnitPrice '{$fuel_unit_price}', and TotalKGs '{$rounded_total_kgs}'.");
     }
     $stmt->close();
 } else {
     $rate_amount = 0;
+    $_SESSION['rate_amount'] = $rate_amount; // Store RateAmount in session
 }
 
 // Retrieve TotalExpense from expenses data
@@ -112,6 +129,7 @@ $total_expense = $_SESSION['expenses_total'];
 
 // Calculate Final Amount
 $amount = $rate_amount + $total_expense;
+$_SESSION['final_amount'] = $amount; // Store Final Amount in session
 ?>
 <div class="body-wrapper">
     <div class="container-fluid">

@@ -15,7 +15,7 @@ error_reporting(E_ALL);
  * - 1200 <= KGs <= 2199 => 2000
  * - 2200 <= KGs <= 3199 => 3000
  * - 3200 <= KGs <= 4199 => 4000
- * - ... and so on.
+ * - KGs >= 4200 => 4000 (Cap at 4000)
  *
  * @param float $kgs Total KGs
  * @return int Rounded KGs
@@ -28,7 +28,10 @@ function round_up_kgs($kgs)
     if ($kgs <= 1199) {
         return 1000;
     }
-    return ceil($kgs / 1000) * 1000;
+    if ($kgs <= 4199) {
+        return ceil($kgs / 1000) * 1000;
+    }
+    return 4000; // Cap at 4000
 }
 
 // Check if the user confirmed the transaction group
@@ -103,22 +106,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->close();
 
-        // ---- Step 5: Retrieve RateAmount from clusters table based on ClusterID and Rounded TotalKGs ----
+        // ---- Step 5: Retrieve RateAmount from clusters table based on ClusterID, FuelPrice, and Rounded TotalKGs ----
         if ($cluster_id && $rounded_kgs > 0) {
-            $cluster_query = "SELECT RateAmount FROM clusters WHERE ClusterID = ? AND Tonner = ?";
+            $fuel_unit_price = $_SESSION['fuel_unit_price'];
+
+            $cluster_query = "SELECT RateAmount 
+                              FROM clusters 
+                              WHERE ClusterID = ? 
+                                AND FuelPrice = ? 
+                                AND Tonner = ?";
             $stmt = $conn->prepare($cluster_query);
             if (!$stmt) {
                 throw new Exception("Prepare failed for cluster query: ({$conn->errno}) {$conn->error}");
             }
-            $stmt->bind_param("ii", $cluster_id, $rounded_kgs);
+            $stmt->bind_param("idd", $cluster_id, $fuel_unit_price, $rounded_kgs);
             $stmt->execute();
             $cluster_result = $stmt->get_result();
 
             if ($cluster_result->num_rows > 0) {
                 $cluster = $cluster_result->fetch_assoc();
-                $rate_amount = $cluster['RateAmount']; // Assuming RateAmount is per KG
+                $rate_amount = $cluster['RateAmount']; // Retrieved based on rounded KGs and UnitPrice
             } else {
-                throw new Exception("No RateAmount found in clusters table for ClusterID '{$cluster_id}' and Rounded KGs '{$rounded_kgs}'.");
+                throw new Exception("No RateAmount found in clusters table for ClusterID '{$cluster_id}', FuelPrice '{$fuel_unit_price}', and Rounded KGs '{$rounded_kgs}'.");
             }
             $stmt->close();
         } else {
@@ -132,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $amount = $rate_amount + $total_expense;
 
         // ---- Step 8: Insert into transactiongroup table with BillingInvoiceNo set to NULL ----
+        // **Change:** Use `total_kgs` instead of `rounded_kgs` for `TotalKGs`
         $transaction_group_query = "INSERT INTO transactiongroup (TruckID, Date, RateAmount, Amount, TotalKGs, ExpenseID, FuelID, BillingInvoiceNo)
                                     VALUES (?, ?, ?, ?, ?, ?, ?, NULL)";
         $stmt = $conn->prepare($transaction_group_query);
@@ -144,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['transaction_date'],    // "s" - string (date)
             $rate_amount,                     // "d" - double (decimal)
             $amount,                          // "d" - double (decimal)
-            $rounded_kgs,                     // "d" - double (decimal)
+            $total_kgs,                       // "d" - double (decimal) (Use actual TotalKGs)
             $expense_id,                      // "i" - integer
             $fuel_id                          // "i" - integer
             // BillingInvoiceNo is set to NULL directly in the query
@@ -167,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['transaction_date'], // "s" - string (date)
                 $txn['drNo'],                  // "i" - integer
                 $txn['outletName'],            // "s" - string
-                $txn['quantity'],              // "s" - string (assuming Qty is string; use "d" if decimal)
+                $txn['quantity'],              // "d" - double (decimal) (Assuming Qty is decimal)
                 $txn['kgs']                    // "d" - double (decimal)
             );
             $stmt->execute();

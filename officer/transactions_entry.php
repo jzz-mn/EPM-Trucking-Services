@@ -45,11 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <h5 class="card-title">Add New Transaction</h5>
                 <form id="add-transaction-form">
                     <div class="row g-3 align-items-end">
-                        <!-- Outlet Name with Autocomplete -->
+                        <!-- Outlet Name with Autocomplete and Validation -->
                         <div class="col-md-4 position-relative">
                             <label for="input-outlet-name" class="form-label">Outlet Name</label>
                             <input type="text" class="form-control" id="input-outlet-name" placeholder="Search Outlet Name" autocomplete="off" required>
                             <div id="outlet-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; background-color: white;"></div>
+                            <!-- Validation Feedback -->
+                            <div class="invalid-feedback" id="outlet-error">
+                                Outlet Name does not exist.
+                            </div>
                         </div>
                         <!-- Quantity -->
                         <div class="col-md-3">
@@ -119,6 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <label for="edit-outlet-name" class="form-label">Outlet Name</label>
                         <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name" autocomplete="off" required>
                         <div id="edit-outlet-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; background-color: white;"></div>
+                        <!-- Validation Feedback -->
+                        <div class="invalid-feedback" id="edit-outlet-error">
+                            Outlet Name does not exist.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="edit-quantity" class="form-label">Quantity</label>
@@ -138,17 +146,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </div>
 
-<!-- JavaScript to handle adding transactions dynamically -->
+<!-- JavaScript to handle adding transactions dynamically and validation -->
 <script>
     let transactions = [];
     let drCounter = <?php echo json_encode($last_dr_no + 1); ?>;
     let editingIndex = -1;
 
+    // Function to sanitize HTML to prevent XSS
+    function sanitizeHTML(str) {
+        const temp = document.createElement('div');
+        temp.textContent = str;
+        return temp.innerHTML;
+    }
+
     // Add Transaction Button Click Event
     document.getElementById('add-transaction-btn').addEventListener('click', function () {
-        const outletName = document.getElementById('input-outlet-name').value.trim();
-        const quantity = parseFloat(document.getElementById('input-quantity').value);
-        const kgs = parseFloat(document.getElementById('input-kgs').value);
+        const outletInput = document.getElementById('input-outlet-name');
+        const outletName = outletInput.value.trim();
+        const quantityInput = document.getElementById('input-quantity');
+        const quantity = parseFloat(quantityInput.value);
+        const kgsInput = document.getElementById('input-kgs');
+        const kgs = parseFloat(kgsInput.value);
+
+        // Reset validation states
+        outletInput.classList.remove('is-invalid');
 
         // Validation
         if (outletName === '' || isNaN(quantity) || isNaN(kgs)) {
@@ -156,31 +177,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             return;
         }
 
-        // Create new transaction object
-        const transaction = { drNo: drCounter, outletName: outletName, quantity: quantity, kgs: kgs };
-        drCounter++;
-        transactions.push(transaction);
+        // Disable the button to prevent multiple clicks
+        const addBtn = this;
+        addBtn.disabled = true;
+        addBtn.textContent = 'Validating...';
 
-        updateTransactionsTable();
-        clearInputs();
+        // Validate Outlet Name via AJAX
+        fetch(`../includes/validate_outlet.php?outlet_name=${encodeURIComponent(outletName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    // Outlet exists, proceed to add the transaction
+                    const transaction = { drNo: drCounter, outletName: outletName, quantity: quantity, kgs: kgs };
+                    drCounter++;
+                    transactions.push(transaction);
+                    updateTransactionsTable();
+                    clearInputs();
+                } else {
+                    // Outlet does not exist, show validation error
+                    outletInput.classList.add('is-invalid');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating outlet:', error);
+                alert('An error occurred while validating the Outlet Name. Please try again.');
+            })
+            .finally(() => {
+                // Re-enable the button
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add Transaction';
+            });
     });
 
     // Clear input fields after adding a transaction
     function clearInputs() {
         document.getElementById('add-transaction-form').reset();
         document.getElementById('outlet-suggestions').innerHTML = '';
+        // Remove any validation errors
+        const outletInput = document.getElementById('input-outlet-name');
+        outletInput.classList.remove('is-invalid');
     }
 
     // Update Transactions Table
     function updateTransactionsTable() {
         const tbody = document.getElementById('transactions-body');
         tbody.innerHTML = '';
-
-        // Reassign DR No's to ensure sequential order
-        drCounter = <?php echo json_encode($last_dr_no + 1); ?>;
-        transactions.forEach((txn, index) => {
-            txn.drNo = drCounter++;
-        });
 
         transactions.forEach((txn, index) => {
             const row = document.createElement('tr');
@@ -214,9 +255,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     function editTransaction(index) {
         editingIndex = index;
         const transaction = transactions[index];
-        document.getElementById('edit-outlet-name').value = transaction.outletName;
-        document.getElementById('edit-quantity').value = transaction.quantity;
-        document.getElementById('edit-kgs').value = transaction.kgs;
+        const editOutletInput = document.getElementById('edit-outlet-name');
+        const editQuantityInput = document.getElementById('edit-quantity');
+        const editKgsInput = document.getElementById('edit-kgs');
+
+        editOutletInput.value = transaction.outletName;
+        editQuantityInput.value = transaction.quantity;
+        editKgsInput.value = transaction.kgs;
+
+        // Reset validation states
+        editOutletInput.classList.remove('is-invalid');
 
         // Show the edit modal using Bootstrap 5
         var editModal = new bootstrap.Modal(document.getElementById('editTransactionModal'));
@@ -225,9 +273,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Save Edited Transaction
     document.getElementById('save-edit-btn').addEventListener('click', function () {
-        const outletName = document.getElementById('edit-outlet-name').value.trim();
-        const quantity = parseFloat(document.getElementById('edit-quantity').value);
-        const kgs = parseFloat(document.getElementById('edit-kgs').value);
+        const editOutletInput = document.getElementById('edit-outlet-name');
+        const outletName = editOutletInput.value.trim();
+        const editQuantityInput = document.getElementById('edit-quantity');
+        const quantity = parseFloat(editQuantityInput.value);
+        const editKgsInput = document.getElementById('edit-kgs');
+        const kgs = parseFloat(editKgsInput.value);
+
+        // Reset validation states
+        editOutletInput.classList.remove('is-invalid');
 
         // Validation
         if (outletName === '' || isNaN(quantity) || isNaN(kgs)) {
@@ -235,14 +289,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             return;
         }
 
-        // Update the transaction object
-        transactions[editingIndex] = { ...transactions[editingIndex], outletName, quantity, kgs };
+        // Disable the button to prevent multiple clicks
+        const saveBtn = this;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Validating...';
 
-        // Hide the edit modal
-        var editModal = bootstrap.Modal.getInstance(document.getElementById('editTransactionModal'));
-        editModal.hide();
-
-        updateTransactionsTable();
+        // Validate Outlet Name via AJAX
+        fetch(`../includes/validate_outlet.php?outlet_name=${encodeURIComponent(outletName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    // Outlet exists, proceed to update the transaction
+                    transactions[editingIndex] = { drNo: transactions[editingIndex].drNo, outletName: outletName, quantity: quantity, kgs: kgs };
+                    updateTransactionsTable();
+                    // Hide the edit modal
+                    var editModal = bootstrap.Modal.getInstance(document.getElementById('editTransactionModal'));
+                    editModal.hide();
+                } else {
+                    // Outlet does not exist, show validation error
+                    editOutletInput.classList.add('is-invalid');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating outlet:', error);
+                alert('An error occurred while validating the Outlet Name. Please try again.');
+            })
+            .finally(() => {
+                // Re-enable the button
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save changes';
+            });
     });
 
     // Outlet name autocomplete for Add Transaction
@@ -303,7 +379,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     });
 
-    // Hide suggestions when clicking outside for Add Transaction
+    // Hide suggestions when clicking outside for Add Transaction and Edit Transaction
     document.addEventListener('click', function (event) {
         const isClickInsideAdd = document.getElementById('input-outlet-name').contains(event.target) || document.getElementById('outlet-suggestions').contains(event.target);
         if (!isClickInsideAdd) {
@@ -315,13 +391,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById('edit-outlet-suggestions').innerHTML = '';
         }
     });
-
-    // Function to sanitize HTML to prevent XSS
-    function sanitizeHTML(str) {
-        const temp = document.createElement('div');
-        temp.textContent = str;
-        return temp.innerHTML;
-    }
 </script>
 
 <?php

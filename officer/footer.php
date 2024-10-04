@@ -178,25 +178,44 @@
 </div>
 
 <div class="dark-transparent sidebartoggler"></div>
-<script src="../assets/js/vendor.min.js"></script>
-<!-- Import Js Files -->
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
 
-<!-- solar icons -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+<!-- jQuery (Must be loaded first) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SimpleBar JS -->
+<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+
+<!-- DataTables JS and Extensions -->
+<script src="https://cdn.datatables.net/2.4.2/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+<!-- DataTables Initialization -->
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+
+<!-- Theme Scripts -->
+<script src="../assets/js/theme/app.init.js"></script>
+<script src="../assets/js/theme/theme.js"></script>
+<script src="../assets/js/theme/app.min.js"></script>
+<script src="../assets/js/theme/sidebarmenu-default.js"></script>
+
+<!-- Solar Icons -->
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+
+<!-- FullCalendar JS (if needed) -->
+<script src="../assets/libs/fullcalendar/index.global.min.js"></script>
+
+<!-- Additional JS Files -->
+<script src="../assets/js/apps/invoice.js"></script>
+<script src="../assets/js/apps/jquery.PrintArea.js"></script>
+
 </body>
 
 </html>

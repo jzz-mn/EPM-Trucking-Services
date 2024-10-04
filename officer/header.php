@@ -21,9 +21,7 @@
 <body class="link-sidebar">
 
   <!-- Preloader -->
-  <div class="preloader">
-    <img src="../assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
-  </div>
+  
   <div id="main-wrapper">
     <!-- Sidebar Start -->
     <aside class="left-sidebar with-vertical">
