@@ -1,70 +1,107 @@
 <?php
 session_start();
-include '../officer/header.php';
 include '../includes/db_connection.php';
 
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  // Handle form submission
-  // Get the form data
-  $billingStartDate = $_POST['billingStartDate'];
-  $billingEndDate = $_POST['billingEndDate'];
-  $billedTo = $_POST['billedTo'];
+  // Check if it's an AJAX request
+  if (isset($_POST['action']) && $_POST['action'] == 'fetch_records') {
+    // Fetch selected records
+    $billingStartDate = $_POST['billingStartDate'];
+    $billingEndDate = $_POST['billingEndDate'];
 
-  // Validate the input data
-  if (empty($billingStartDate) || empty($billingEndDate) || empty($billedTo)) {
-    $error_message = "Please fill in all required fields.";
-  } else {
-    // Proceed with generating the invoice
+    // Validate dates
+    if (empty($billingStartDate) || empty($billingEndDate)) {
+      echo json_encode(['success' => false, 'message' => 'Please provide both start and end dates.']);
+      exit;
+    } elseif ($billingStartDate > $billingEndDate) {
+      echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
+      exit;
+    }
 
-    // Prepare and execute the query to select 'transactiongroup' records
+    // Query to fetch transactiongroup records
     $query = "
-            SELECT tg.TransactionGroupID, tg.RateAmount, e.TotalExpense
+            SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, e.TotalExpense
             FROM transactiongroup tg
-            JOIN transactions t ON tg.TransactionGroupID = t.TransactionGroupID
-            JOIN customers c ON t.OutletName = c.CustomerName
-            JOIN clusters cl ON c.ClusterID = cl.ClusterID
             JOIN expenses e ON tg.ExpenseID = e.ExpenseID
             WHERE tg.Date BETWEEN ? AND ?
-            AND tg.BillingInvoiceNo IS NULL
-            AND cl.ClusterCategory = ?
-            GROUP BY tg.TransactionGroupID
         ";
 
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('sss', $billingStartDate, $billingEndDate, $billedTo);
+    $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Initialize totals
-    $grossAmount = 0;
-    $totalExpenses = 0;
-    $transactionGroupIDs = array();
+    // Check if records are found
+    if ($result->num_rows > 0) {
+      $html = '';
+      while ($row = $result->fetch_assoc()) {
+        $html .= '<tr>';
+        $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
+        $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
+        $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
+        $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
+        $html .= '<td>' . number_format($row['TotalExpense'], 2) . '</td>';
+        $html .= '</tr>';
+      }
+      echo json_encode(['success' => true, 'html' => $html]);
+    } else {
+      echo json_encode(['success' => false, 'message' => 'No transactions found for the selected date range.']);
+    }
+    exit;
+  } elseif (isset($_POST['action']) && $_POST['action'] == 'generate_invoice') {
+    // Generate invoice
+    $billingStartDate = $_POST['billingStartDate'];
+    $billingEndDate = $_POST['billingEndDate'];
+    $billedTo = $_POST['billedTo'];
 
-    while ($row = $result->fetch_assoc()) {
-      $grossAmount += $row['RateAmount'];
-      $totalExpenses += $row['TotalExpense'];
-      $transactionGroupIDs[] = $row['TransactionGroupID'];
+    // Validate input data
+    if (empty($billingStartDate) || empty($billingEndDate) || empty($billedTo)) {
+      echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
+      exit;
+    } elseif ($billingStartDate > $billingEndDate) {
+      echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
+      exit;
     }
 
-    if (empty($transactionGroupIDs)) {
-      $error_message = "No transactions found for the selected date range and client.";
-    } else {
-      // Calculate VAT (12% of GrossAmount)
+    // Proceed with generating the invoice
+    // Wrap in a transaction
+    $conn->begin_transaction();
+    try {
+      // Query to select transactiongroup records
+      $query = "
+                SELECT tg.TransactionGroupID, tg.RateAmount, e.TotalExpense
+                FROM transactiongroup tg
+                JOIN expenses e ON tg.ExpenseID = e.ExpenseID
+                WHERE tg.Date BETWEEN ? AND ?
+            ";
+
+      $stmt = $conn->prepare($query);
+      $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      // Initialize totals
+      $grossAmount = 0;
+      $totalExpenses = 0;
+      $transactionGroupIDs = array();
+
+      while ($row = $result->fetch_assoc()) {
+        $grossAmount += $row['RateAmount'];
+        $totalExpenses += $row['TotalExpense'];
+        $transactionGroupIDs[] = $row['TransactionGroupID'];
+      }
+
+      if (empty($transactionGroupIDs)) {
+        throw new Exception('No transactions found for the selected date range.');
+      }
+
+      // Calculate amounts
       $vat = $grossAmount * 0.12;
-
-      // Calculate TotalAmount (GrossAmount + VAT)
       $totalAmount = $grossAmount + $vat;
-
-      // Calculate EWT (2% of TotalAmount)
       $ewt = $totalAmount * 0.02;
-
-      // Calculate AmountNetOfTax (TotalAmount - EWT)
       $amountNetOfTax = $totalAmount - $ewt;
-
-      // AddTollCharges is total of TotalExpense
       $addTollCharges = $totalExpenses;
-
-      // Calculate NetAmount (AmountNetOfTax + AddTollCharges)
       $netAmount = $amountNetOfTax + $addTollCharges;
 
       // Insert into 'invoices' table
@@ -101,12 +138,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute();
       }
 
-      // Display success message
-      $success_message = "Invoice generated successfully.";
+      // Commit the transaction
+      $conn->commit();
+
+      echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+      // Rollback the transaction
+      $conn->rollback();
+      echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    exit;
   }
 }
+
+// Rest of your PHP code to display the page
+include '../officer/header.php';
 ?>
+
 
 <div class="body-wrapper">
   <div class="container-fluid">
@@ -167,35 +215,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                   <table class="table table-striped">
                     <thead>
                       <tr>
-                        <th>Billing Invoice No</th>
-                        <th>Billing Start Date</th>
-                        <th>Billing End Date</th>
+                        <th>Invoice No</th>
+                        <th>Date Range</th>
                         <th>Billed To</th>
                         <th>Gross Amount</th>
-                        <th>VAT</th>
-                        <th>Total Amount</th>
-                        <th>EWT</th>
-                        <th>Add Toll Charges</th>
-                        <th>Amount Net Of Tax</th>
                         <th>Net Amount</th>
-                        <!-- Add other columns as needed -->
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php while ($invoice = $invoicesResult->fetch_assoc()): ?>
                         <tr>
-                          <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
-                          <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?></td>
-                          <td><?php echo htmlspecialchars($invoice['BillingEndDate']); ?></td>
+                        <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
+                          <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
+                            <?php echo htmlspecialchars($invoice['BillingEndDate']); ?>
+                          </td>
                           <td><?php echo htmlspecialchars($invoice['BilledTo']); ?></td>
                           <td><?php echo number_format($invoice['GrossAmount'], 2); ?></td>
-                          <td><?php echo number_format($invoice['VAT'], 2); ?></td>
-                          <td><?php echo number_format($invoice['TotalAmount'], 2); ?></td>
-                          <td><?php echo number_format($invoice['EWT'], 2); ?></td>
-                          <td><?php echo number_format($invoice['AddTollCharges'], 2); ?></td>
-                          <td><?php echo number_format($invoice['AmountNetOfTax'], 2); ?></td>
                           <td><?php echo number_format($invoice['NetAmount'], 2); ?></td>
-                          <!-- Add other columns as needed -->
+                          <td>
+                            <!-- Print Button -->
+                            <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
+                              <input type="hidden" name="BillingInvoiceNo"
+                                value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
+                              <button type="submit" class="btn btn-primary btn-sm">Print</button>
+                            </form>
+                          </td>
                         </tr>
                       <?php endwhile; ?>
                     </tbody>
@@ -204,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                   <p>No invoices found.</p>
                 <?php endif; ?>
               </div>
+
 
             </div>
           </div>
@@ -222,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="add-contact-box">
                   <div class="add-contact-content">
                     <!-- Add the method and action attributes -->
-                    <form id="addInvoiceForm" method="post" action="invoice.php">
+                    <form id="addInvoiceForm">
                       <div class="mb-3">
                         <label for="billingStartDate" class="form-label">Billing Start Date</label>
                         <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required>
@@ -243,12 +289,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="d-flex gap-6 m-0 justify-content-end">
                           <button type="button" class="btn bg-danger-subtle text-danger"
                             data-bs-dismiss="modal">Discard</button>
-                          <button id="btn-add-invoice" class="btn btn-primary" type="submit">Generate Invoice</button>
+                          <button id="btn-add-invoice" class="btn btn-primary" type="button">Generate Invoice</button>
                         </div>
                       </div>
                     </form>
+
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Selected Records Modal -->
+        <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 90%;">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="selectedRecordsModalLabel">Selected Transaction Groups</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <!-- Table to display selected records -->
+                <div class="table-responsive">
+                  <table class="table table-striped" id="selectedRecordsTable">
+                    <thead>
+                      <tr>
+                        <th>Transaction Group ID</th>
+                        <th>Date</th>
+                        <th>Rate Amount</th>
+                        <th>Total KGs</th>
+                        <th>Total Expense</th>
+                        <!-- Add other columns as needed -->
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Data will be populated via AJAX -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmGenerateInvoice">Confirm and Generate
+                  Invoice</button>
               </div>
             </div>
           </div>
@@ -260,3 +344,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     include '../officer/footer.php';
     $conn->close();
     ?>
+    <script>
+      $(document).ready(function () {
+        $('#btn-add-invoice').click(function () {
+          // Get form data
+          var billingStartDate = $('#billingStartDate').val();
+          var billingEndDate = $('#billingEndDate').val();
+          var billedTo = $('#billedTo').val();
+
+          // Validate inputs
+          if (!billingStartDate || !billingEndDate || !billedTo) {
+            alert('Please fill in all required fields.');
+            return;
+          }
+
+          // Send AJAX request to fetch selected records
+          $.ajax({
+            url: 'invoice.php',
+            type: 'POST',
+            data: {
+              action: 'fetch_records',
+              billingStartDate: billingStartDate,
+              billingEndDate: billingEndDate,
+              billedTo: billedTo
+            },
+            dataType: 'json',
+            success: function (response) {
+              if (response.success) {
+                // Populate the modal with the data
+                $('#selectedRecordsTable tbody').html(response.html);
+                // Show the modal
+                $('#selectedRecordsModal').modal('show');
+                // Close the add invoice modal
+                $('#addInvoiceModal').modal('hide');
+              } else {
+                alert(response.message);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error(xhr.responseText);
+              alert('An error occurred while fetching the records.');
+            }
+          });
+        });
+
+        // Handle invoice confirmation
+        $('#confirmGenerateInvoice').click(function () {
+          // Send AJAX request to generate the invoice
+          $.ajax({
+            url: 'invoice.php',
+            type: 'POST',
+            data: {
+              action: 'generate_invoice',
+              billingStartDate: $('#billingStartDate').val(),
+              billingEndDate: $('#billingEndDate').val(),
+              billedTo: $('#billedTo').val()
+            },
+            dataType: 'json',
+            success: function (response) {
+              if (response.success) {
+                alert('Invoice generated successfully.');
+                // Reload the page to show the new invoice
+                location.reload();
+              } else {
+                alert(response.message);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error(xhr.responseText);
+              alert('An error occurred while generating the invoice.');
+            }
+          });
+        });
+      });
+    </script>
