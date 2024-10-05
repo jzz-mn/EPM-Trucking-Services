@@ -12,7 +12,7 @@ include '../officer/header.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
@@ -42,7 +42,7 @@ include '../officer/header.php';
     <div class="widget-content searchable-container list">
       <h5 class="border-bottom py-2 px-4 mb-4">Finances</h5>
       <!-- Add Expense Modal -->
-      
+
 
       <script>
         // Function to calculate and display fuel amount
@@ -97,37 +97,41 @@ include '../officer/header.php';
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="updateSalaryAmount" class="form-label">Salary Amount</label>
-                              <input type="number" class="form-control" id="updateSalaryAmount" name="updateSalaryAmount" step="0.01" oninput="computeTotalExpense()">
+                              <input type="number" class="form-control" id="updateSalaryAmount"
+                                name="updateSalaryAmount" step="0.01" oninput="computeTotalExpense()">
                             </div>
                           </div>
                           <!-- Toll Fee -->
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="updateTollFee" class="form-label">Toll Fee Amount</label>
-                              <input type="number" class="form-control" id="updateTollFeeAmount" name="updateTollFeeAmount" step="0.01" oninput="computeTotalExpense()">
-                              </div>
+                              <input type="number" class="form-control" id="updateTollFeeAmount"
+                                name="updateTollFeeAmount" step="0.01" oninput="computeTotalExpense()">
+                            </div>
                           </div>
                           <!-- Mobile -->
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="updateMobile" class="form-label">Mobile Amount</label>
-                              <input type="number" class="form-control" id="updateMobileAmount" name="updateMobileAmount" step="0.01" oninput="computeTotalExpense()">
-                              </div>
+                              <input type="number" class="form-control" id="updateMobileAmount"
+                                name="updateMobileAmount" step="0.01" oninput="computeTotalExpense()">
+                            </div>
                           </div>
                           <!-- Other Amount -->
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="updateOtherAmount" class="form-label">Other Amount</label>
-                              <input type="number" class="form-control" id="updateOtherAmount" name="updateOtherAmount" step="0.01" oninput="computeTotalExpense()">
+                              <input type="number" class="form-control" id="updateOtherAmount" name="updateOtherAmount"
+                                step="0.01" oninput="computeTotalExpense()">
                             </div>
                           </div>
-                          
+
                           <!-- Total Amount -->
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="updateTotalExpense" class="form-label">Total Expense</label>
-                              <input type="number" class="form-control" id="updateTotalExpense" name="updateTotalExpense"
-                                step="0.01" readonly>
+                              <input type="number" class="form-control" id="updateTotalExpense"
+                                name="updateTotalExpense" step="0.01" readonly>
                             </div>
                           </div>
 
@@ -177,13 +181,13 @@ include '../officer/header.php';
                 </div>
                 <div
                   class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                  
+
                 </div>
               </div>
               <div class="py-3">
                 <!-- Expense Table -->
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered text-nowrap align-middle">
+                  <table id="" class="table text-center table-striped table-bordered text-nowrap align-middle">
                     <thead>
                       <!-- start row -->
                       <tr>
@@ -248,92 +252,96 @@ include '../officer/header.php';
                 </div>
                 <div
                   class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                  
+
                 </div>
               </div>
 
               <!-- Edit Fuel Modal -->
-<div class="modal fade" id="editFuelModal" tabindex="-1" role="dialog" aria-labelledby="editFuelModalTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header d-flex align-items-center bg-primary">
-        <h5 class="modal-title text-white fs-4">Edit Fuel Record</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-12">
-            <div class="card w-100 border position-relative overflow-hidden mb-0">
-              <div class="card-body p-4">
-                <h4 class="card-title">Edit Fuel Record</h4>
-                <form id="updateFuelForm" method="POST" action="update_fuel.php">
-                  <div class="row">
-                    <!-- Fuel ID -->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="updateFuelID" class="form-label">Fuel ID</label>
-                        <input type="text" class="form-control" id="updateFuelID" name="updateFuelID" readonly>
-                      </div>
+              <div class="modal fade" id="editFuelModal" tabindex="-1" role="dialog"
+                aria-labelledby="editFuelModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header d-flex align-items-center bg-primary">
+                      <h5 class="modal-title text-white fs-4">Edit Fuel Record</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <!-- Date -->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="updateDate" class="form-label">Date</label>
-                        <input type="date" class="form-control" id="updateDate" name="updateDate">
-                      </div>
-                    </div>
-                    <!-- Liters -->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="updateLiters" class="form-label">Liters</label>
-                        <input type="number" class="form-control" id="updateLiters" name="updateLiters" step="0.01" oninput="computeFuelAmount()">
-                      </div>
-                    </div>
-                    <!-- Unit Price -->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="updateUnitPrice" class="form-label">Unit Price</label>
-                        <input type="number" class="form-control" id="updateUnitPrice" name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
-                      </div>
-                    </div>
-                    <!-- Fuel Type -->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="updateFuelType" class="form-label">Fuel Type</label>
-                        <select class="form-select" id="updateFuelType" name="updateFuelType">
-                          <option value="Diesel">Diesel</option>
-                          <option value="Gasoline">Gasoline</option>
-                        </select>
-                      </div>
-                    </div>
-                    <!-- Amount -->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="updateAmount" class="form-label">Amount</label>
-                        <input type="number" class="form-control" id="updateAmount" name="updateAmount" step="0.01" readonly>
-                      </div>
-                    </div>
-                    <div class="col-12">
-                      <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                        <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                    <div class="modal-body">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="card w-100 border position-relative overflow-hidden mb-0">
+                            <div class="card-body p-4">
+                              <h4 class="card-title">Edit Fuel Record</h4>
+                              <form id="updateFuelForm" method="POST" action="update_fuel.php">
+                                <div class="row">
+                                  <!-- Fuel ID -->
+                                  <div class="col-lg-4">
+                                    <div class="mb-3">
+                                      <label for="updateFuelID" class="form-label">Fuel ID</label>
+                                      <input type="text" class="form-control" id="updateFuelID" name="updateFuelID"
+                                        readonly>
+                                    </div>
+                                  </div>
+                                  <!-- Date -->
+                                  <div class="col-lg-4">
+                                    <div class="mb-3">
+                                      <label for="updateDate" class="form-label">Date</label>
+                                      <input type="date" class="form-control" id="updateDate" name="updateDate">
+                                    </div>
+                                  </div>
+                                  <!-- Liters -->
+                                  <div class="col-lg-4">
+                                    <div class="mb-3">
+                                      <label for="updateLiters" class="form-label">Liters</label>
+                                      <input type="number" class="form-control" id="updateLiters" name="updateLiters"
+                                        step="0.01" oninput="computeFuelAmount()">
+                                    </div>
+                                  </div>
+                                  <!-- Unit Price -->
+                                  <div class="col-lg-4">
+                                    <div class="mb-3">
+                                      <label for="updateUnitPrice" class="form-label">Unit Price</label>
+                                      <input type="number" class="form-control" id="updateUnitPrice"
+                                        name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
+                                    </div>
+                                  </div>
+                                  <!-- Fuel Type -->
+                                  <div class="col-lg-4">
+                                    <div class="mb-3">
+                                      <label for="updateFuelType" class="form-label">Fuel Type</label>
+                                      <select class="form-select" id="updateFuelType" name="updateFuelType">
+                                        <option value="Diesel">Diesel</option>
+                                        <option value="Gasoline">Gasoline</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <!-- Amount -->
+                                  <div class="col-lg-6">
+                                    <div class="mb-3">
+                                      <label for="updateAmount" class="form-label">Amount</label>
+                                      <input type="number" class="form-control" id="updateAmount" name="updateAmount"
+                                        step="0.01" readonly>
+                                    </div>
+                                  </div>
+                                  <div class="col-12">
+                                    <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                                      <button class="btn bg-danger-subtle text-danger"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                      <button type="submit" class="btn btn-primary">Save</button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </form>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
               <!-- Fuel Table -->
               <div class="table-responsive">
-                <table id="" class="table table-striped table-bordered display text-nowrap">
+                <table id="" class="table text-center table-striped table-bordered display text-nowrap">
                   <thead>
                     <tr>
                       <th>FuelID</th>
@@ -359,7 +367,7 @@ include '../officer/header.php';
                       while ($row = $result->fetch_assoc()) {
                         // Prepare the row data as a JSON object
                         $fuelData = json_encode($row);
-                        
+
                         echo "<tr>";
                         echo "<td>" . $row['FuelID'] . "</td>";
                         echo "<td>" . $row['Date'] . "</td>";
@@ -403,7 +411,7 @@ include '../officer/header.php';
 </script>
 <script>
 
-function populateExpenseEditForm(expense) {
+  function populateExpenseEditForm(expense) {
     // Set values in the modal based on the selected expense row
     document.getElementById("updateExpenseID").value = expense.ExpenseID;
     document.getElementById("updateDate").value = expense.Date;
@@ -412,7 +420,7 @@ function populateExpenseEditForm(expense) {
     document.getElementById("updateMobileAmount").value = expense.MobileAmount;
     document.getElementById("updateOtherAmount").value = expense.OtherAmount;
     document.getElementById("updateTotalExpense").value = expense.TotalExpense;
-}
+  }
 
   function computeTotalExpense() {
     // Get the values from the input fields
@@ -429,9 +437,9 @@ function populateExpenseEditForm(expense) {
   }
 
 
-  </script>
+</script>
 
-  
+
 <script>
   function populateEditForm(fuel) {
     document.getElementById("updateFuelID").value = fuel.FuelID;
@@ -449,14 +457,14 @@ function populateExpenseEditForm(expense) {
     document.getElementById("updateAmount").value = amount.toFixed(2); // Rounds to 2 decimal places
   }
   function populateEditForm(fuel) {
-  // Set the form fields in the modal using the fuel data passed from the table row
-  document.getElementById("updateFuelID").value = fuel.FuelID;
-  document.getElementById("updateDate").value = fuel.Date;
-  document.getElementById("updateLiters").value = fuel.Liters;
-  document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
-  document.getElementById("updateFuelType").value = fuel.FuelType;
-  document.getElementById("updateAmount").value = fuel.Amount;
-}
+    // Set the form fields in the modal using the fuel data passed from the table row
+    document.getElementById("updateFuelID").value = fuel.FuelID;
+    document.getElementById("updateDate").value = fuel.Date;
+    document.getElementById("updateLiters").value = fuel.Liters;
+    document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
+    document.getElementById("updateFuelType").value = fuel.FuelType;
+    document.getElementById("updateAmount").value = fuel.Amount;
+  }
 </script>
 
 
@@ -747,7 +755,7 @@ function populateExpenseEditForm(expense) {
 
 <script src="../assets/js/datatable/datatable-advanced.init.js"></script>
 
-  
-</body >
 
-</html >
+</body>
+
+</html>

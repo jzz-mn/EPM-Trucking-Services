@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../includes/header.php';
+include '../officer/header.php';
 ?>
 
 <div class="body-wrapper">
@@ -13,7 +13,7 @@ include '../includes/header.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
+                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
@@ -81,7 +81,8 @@ include '../includes/header.php';
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputPassword" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="exampleInputPassword" name="password" placeholder="Enter new password">
+                              <input type="password" class="form-control" id="exampleInputPassword" name="password"
+                                placeholder="Enter new password">
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputConfirmPassword" class="form-label">Confirm Password</label>
@@ -197,7 +198,7 @@ include '../includes/header.php';
               <div class="edit-contact-box">
                 <div class="edit-contact-content">
                   <form id="editOfficerForm" method="POST" action="edit_officer.php">
-                  <input type="hidden" name="officerID" value="">
+                    <input type="hidden" name="officerID" value="">
                     <div class="row">
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -226,11 +227,13 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Update officer's login credentials.</p>
                             <div class="mb-3">
                               <label for="usernameInput" class="form-label">Username</label>
-                              <input type="text" class="form-control" id="usernameInput" name="username" placeholder="Enter username" required>
+                              <input type="text" class="form-control" id="usernameInput" name="username"
+                                placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress" placeholder="Enter Email Address">
+                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress"
+                                placeholder="Enter Email Address">
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputPassword" class="form-label">New Password</label>
@@ -371,12 +374,6 @@ include '../includes/header.php';
           <tr>
             <th>Name</th>
             <th>Position</th>
-            <th>Gender</th>
-            <th>City Address</th>
-            <th>Mobile No</th>
-            <th>Email Address</th>
-            <th>College</th>
-            <th>Year Graduated</th>
             <th>Activation Status</th>
             <th>Actions</th>
           </tr>
@@ -397,10 +394,12 @@ include '../includes/header.php';
 
               // Assign badges for specific positions
               $positionBadge = '';
-              if ($row['Position'] === 'President') {
-                $positionBadge = "<span class='badge text-bg-primary'>President</span>";
-              } elseif ($row['Position'] === 'Vice President') {
-                $positionBadge = "<span class='badge text-bg-danger'>Vice President</span>";
+              if ($row['Position'] === 'Proprietor') {
+                $positionBadge = "<span class='badge text-bg-primary'>Proprietor</span>";
+              } elseif ($row['Position'] === 'Operation Manager/Proprietor') {
+                $positionBadge = "<span class='badge text-bg-secondary'>Operation Manager/Proprietor</span>";
+              } elseif ($row['Position'] === 'Asst. Operation Manager') {
+                $positionBadge = "<span class='badge text-bg-danger'>Asst. Operation Manager</span>";
               } else {
                 $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
               }
@@ -424,12 +423,6 @@ include '../includes/header.php';
               echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
               echo "</div></div></td>";
               echo "<td>{$positionBadge}</td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['Gender']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['CityAddress']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['College']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['YearGraduated']}</p></td>";
               echo "<td>{$activationStatus}</td>";
               echo "<td>";
               echo "<a href='#' class='me-3 text-primary edit-button' data-officerid='{$row['OfficerID']}' data-bs-toggle='modal' data-bs-target='#editContactModal'>";
@@ -451,8 +444,8 @@ include '../includes/header.php';
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('.edit-button').on('click', function() {
+  $(document).ready(function () {
+    $('.edit-button').on('click', function () {
       var officerID = $(this).data('officerid');
 
       $.ajax({
@@ -462,7 +455,7 @@ include '../includes/header.php';
           officerID: officerID
         },
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
           if (data.success) {
             // Populate the modal fields
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
@@ -483,14 +476,14 @@ include '../includes/header.php';
             $('#editOfficerForm input[name="activationStatus"]').val(data.officer.ActivationStatus);
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
 
-            
+
 
 
           } else {
             alert('Failed to fetch officer data.');
           }
         },
-        error: function() {
+        error: function () {
           alert('Error in AJAX request.');
         }
       });
@@ -502,30 +495,30 @@ include '../includes/header.php';
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('#editOfficerForm').submit(function(event) {
-        event.preventDefault(); // Prevent the form from submitting via the browser.
-        var formData = $(this).serialize(); // Get form data.
+  $(document).ready(function () {
+    $('#editOfficerForm').submit(function (event) {
+      event.preventDefault(); // Prevent the form from submitting via the browser.
+      var formData = $(this).serialize(); // Get form data.
 
-        $.ajax({
-            type: "POST",
-            url: "edit_officer.php",
-            data: formData,
-            dataType: "json",
-            success: function(response) {
-                if(response.user_message) {
-                    $('#editContactModal').modal('hide'); // Hide the modal if success
-                    window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
-                } else {
-                    alert('Failed to update: ' + response.error);
-                }
-            },
-            error: function() {
-                alert('Error updating officer.');
-            }
-        });
+      $.ajax({
+        type: "POST",
+        url: "edit_officer.php",
+        data: formData,
+        dataType: "json",
+        success: function (response) {
+          if (response.user_message) {
+            $('#editContactModal').modal('hide'); // Hide the modal if success
+            window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
+          } else {
+            alert('Failed to update: ' + response.error);
+          }
+        },
+        error: function () {
+          alert('Error updating officer.');
+        }
+      });
     });
-});
+  });
 </script>
 
 

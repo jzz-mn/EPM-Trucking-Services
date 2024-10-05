@@ -21,7 +21,7 @@
 <body class="link-sidebar">
 
   <!-- Preloader -->
-  
+
   <div id="main-wrapper">
     <!-- Sidebar Start -->
     <aside class="left-sidebar with-vertical">
@@ -324,7 +324,7 @@
                   <!-- ------------------------------- -->
                   <!-- start profile Dropdown -->
                   <!-- ------------------------------- -->
-                  
+
 
 
                   <!-- Dropdown menu -->
@@ -376,119 +376,7 @@
 
           <!-- ------------------------------- -->
           <!-- apps Dropdown in Small screen -->
-          <!-- ------------------------------- -->
-          <!--  Mobilenavbar -->
-          <div class="offcanvas offcanvas-start pt-0" data-bs-scroll="true" tabindex="-1" id="mobilenavbar"
-            aria-labelledby="offcanvasWithBothOptionsLabel">
-            <nav class="sidebar-nav scroll-sidebar">
-              <div class="offcanvas-header justify-content-between">
-                <a href="../officer/home.php" class="text-nowrap logo-img">
-                  <img src="../assets/images/logos/logo-icon.svg" alt="Logo" />
-                </a>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-              </div>
-              <div class="offcanvas-body pt-0" data-simplebar style="height: calc(100vh - 80px)">
-                <ul id="sidebarnav">
-                  <li class="sidebar-item">
-                    <a class="sidebar-link has-arrow ms-0" href="javascript:void(0)" aria-expanded="false">
-                      <span>
-                        <iconify-icon icon="solar:slider-vertical-line-duotone" class="fs-7"></iconify-icon>
-                      </span>
-                      <span class="hide-menu">Apps</span>
-                    </a>
-                    <ul aria-expanded="false" class="collapse first-level my-3 ps-3">
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/app-chat.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:chat-line-bold-duotone" class="fs-7 text-primary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Chat Application</h6>
-                            <span class="fs-11 d-block text-body-color">New messages arrived</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/invoice.php" class="d-flex align-items-center">
-                          <div
-                            class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:bill-list-bold-duotone"
-                              class="fs-7 text-secondary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Invoice App</h6>
-                            <span class="fs-11 d-block text-body-color">Get latest invoice</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/app-email.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:letter-bold-duotone" class="fs-7 text-danger"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Email App</h6>
-                            <span class="fs-11 d-block text-body-color">Get new emails</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/page-user-profile.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:user-bold-duotone" class="fs-7 text-success"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">User Profile</h6>
-                            <span class="fs-11 d-block text-body-color">learn more information</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/app-calendar.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:calendar-minimalistic-bold-duotone"
-                              class="fs-7 text-primary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Calendar App</h6>
-                            <span class="fs-11 d-block text-body-color">Get dates</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/app-contact.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:smartphone-2-bold-duotone"
-                              class="fs-7 text-secondary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Contact List Table</h6>
-                            <span class="fs-11 d-block text-body-color">Add new contact</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../officer/app-notes.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:notes-bold-duotone" class="fs-7 text-warning"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Notes Application</h6>
-                            <span class="fs-11 d-block text-body-color">To-do and Daily tasks</span>
-                          </div>
-                        </a>
-                      </li>
-                  </li>
-                </ul>
-              </div>
-            </nav>
-          </div>
+
 
         </div>
         <div class="app-header with-horizontal">
@@ -515,117 +403,6 @@
                   <a class="nav-link" id="drop2" href="javascript:void(0)" aria-haspopup="true" aria-expanded="false">
                     <iconify-icon icon="solar:widget-3-line-duotone" class="fs-6"></iconify-icon>
                   </a>
-                  <div class="dropdown-menu dropdown-menu-nav dropdown-menu-animate-up py-0 overflow-hidden"
-                    aria-labelledby="drop2">
-                    <div class="position-relative">
-                      <div class="row">
-                        <div class="col-8">
-                          <div class="p-4 pb-3">
-
-                            <div class="row">
-                              <div class="col-6">
-                                <div class="position-relative">
-                                  <a href="../officer/app-chat.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:chat-line-bold-duotone"
-                                        class="fs-7 text-primary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Chat Application</h6>
-                                      <span class="fs-11 d-block text-body-color">New messages arrived</span>
-                                    </div>
-                                  </a>
-                                  <a href="../officer/invoice.php"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:bill-list-bold-duotone"
-                                        class="fs-7 text-secondary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Invoice App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get latest invoice</span>
-                                    </div>
-                                  </a>
-
-                                  <a href="../officer/app-email.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:letter-bold-duotone"
-                                        class="fs-7 text-danger"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Email App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get new emails</span>
-                                    </div>
-                                  </a>
-                                </div>
-                              </div>
-                              <div class="col-6">
-                                <div class="position-relative">
-                                  <a href="../officer/page-user-profile.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:user-bold-duotone"
-                                        class="fs-7 text-success"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">User Profile</h6>
-                                      <span class="fs-11 d-block text-body-color">learn more information</span>
-                                    </div>
-                                  </a>
-                                  <a href="../officer/app-calendar.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:calendar-minimalistic-bold-duotone"
-                                        class="fs-7 text-primary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Calendar App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get dates</span>
-                                    </div>
-                                  </a>
-                                  <a href="../officer/app-contact.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:smartphone-2-bold-duotone"
-                                        class="fs-7 text-secondary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Contact List Table</h6>
-                                      <span class="fs-11 d-block text-body-color">Add new contact</span>
-                                    </div>
-                                  </a>
-                                  <a href="../officer/app-notes.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:notes-bold-duotone"
-                                        class="fs-7 text-warning"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Notes Application</h6>
-                                      <span class="fs-11 d-block text-body-color">To-do and Daily tasks</span>
-                                    </div>
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-4">
-                          <img src="../assets/images/backgrounds/mega-dd-bg.jpg" alt="mega-dd"
-                            class="img-fluid mega-dd-bg" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </li>
             </ul>
