@@ -219,7 +219,7 @@ include '../officer/header.php';
                           echo "<td>" . $row['TotalExpense'] . "</td>";
                           echo "<td>";
                           // Edit button
-                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateExpenseEditForm(" . json_encode($row) . ");'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
                           // Delete button inside your table
                           echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']});  return false;'>";
@@ -403,7 +403,7 @@ include '../officer/header.php';
 </script>
 <script>
 
-function populateEditForm(expense) {
+function populateExpenseEditForm(expense) {
     // Set values in the modal based on the selected expense row
     document.getElementById("updateExpenseID").value = expense.ExpenseID;
     document.getElementById("updateDate").value = expense.Date;

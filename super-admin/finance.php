@@ -12,7 +12,7 @@ include '../includes/header.php';
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
+                <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
@@ -42,200 +42,7 @@ include '../includes/header.php';
     <div class="widget-content searchable-container list">
       <h5 class="border-bottom py-2 px-4 mb-4">Finances</h5>
       <!-- Add Expense Modal -->
-      <div class="modal fade" id="addExpenseModal" tabindex="-1" role="dialog" aria-labelledby="addExpenseModalTitle"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header d-flex align-items-center bg-primary">
-              <h5 class="modal-title text-white fs-4">Add Expense</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-12">
-                  <div class="card w-100 border position-relative overflow-hidden mb-0">
-                    <div class="card-body p-4">
-                      <h4 class="card-title">Add Expenses</h4>
-                      <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
-                      <form id="addExpenseForm" method="POST" action="add_expense.php">
-                        <div class="row">
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="nextExpenseID" class="form-label">Expense ID</label>
-                              <input type="text" class="form-control" id="nextExpenseID" name="nextExpenseID" readonly>
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="expenseDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="expenseDate" name="expenseDate">
-                            </div>
-                          </div>
-
-                          <!-- Other input fields for amounts -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="tollFee" class="form-label">Toll Fee</label>
-                              <input type="number" class="form-control" id="tollFee" name="tollFee"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="rateAmount" class="form-label">Rate Amount</label>
-                              <input type="number" class="form-control" id="rateAmount" name="rateAmount"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="salaryAmount" class="form-label">Salary Amount</label>
-                              <input type="number" class="form-control" id="salaryAmount" name="salaryAmount"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="gasAmount" class="form-label">Gas Amount</label>
-                              <input type="number" class="form-control" id="gasAmount" name="gasAmount"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="allowanceAmount" class="form-label">Allowance Amount</label>
-                              <input type="number" class="form-control" id="allowanceAmount" name="allowanceAmount"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="extraMealAmount" class="form-label">Extra Meal Amount</label>
-                              <input type="number" class="form-control" id="extraMealAmount" name="extraMealAmount"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="mobileFee" class="form-label">Mobile Fee</label>
-                              <input type="number" class="form-control" id="mobileFee" name="mobileFee"
-                                oninput="calculateTotal()">
-                            </div>
-                          </div>
-
-                          <!-- Total Amount Field -->
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="totalAmount" class="form-label">Total Amount</label>
-                              <input type="number" class="form-control" id="totalAmount" name="totalAmount" readonly>
-                            </div>
-                          </div>
-
-                          <div class="col-12 mb-3">
-                            <div class="d-flex gap-6 m-0 justify-content-end">
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
-                              <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
-                          </div>
-                        </div>
-                      </form>
-
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add Fuel Expenses -->
-      <div class="modal fade" id="addFuelExpenseModal" tabindex="-1" role="dialog"
-        aria-labelledby="addFuelExpenseModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header d-flex align-items-center bg-primary">
-              <h5 class="modal-title text-white fs-4">Add Fuel Expense</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-12">
-                  <div class="card w-100 border position-relative overflow-hidden mb-0">
-                    <div class="card-body p-4">
-                      <h4 class="card-title">Add Fuel Expense</h4>
-                      <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
-                      <form id="fuelExpenseForm">
-                        <div class="row">
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="dieselId" class="form-label">Diesel ID</label>
-                              <input type="text" class="form-control" id="dieselId" placeholder="Enter Diesel ID">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="date" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="date" placeholder="Enter Date">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="controlNumber" class="form-label">Control Number</label>
-                              <input type="text" class="form-control" id="controlNumber"
-                                placeholder="Enter Control Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="plateNumber" class="form-label">Plate Number</label>
-                              <input type="text" class="form-control" id="plateNumber" placeholder="Enter Plate Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="seriesNumber" class="form-label">Series Number</label>
-                              <input type="text" class="form-control" id="seriesNumber"
-                                placeholder="Enter Series Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="liters" class="form-label">Liters</label>
-                              <input type="number" step="0.01" class="form-control" id="liters"
-                                placeholder="Enter Liters">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="unitPrice" class="form-label">Unit Price</label>
-                              <input type="number" step="0.01" class="form-control" id="unitPrice"
-                                placeholder="Enter Unit Price">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="fuelAmount" class="form-label">Fuel Amount</label>
-                              <input type="text" class="form-control" id="fuelAmount" placeholder="Fuel Amount"
-                                readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       <script>
         // Function to calculate and display fuel amount
@@ -251,7 +58,8 @@ include '../includes/header.php';
         document.getElementById('unitPrice').addEventListener('input', calculateFuelAmount);
       </script>
 
-      <!-- Edit Fuel Expenses Modal -->
+
+      <!-- Edit Fuel Expenses -->
       <div class="modal fade" id="editFuelExpenseModal" tabindex="-1" role="dialog"
         aria-labelledby="editFuelExpenseModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -284,67 +92,41 @@ include '../includes/header.php';
                               <input type="date" class="form-control" id="updateDate" name="updateDate">
                             </div>
                           </div>
-                          <!-- Toll Fee -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="updateTollFee" class="form-label">Toll Fee</label>
-                              <input type="number" class="form-control" id="updateTollFee" name="updateTollFee"
-                                step="0.01" oninput="computeTotalAmount()">
-                            </div>
-                          </div>
-                          <!-- Rate Amount -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="updateRateAmount" class="form-label">Rate Amount</label>
-                              <input type="number" class="form-control" id="updateRateAmount" name="updateRateAmount"
-                                step="0.01" oninput="computeTotalAmount()">
-                            </div>
-                          </div>
+
                           <!-- Salary Amount -->
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="updateSalaryAmount" class="form-label">Salary Amount</label>
-                              <input type="number" class="form-control" id="updateSalaryAmount"
-                                name="updateSalaryAmount" step="0.01" oninput="computeTotalAmount()">
+                              <input type="number" class="form-control" id="updateSalaryAmount" name="updateSalaryAmount" step="0.01" oninput="computeTotalExpense()">
                             </div>
                           </div>
-                          <!-- Gas Amount -->
+                          <!-- Toll Fee -->
                           <div class="col-lg-4">
                             <div class="mb-3">
-                              <label for="updateGasAmount" class="form-label">Gas Amount</label>
-                              <input type="number" class="form-control" id="updateGasAmount" name="updateGasAmount"
-                                step="0.01" oninput="computeTotalAmount()">
-                            </div>
-                          </div>
-                          <!-- Allowance Amount -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="updateAllowanceAmount" class="form-label">Allowance Amount</label>
-                              <input type="number" class="form-control" id="updateAllowanceAmount"
-                                name="updateAllowanceAmount" step="0.01" oninput="computeTotalAmount()">
-                            </div>
-                          </div>
-                          <!-- Extra Meal Amount -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="updateExtraMealAmount" class="form-label">Extra Meal Amount</label>
-                              <input type="number" class="form-control" id="updateExtraMealAmount"
-                                name="updateExtraMealAmount" step="0.01" oninput="computeTotalAmount()">
-                            </div>
+                              <label for="updateTollFee" class="form-label">Toll Fee Amount</label>
+                              <input type="number" class="form-control" id="updateTollFeeAmount" name="updateTollFeeAmount" step="0.01" oninput="computeTotalExpense()">
+                              </div>
                           </div>
                           <!-- Mobile -->
                           <div class="col-lg-4">
                             <div class="mb-3">
-                              <label for="updateMobile" class="form-label">Mobile</label>
-                              <input type="number" class="form-control" id="updateMobile" name="updateMobile"
-                                step="0.01" oninput="computeTotalAmount()">
+                              <label for="updateMobile" class="form-label">Mobile Amount</label>
+                              <input type="number" class="form-control" id="updateMobileAmount" name="updateMobileAmount" step="0.01" oninput="computeTotalExpense()">
+                              </div>
+                          </div>
+                          <!-- Other Amount -->
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label for="updateOtherAmount" class="form-label">Other Amount</label>
+                              <input type="number" class="form-control" id="updateOtherAmount" name="updateOtherAmount" step="0.01" oninput="computeTotalExpense()">
                             </div>
                           </div>
+                          
                           <!-- Total Amount -->
                           <div class="col-lg-6">
                             <div class="mb-3">
-                              <label for="updateTotalAmount" class="form-label">Total Amount</label>
-                              <input type="number" class="form-control" id="updateTotalAmount" name="updateTotalAmount"
+                              <label for="updateTotalExpense" class="form-label">Total Expense</label>
+                              <input type="number" class="form-control" id="updateTotalExpense" name="updateTotalExpense"
                                 step="0.01" readonly>
                             </div>
                           </div>
@@ -353,90 +135,6 @@ include '../includes/header.php';
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                               <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Edit Fuel Expenses -->
-      <div class="modal fade" id="editFuelExpenseModal" tabindex="-1" role="dialog"
-        aria-labelledby="editFuelExpenseModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header d-flex align-items-center bg-primary">
-              <h5 class="modal-title text-white fs-4">Edit Fuel Expense</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-12">
-                  <div class="card w-100 border position-relative overflow-hidden mb-0">
-                    <div class="card-body p-4">
-                      <h4 class="card-title">Edit Fuel Expense</h4>
-                      <p class="card-subtitle mb-4">Fill out the form to record an expense.</p>
-                      <form>
-                        <div class="row">
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="dieselId" class="form-label">Diesel ID</label>
-                              <input type="text" class="form-control" id="dieselId" placeholder="Enter Diesel ID">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="date" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="date" placeholder="Enter Date">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="controlNumber" class="form-label">Control Number</label>
-                              <input type="text" class="form-control" id="controlNumber"
-                                placeholder="Enter Control Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="plateNumber" class="form-label">Plate Number</label>
-                              <input type="text" class="form-control" id="plateNumber" placeholder="Enter Plate Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="seriesNumber" class="form-label">Series Number</label>
-                              <input type="text" class="form-control" id="seriesNumber"
-                                placeholder="Enter Series Number">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="liters" class="form-label">Liters</label>
-                              <input type="number" class="form-control" id="liters" placeholder="Enter Liters">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="unitPrice" class="form-label">Unit Price</label>
-                              <input type="text" class="form-control" id="unitPrice" placeholder="Enter Unit Price">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="fuelAmount" class="form-label">Fuel Amount</label>
-                              <input type="text" class="form-control" id="fuelAmount" placeholder="Enter Fuel Amount">
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button class="btn btn-primary">Save</button>
                             </div>
                           </div>
                         </div>
@@ -479,10 +177,7 @@ include '../includes/header.php';
                 </div>
                 <div
                   class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                  <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                    data-bs-target="#addExpenseModal">
-                    <i class="ti ti-users text-white me-1 fs-5"></i> Add Expenses
-                  </a>
+                  
                 </div>
               </div>
               <div class="py-3">
@@ -494,14 +189,11 @@ include '../includes/header.php';
                       <tr>
                         <th>ExpenseID</th>
                         <th>Date</th>
-                        <th>TollFee</th>
-                        <th>RateAmount</th>
-                        <th>TotalAmount</th>
                         <th>SalaryAmount</th>
-                        <th>GasAmount</th>
-                        <th>AllowanceAmount</th>
-                        <th>ExtraMealAmount</th>
-                        <th>MobileFeeAmount</th>
+                        <th>TollFeeAmount</th>
+                        <th>MobileAmount</th>
+                        <th>OtherAmount</th>
+                        <th>TotalExpense</th>
                         <th>Action</th>
                       </tr>
                       <!-- end row -->
@@ -520,21 +212,17 @@ include '../includes/header.php';
                           echo "<tr>";
                           echo "<td>" . $row['ExpenseID'] . "</td>";
                           echo "<td>" . $row['Date'] . "</td>";
-                          echo "<td>" . $row['TollFee'] . "</td>";
-                          echo "<td>" . $row['RateAmount'] . "</td>";
-                          echo "<td>" . $row['TotalAmount'] . "</td>";
                           echo "<td>" . $row['SalaryAmount'] . "</td>";
-                          echo "<td>" . $row['GasAmount'] . "</td>";
-                          echo "<td>" . $row['AllowanceAmount'] . "</td>";
-                          echo "<td>" . $row['ExtraMealAmount'] . "</td>";
-                          echo "<td>" . $row['Mobile'] . "</td>";
+                          echo "<td>" . $row['TollFeeAmount'] . "</td>";
+                          echo "<td>" . $row['MobileAmount'] . "</td>";
+                          echo "<td>" . $row['OtherAmount'] . "</td>";
+                          echo "<td>" . $row['TotalExpense'] . "</td>";
                           echo "<td>";
                           // Edit button
-                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateExpenseEditForm(" . json_encode($row) . ");'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
                           // Delete button inside your table
                           echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']});  return false;'>";
-                          echo "<i class='fs-4 ti ti-trash'></i></a>";
                           echo "</td>";
                           echo "</tr>";
                         }
@@ -548,8 +236,6 @@ include '../includes/header.php';
                     </tbody>
                   </table>
                 </div>
-                <!-- Delete Expense Modal -->
-
               </div>
             </div>
             <div class="tab-pane py-3" id="profile" role="tabpanel">
@@ -562,22 +248,100 @@ include '../includes/header.php';
                 </div>
                 <div
                   class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                  <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                    data-bs-target="#addFuelExpenseModal">
-                    <i class="ti ti-users text-white me-1 fs-5"></i> Add Fuel Record
-                  </a>
+                  
                 </div>
               </div>
+
+              <!-- Edit Fuel Modal -->
+<div class="modal fade" id="editFuelModal" tabindex="-1" role="dialog" aria-labelledby="editFuelModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header d-flex align-items-center bg-primary">
+        <h5 class="modal-title text-white fs-4">Edit Fuel Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-12">
+            <div class="card w-100 border position-relative overflow-hidden mb-0">
+              <div class="card-body p-4">
+                <h4 class="card-title">Edit Fuel Record</h4>
+                <form id="updateFuelForm" method="POST" action="update_fuel.php">
+                  <div class="row">
+                    <!-- Fuel ID -->
+                    <div class="col-lg-4">
+                      <div class="mb-3">
+                        <label for="updateFuelID" class="form-label">Fuel ID</label>
+                        <input type="text" class="form-control" id="updateFuelID" name="updateFuelID" readonly>
+                      </div>
+                    </div>
+                    <!-- Date -->
+                    <div class="col-lg-4">
+                      <div class="mb-3">
+                        <label for="updateDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="updateDate" name="updateDate">
+                      </div>
+                    </div>
+                    <!-- Liters -->
+                    <div class="col-lg-4">
+                      <div class="mb-3">
+                        <label for="updateLiters" class="form-label">Liters</label>
+                        <input type="number" class="form-control" id="updateLiters" name="updateLiters" step="0.01" oninput="computeFuelAmount()">
+                      </div>
+                    </div>
+                    <!-- Unit Price -->
+                    <div class="col-lg-4">
+                      <div class="mb-3">
+                        <label for="updateUnitPrice" class="form-label">Unit Price</label>
+                        <input type="number" class="form-control" id="updateUnitPrice" name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
+                      </div>
+                    </div>
+                    <!-- Fuel Type -->
+                    <div class="col-lg-4">
+                      <div class="mb-3">
+                        <label for="updateFuelType" class="form-label">Fuel Type</label>
+                        <select class="form-select" id="updateFuelType" name="updateFuelType">
+                          <option value="Diesel">Diesel</option>
+                          <option value="Gasoline">Gasoline</option>
+                        </select>
+                      </div>
+                    </div>
+                    <!-- Amount -->
+                    <div class="col-lg-6">
+                      <div class="mb-3">
+                        <label for="updateAmount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="updateAmount" name="updateAmount" step="0.01" readonly>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
+                        <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
               <!-- Fuel Table -->
               <div class="table-responsive">
                 <table id="" class="table table-striped table-bordered display text-nowrap">
                   <thead>
                     <tr>
-                      <th>Expense ID</th>
+                      <th>FuelID</th>
                       <th>Date</th>
-                      <th>Unit Price</th>
-                      <th>Gas Amount</th>
                       <th>Liters</th>
+                      <th>Unit Price</th>
+                      <th>Fuel Type</th>
+                      <th>Amount</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -587,25 +351,28 @@ include '../includes/header.php';
                     include '../includes/db_connection.php';
 
                     // Create the SQL query to fetch data from the fuel table
-                    $sql = "SELECT ExpenseID, Date, UnitPrice, GasAmount, Liters FROM fuel";
+                    $sql = "SELECT FuelID, Date, Liters, UnitPrice, FuelType, Amount  FROM fuel";
                     $result = $conn->query($sql);
 
                     if ($result->num_rows > 0) {
                       // Loop through each row and display in the table
                       while ($row = $result->fetch_assoc()) {
+                        // Prepare the row data as a JSON object
+                        $fuelData = json_encode($row);
+                        
                         echo "<tr>";
-                        echo "<td>" . $row['ExpenseID'] . "</td>";
+                        echo "<td>" . $row['FuelID'] . "</td>";
                         echo "<td>" . $row['Date'] . "</td>";
-                        echo "<td>" . $row['UnitPrice'] . "</td>";
-                        echo "<td>" . $row['GasAmount'] . "</td>";
                         echo "<td>" . $row['Liters'] . "</td>";
-                        // Edit button
+                        echo "<td>" . $row['UnitPrice'] . "</td>";
+                        echo "<td>" . $row['FuelType'] . "</td>";
+                        echo "<td>" . $row['Amount'] . "</td>";
                         echo "<td>";
-                        echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateEditForm(" . json_encode($row) . ");'>";
+                        // Edit button directly populates the modal using the row data
+                        echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelModal' onclick='populateEditForm($fuelData);'>";
                         echo "<i class='fs-4 ti ti-edit'></i></a>";
-                        // Delete button inside your table
-                        echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['ExpenseID']});  return false;'>";
-                        echo "<i class='fs-4 ti ti-trash'></i></a>";
+                        // Delete button (same as before)
+                        echo "<a href='#' class='text-danger' onclick='openDeleteFuelModal({$row['FuelID']}); return false;'>";
                         echo "</td>";
                         echo "</tr>";
                       }
@@ -628,25 +395,69 @@ include '../includes/header.php';
     </div>
   </div>
 </div>
-
-<div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog" aria-labelledby="deleteExpenseModalLabel"
-  aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-danger">
-        <h5 class="modal-title text-white" id="deleteExpenseModalLabel">Confirm Delete</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to delete this expense? This action cannot be undone.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteExpenseBtn">Delete</button>
-      </div>
-    </div>
-  </div>
 </div>
+
+
+<script>
+  document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
+</script>
+<script>
+
+function populateExpenseEditForm(expense) {
+    // Set values in the modal based on the selected expense row
+    document.getElementById("updateExpenseID").value = expense.ExpenseID;
+    document.getElementById("updateDate").value = expense.Date;
+    document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
+    document.getElementById("updateTollFeeAmount").value = expense.TollFeeAmount;
+    document.getElementById("updateMobileAmount").value = expense.MobileAmount;
+    document.getElementById("updateOtherAmount").value = expense.OtherAmount;
+    document.getElementById("updateTotalExpense").value = expense.TotalExpense;
+}
+
+  function computeTotalExpense() {
+    // Get the values from the input fields
+    const salaryAmount = parseFloat(document.getElementById("updateSalaryAmount").value) || 0;
+    const tollFeeAmount = parseFloat(document.getElementById("updateTollFeeAmount").value) || 0;
+    const mobileAmount = parseFloat(document.getElementById("updateMobileAmount").value) || 0;
+    const otherAmount = parseFloat(document.getElementById("updateOtherAmount").value) || 0;
+
+    // Calculate the total amount
+    const totalExpense = salaryAmount + tollFeeAmount + mobileAmount + otherAmount;
+
+    // Set the total amount in the totalAmount input field
+    document.getElementById("updateTotalExpense").value = totalExpense.toFixed(2); // Rounds to 2 decimal places
+  }
+
+
+  </script>
+
+  
+<script>
+  function populateEditForm(fuel) {
+    document.getElementById("updateFuelID").value = fuel.FuelID;
+    document.getElementById("updateDate").value = fuel.Date;
+    document.getElementById("updateLiters").value = fuel.Liters;
+    document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
+    document.getElementById("updateFuelType").value = fuel.FuelType;
+    document.getElementById("updateAmount").value = fuel.Amount;
+  }
+
+  function computeFuelAmount() {
+    const liters = parseFloat(document.getElementById("updateLiters").value) || 0;
+    const unitPrice = parseFloat(document.getElementById("updateUnitPrice").value) || 0;
+    const amount = liters * unitPrice;
+    document.getElementById("updateAmount").value = amount.toFixed(2); // Rounds to 2 decimal places
+  }
+  function populateEditForm(fuel) {
+  // Set the form fields in the modal using the fuel data passed from the table row
+  document.getElementById("updateFuelID").value = fuel.FuelID;
+  document.getElementById("updateDate").value = fuel.Date;
+  document.getElementById("updateLiters").value = fuel.Liters;
+  document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
+  document.getElementById("updateFuelType").value = fuel.FuelType;
+  document.getElementById("updateAmount").value = fuel.Amount;
+}
+</script>
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
   aria-labelledby="offcanvasExampleLabel">
@@ -911,6 +722,7 @@ include '../includes/header.php';
 </div>
 
 
+</div>
 <div class="dark-transparent sidebartoggler"></div>
 <script src="../assets/js/vendor.min.js"></script>
 <!-- Import Js Files -->
@@ -923,92 +735,18 @@ include '../includes/header.php';
 
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/fullcalendar/index.global.min.js"></script>
-<script src="../assets/js/apps/contact.js"></script>
-<script>
-  document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
-</script>
-<script>
-  function calculateTotal() {
-    var tollFee = parseFloat(document.getElementById("tollFee").value) || 0;
-    var rateAmount = parseFloat(document.getElementById("rateAmount").value) || 0;
-    var salaryAmount = parseFloat(document.getElementById("salaryAmount").value) || 0;
-    var gasAmount = parseFloat(document.getElementById("gasAmount").value) || 0;
-    var allowanceAmount = parseFloat(document.getElementById("allowanceAmount").value) || 0;
-    var extraMealAmount = parseFloat(document.getElementById("extraMealAmount").value) || 0;
-    var mobileFee = parseFloat(document.getElementById("mobileFee").value) || 0;
+<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
-    var total = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
-    document.getElementById("totalAmount").value = total.toFixed(2);
-  }
 
-  function populateEditForm(expense) {
-    // Set values in the modal based on the selected expense row
-    document.getElementById("updateExpenseID").value = expense.ExpenseID;
-    document.getElementById("updateDate").value = expense.Date;
-    document.getElementById("updateTollFee").value = expense.TollFee;
-    document.getElementById("updateRateAmount").value = expense.RateAmount;
-    document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
-    document.getElementById("updateGasAmount").value = expense.GasAmount;
-    document.getElementById("updateAllowanceAmount").value = expense.AllowanceAmount;
-    document.getElementById("updateExtraMealAmount").value = expense.ExtraMealAmount;
-    document.getElementById("updateMobile").value = expense.Mobile;
-    document.getElementById("updateTotalAmount").value = expense.TotalAmount;
-  }
+<script src="../assets/js/datatable/datatable-advanced.init.js"></script>
 
-  function computeTotalAmount() {
-    // Get the values from the input fields
-    const tollFee = parseFloat(document.getElementById("updateTollFee").value) || 0;
-    const rateAmount = parseFloat(document.getElementById("updateRateAmount").value) || 0;
-    const salaryAmount = parseFloat(document.getElementById("updateSalaryAmount").value) || 0;
-    const gasAmount = parseFloat(document.getElementById("updateGasAmount").value) || 0;
-    const allowanceAmount = parseFloat(document.getElementById("updateAllowanceAmount").value) || 0;
-    const extraMealAmount = parseFloat(document.getElementById("updateExtraMealAmount").value) || 0;
-    const mobileFee = parseFloat(document.getElementById("updateMobile").value) || 0;
+  
+</body >
 
-    // Calculate the total amount
-    const totalAmount = tollFee + rateAmount + salaryAmount + gasAmount + allowanceAmount + extraMealAmount + mobileFee;
-
-    // Set the total amount in the totalAmount input field
-    document.getElementById("updateTotalAmount").value = totalAmount.toFixed(2); // Rounds to 2 decimal places
-  }
-
-  // Store the ID of the expense to delete
-  let expenseIDToDelete = null;
-
-  // Function to open the modal and pass the ExpenseID
-  function openDeleteExpenseModal(expenseID) {
-    expenseIDToDelete = expenseID; // Set the expense ID to delete
-    $('#deleteExpenseModal').modal('show'); // Display the modal
-  }
-
-  // Handle the delete button click inside the modal
-  document.getElementById('confirmDeleteExpenseBtn').addEventListener('click', function() {
-    if (expenseIDToDelete !== null) {
-      // Send AJAX request to delete the expense
-      fetch('delete_expense.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: `id=${expenseIDToDelete}` // Send the expense ID as POST data
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Hide the modal after successful deletion
-            $('#deleteExpenseModal').modal('hide');
-            // Reload the page or remove the deleted expense row
-            alert('Expense deleted successfully.');
-            location.reload(); // Reload to reflect changes
-          } else {
-            alert('Failed to delete expense: ' + data.message);
-          }
-        })
-        .catch(error => console.error('Error deleting expense:', error));
-    }
-  });
-</script>
-</body>
-
-</html>
+</html >
