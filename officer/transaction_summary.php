@@ -10,10 +10,14 @@ function roundUpKGs($kgs)
         return 0; // Handle as per your business logic
     }
     if ($kgs <= 1199) {
-        return 1000;
+        return 1000; // Rounds up to the nearest thousand if under 1199
     }
-    return ceil($kgs / 1000) * 1000;
+    if ($kgs > 4200) {
+        return 4000; // Specific case where values over 4200 round down to 4000
+    }
+    return ceil($kgs / 1000) * 1000; // Rounds up to the nearest thousand for all other cases
 }
+
 
 // Check if expenses data was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

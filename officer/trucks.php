@@ -394,7 +394,7 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered display text-nowrap">
+                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
                         <th>Maintenance ID</th>
@@ -455,7 +455,7 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="" class="table table-striped table-bordered display text-nowrap">
+                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
                         <th>Transaction ID</th>
