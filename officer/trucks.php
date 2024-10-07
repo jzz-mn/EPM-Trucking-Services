@@ -264,7 +264,7 @@ include '../officer/header.php';
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="maintenanceAmount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="maintenanceAmount" name="maintenanceAmount" placeholder="Enter Amount" oninput="computeMaintenanceAmount()">
+                            <input type="number" class="form-control" id="maintenanceAmount" name="maintenanceAmount" placeholder="Enter Amount" step="0.01" min="0" max="1000000000000">
                           </div>
                         </div>
 
@@ -507,19 +507,36 @@ include '../officer/header.php';
     <script>
       // Function to populate the Edit Maintenance modal with the selected record data
       function populateEditMaintenanceForm(maintenance) {
+        // Map month names to numbers
+        const monthMap = {
+          'January': '1',
+          'February': '2',
+          'March': '3',
+          'April': '4',
+          'May': '5',
+          'June': '6',
+          'July': '7',
+          'August': '8',
+          'September': '9',
+          'October': '10',
+          'November': '11',
+          'December': '12'
+        };
+
+        let monthValue = maintenance.Month;
+
+        // If the month is a name, map it to its numeric value
+        if (isNaN(monthValue)) {
+          monthValue = monthMap[monthValue];
+        }
+
         // Set values in the modal based on the selected maintenance row
         document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-        document.getElementById("maintenanceYear").value = maintenance.Year; // Set year
-        document.getElementById("maintenanceMonth").value = maintenance.Month; // Set month
+        document.getElementById("maintenanceYear").value = maintenance.Year;
+        document.getElementById("maintenanceMonth").value = monthValue; // Set month
         document.getElementById("maintenanceCategory").value = maintenance.Category;
         document.getElementById("maintenanceDescription").value = maintenance.Description;
         document.getElementById("maintenanceAmount").value = maintenance.Amount;
-      }
-
-      // Event listener for calculating and updating the maintenance amount if needed
-      function computeMaintenanceAmount() {
-        const amount = parseFloat(document.getElementById("maintenanceAmount").value) || 0;
-        document.getElementById("maintenanceAmount").value = amount.toFixed(2); // Rounds to 2 decimal places
       }
 
       // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
