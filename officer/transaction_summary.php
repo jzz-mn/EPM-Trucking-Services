@@ -3,28 +3,38 @@ session_start();
 include '../officer/header.php';
 include '../includes/db_connection.php';
 
-// Function to round up Total KGs to the nearest 1000
-function roundUpKGs($kgs)
+/**
+ * Function to round up Total KGs based on the specified rules.
+ * 
+ * Rules:
+ * - 0 < KGs <= 1199 => 1000
+ * - 1200 <= KGs <= 2199 => 2000
+ * - 2200 <= KGs <= 3199 => 3000
+ * - 3200 <= KGs <= 4199 => 4000
+ * - KGs >= 4200 => 4000 (Cap at 4000)
+ *
+ * @param float $kgs Total KGs
+ * @return int Rounded KGs
+ */
+function round_up_kgs($kgs)
 {
     if ($kgs <= 0) {
         return 0; // Handle as per your business logic
     }
     if ($kgs <= 1199) {
-        return 1000; // Rounds up to the nearest thousand if under 1199
+        return 1000;
     }
-    if ($kgs > 4200) {
-        return 4000; // Specific case where values over 4200 round down to 4000
+    if ($kgs <= 4199) {
+        return ceil($kgs / 1000) * 1000;
     }
-    return ceil($kgs / 1000) * 1000; // Rounds up to the nearest thousand for all other cases
+    return 4000; // Cap at 4000
 }
 
-
-// Check if expenses data was submitted
+// Check if the user has submitted expenses data
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Store expenses data in session
     $_SESSION['expenses_date'] = $_POST['expenses_date'];
     $_SESSION['expenses_salary'] = $_POST['expenses_salary'];
-    $_SESSION['expenses_toll_fee'] = $_POST['expenses_toll_fee'];
     $_SESSION['expenses_mobile_fee'] = $_POST['expenses_mobile_fee'];
     $_SESSION['expenses_other_amount'] = $_POST['expenses_other_amount'];
     $_SESSION['expenses_total'] = $_POST['expenses_total'];
@@ -35,33 +45,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Retrieve data from session for display
-$transaction_date = $_SESSION['transaction_date'];
-$truck_id = $_SESSION['truck_id'];
-$transactions = $_SESSION['transactions'];
+$transaction_date = $_SESSION['transaction_date'] ?? '';
+$truck_id = $_SESSION['truck_id'] ?? '';
+$transactions = $_SESSION['transactions'] ?? [];
 $fuel_data = [
-    'date' => $_SESSION['fuel_date'],
-    'liters' => $_SESSION['fuel_liters'],
-    'unit_price' => $_SESSION['fuel_unit_price'],
-    'type' => $_SESSION['fuel_type'],
-    'amount' => $_SESSION['fuel_amount']
+    'date' => $_SESSION['fuel_date'] ?? '',
+    'liters' => $_SESSION['fuel_liters'] ?? 0,
+    'unit_price' => $_SESSION['fuel_unit_price'] ?? 0,
+    'type' => $_SESSION['fuel_type'] ?? '',
+    'amount' => $_SESSION['fuel_amount'] ?? 0
 ];
 $expenses_data = [
-    'date' => $_SESSION['expenses_date'],
-    'salary' => $_SESSION['expenses_salary'],
-    'toll_fee' => $_SESSION['expenses_toll_fee'],
-    'mobile_fee' => $_SESSION['expenses_mobile_fee'],
-    'other_amount' => $_SESSION['expenses_other_amount'],
-    'total' => $_SESSION['expenses_total']
+    'date' => $_SESSION['expenses_date'] ?? '',
+    'salary' => $_SESSION['expenses_salary'] ?? 0,
+    'mobile_fee' => $_SESSION['expenses_mobile_fee'] ?? 0,
+    'other_amount' => $_SESSION['expenses_other_amount'] ?? 0,
+    'total' => $_SESSION['expenses_total'] ?? 0
 ];
 
 // Fetch truck details
-$truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
-$stmt = $conn->prepare($truck_query);
-$stmt->bind_param("i", $truck_id);
-$stmt->execute();
-$truck_result = $stmt->get_result();
-$truck = $truck_result->fetch_assoc();
-$stmt->close();
+if ($truck_id) {
+    $truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
+    $stmt = $conn->prepare($truck_query);
+    $stmt->bind_param("i", $truck_id);
+    $stmt->execute();
+    $truck_result = $stmt->get_result();
+    $truck = $truck_result->fetch_assoc();
+    $stmt->close();
+} else {
+    // Redirect back if truck_id is not set
+    header("Location: add_data.php");
+    exit();
+}
 
 // Calculate Total KGs
 $total_kgs = array_sum(array_column($transactions, 'kgs'));
@@ -70,57 +85,90 @@ $total_kgs = array_sum(array_column($transactions, 'kgs'));
 $_SESSION['total_kgs'] = $total_kgs;
 
 // Round up Total KGs as per the rules
-$rounded_total_kgs = roundUpKGs($total_kgs);
-$_SESSION['rounded_total_kgs'] = $rounded_total_kgs;
-
-
-// Store Rounded Total KGs in session
+$rounded_total_kgs = round_up_kgs($total_kgs);
 $_SESSION['rounded_total_kgs'] = $rounded_total_kgs;
 
 // Retrieve ClusterID using the OutletName from the first transaction
-$first_outlet_name = $transactions[0]['outletName'];
-$customer_query = "SELECT CustomerID, ClusterID FROM customers WHERE CustomerName = ?";
-$stmt = $conn->prepare($customer_query);
-$stmt->bind_param("s", $first_outlet_name);
-$stmt->execute();
-$customer_result = $stmt->get_result();
+if (!empty($transactions)) {
+    $first_outlet_name = $transactions[0]['outletName'];
+    $customer_query = "SELECT CustomerID, ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?)";
+    $stmt = $conn->prepare($customer_query);
+    $stmt->bind_param("s", $first_outlet_name);
+    $stmt->execute();
+    $customer_result = $stmt->get_result();
 
-if ($customer_result->num_rows > 0) {
-    $customer = $customer_result->fetch_assoc();
-    $cluster_id = $customer['ClusterID'];
-    $_SESSION['cluster_id'] = $cluster_id; // Store ClusterID in session
+    if ($customer_result->num_rows > 0) {
+        $customer = $customer_result->fetch_assoc();
+        $cluster_id = $customer['ClusterID'];
+        $_SESSION['cluster_id'] = $cluster_id; // Store ClusterID in session
+    } else {
+        // Handle the case where the OutletName does not exist in the Customers table
+        $cluster_id = null;
+        $customer_id = null;
+        $error_message = "The Outlet Name '{$first_outlet_name}' does not exist in the Customers table.";
+    }
+    $stmt->close();
 } else {
-    // Handle the case where the OutletName does not exist in the Customers table
-    $cluster_id = null;
-    $customer_id = null;
-    $error_message = "The Outlet Name '{$first_outlet_name}' does not exist in the Customers table.";
+    $error_message = "No transactions found.";
 }
-$stmt->close();
 
-// Calculate RateAmount using Clusters table based on ClusterID, UnitPrice, and Rounded Total KGs
-if ($cluster_id) {
-    // Assuming 'FuelPrice' in 'clusters' corresponds to 'UnitPrice' from fuel data
-    $fuel_unit_price = $_SESSION['fuel_unit_price'];
+// If there was an error, display it and provide a way to go back
+if (isset($error_message)) {
+    ?>
+    <div class="body-wrapper">
+        <div class="container-fluid">
+            <div class="card card-body py-3">
+                <h4 class="card-title">Error in Transaction Summary</h4>
+                <p class="card-text"><?php echo htmlspecialchars($error_message); ?></p>
+                <a href="transactions_entry.php" class="btn btn-danger">Go Back to Edit Transactions</a>
+            </div>
+        </div>
+    </div>
+    <?php
+    include '../officer/footer.php';
+    $conn->close();
+    exit();
+}
 
-    $cluster_query = "SELECT RateAmount 
-                      FROM clusters 
+// Fetch RateAmount from clusters table based on ClusterID, FuelPrice, and Tonner
+if ($cluster_id && $rounded_total_kgs > 0) {
+    // Calculate Tonner (assuming 1 Ton = 1000 KGs)
+    $tonner = $rounded_total_kgs;
+
+    // Fetch RateAmount from clusters based on ClusterID, FuelPrice, and Tonner
+    $cluster_query = "SELECT RateAmount FROM clusters 
                       WHERE ClusterID = ? 
                         AND FuelPrice = ? 
                         AND Tonner = ?";
     $stmt = $conn->prepare($cluster_query);
     if (!$stmt) {
-        throw new Exception("Prepare failed for cluster query: ({$conn->errno}) {$conn->error}");
+        // Handle error
+        ?>
+        <div class="body-wrapper">
+            <div class="container-fluid">
+                <div class="card card-body py-3">
+                    <h4 class="card-title">Error</h4>
+                    <p class="card-text">Database error: <?php echo htmlspecialchars($conn->error); ?></p>
+                    <a href="transaction_summary.php" class="btn btn-danger">Go Back</a>
+                </div>
+            </div>
+        </div>
+        <?php
+        include '../officer/footer.php';
+        $conn->close();
+        exit();
     }
-    $stmt->bind_param("idd", $cluster_id, $fuel_unit_price, $rounded_total_kgs);
+    $fuel_unit_price = $_SESSION['fuel_unit_price'];
+    $stmt->bind_param("idd", $cluster_id, $fuel_unit_price, $tonner);
     $stmt->execute();
     $cluster_result = $stmt->get_result();
 
     if ($cluster_result->num_rows > 0) {
         $cluster = $cluster_result->fetch_assoc();
-        $rate_amount = $cluster['RateAmount']; // Retrieved based on rounded KGs and UnitPrice
+        $rate_amount = $cluster['RateAmount']; // Retrieved based on ClusterID, FuelPrice, and Tonner
         $_SESSION['rate_amount'] = $rate_amount; // Store RateAmount in session
     } else {
-        throw new Exception("No matching cluster found for ClusterID '{$cluster_id}', UnitPrice '{$fuel_unit_price}', and TotalKGs '{$rounded_total_kgs}'.");
+        throw new Exception("No RateAmount found in clusters table for ClusterID '{$cluster_id}', FuelPrice '{$fuel_unit_price}', and Tonner '{$tonner}'.");
     }
     $stmt->close();
 } else {
@@ -129,86 +177,91 @@ if ($cluster_id) {
 }
 
 // Retrieve TotalExpense from expenses data
-$total_expense = $_SESSION['expenses_total'];
+$total_expense = $expenses_data['total'];
+
+// Retrieve Toll Fee Amount from session
+$toll_fee_amount = $_SESSION['toll_fee_amount'] ?? 0;
 
 // Calculate Final Amount
-$amount = $rate_amount + $total_expense;
-$_SESSION['final_amount'] = $amount; // Store Final Amount in session
+$final_amount = $rate_amount + $toll_fee_amount;
+$_SESSION['final_amount'] = $final_amount; // Store Final Amount in session
 ?>
+
 <div class="body-wrapper">
     <div class="container-fluid">
-        <!-- Existing card and breadcrumb code -->
-        <div class="card card-body py-3">
-            <!-- ... -->
-        </div>
-        <div class="widget-content searchable-container list">
-            <h5 class="border-bottom py-2 px-4 mb-4">Transaction Group Summary</h5>
-            <div class="card w-100 border position-relative overflow-hidden mb-0">
-                <div class="card-body p-4">
-                    <h4 class="card-title">Review and Confirm</h4>
-                    <p class="card-subtitle mb-4">Please review all the details before confirming.</p>
-                    <?php if (isset($error_message)): ?>
-                        <div class="alert alert-danger">
-                            <?php echo htmlspecialchars($error_message); ?>
-                            <br>
-                            <a href="transactions_entry.php" class="btn btn-danger mt-2">Go Back to Edit Transactions</a>
-                        </div>
-                    <?php else: ?>
-                        <form id="summary-form" method="POST" action="save_transaction_group.php">
-                            <!-- Truck Details -->
-                            <h5 class="mt-4">Truck Details</h5>
-                            <p>Plate No: <?php echo htmlspecialchars($truck['PlateNo']); ?></p>
-                            <p>Truck Brand: <?php echo htmlspecialchars($truck['TruckBrand']); ?></p>
-                            <p>Date: <?php echo htmlspecialchars($transaction_date); ?></p>
-                            <!-- Transactions Summary -->
-                            <h5 class="mt-4">Transactions Summary</h5>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>DR No</th>
-                                        <th>Outlet Name</th>
-                                        <th>Quantity</th>
-                                        <th>KGs</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($transactions as $txn): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($txn['drNo']); ?></td>
-                                            <td><?php echo htmlspecialchars($txn['outletName']); ?></td>
-                                            <td><?php echo htmlspecialchars($txn['quantity']); ?></td>
-                                            <td><?php echo htmlspecialchars($txn['kgs']); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                            <!-- Fuel Details -->
-                            <h5 class="mt-4">Fuel Details</h5>
-                            <p>Date: <?php echo htmlspecialchars($fuel_data['date']); ?></p>
-                            <p>Liters: <?php echo htmlspecialchars($fuel_data['liters']); ?></p>
-                            <p>Unit Price: <?php echo htmlspecialchars($fuel_data['unit_price']); ?></p>
-                            <p>Fuel Type: <?php echo htmlspecialchars($fuel_data['type']); ?></p>
-                            <p>Amount: <?php echo htmlspecialchars($fuel_data['amount']); ?></p>
-                            <!-- Expenses Details -->
-                            <h5 class="mt-4">Expenses Details</h5>
-                            <p>Salary Amount: <?php echo htmlspecialchars($expenses_data['salary']); ?></p>
-                            <p>Toll Fee Amount: <?php echo htmlspecialchars($expenses_data['toll_fee']); ?></p>
-                            <p>Mobile Fee Amount: <?php echo htmlspecialchars($expenses_data['mobile_fee']); ?></p>
-                            <p>Other Amount: <?php echo htmlspecialchars($expenses_data['other_amount']); ?></p>
-                            <p>Total Expense: <?php echo htmlspecialchars($expenses_data['total']); ?></p>
-                            <!-- Calculated Fields -->
-                            <h5 class="mt-4">Calculated Totals</h5>
-                            <p>Original Total KGs: <?php echo number_format($total_kgs, 2); ?></p>
-                            <p>Rounded Total KGs: <?php echo number_format($rounded_total_kgs, 0); ?></p>
-                            <p>Cluster ID: <?php echo htmlspecialchars($cluster_id); ?></p>
-                            <p>Rate Amount: <?php echo number_format($rate_amount, 2); ?></p>
-                            <p>Final Amount: <?php echo number_format($amount, 2); ?></p>
-                            <!-- Buttons -->
-                            <button type="submit" class="btn btn-success">Confirm and Save</button>
-                            <a href="add_data.php" class="btn btn-secondary">Cancel</a>
-                        </form>
-                    <?php endif; ?>
-                </div>
+        <!-- Transaction Summary Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-title">Transaction Summary</h4>
+                <p class="card-subtitle">Review and confirm all transaction details.</p>
+            </div>
+            <div class="card-body">
+                <form id="summary-form" method="POST" action="save_transaction_group.php">
+                    <!-- Truck Details -->
+                    <h5 class="mt-4">Truck Details</h5>
+                    <p><strong>Plate No:</strong> <?php echo htmlspecialchars($truck['PlateNo']); ?></p>
+                    <p><strong>Truck Brand:</strong> <?php echo htmlspecialchars($truck['TruckBrand']); ?></p>
+                    <p><strong>Date:</strong> <?php echo htmlspecialchars($transaction_date); ?></p>
+
+                    <!-- Transactions Summary -->
+                    <h5 class="mt-4">Transactions Summary</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>DR No</th>
+                                <th>Outlet Name</th>
+                                <th>Quantity</th>
+                                <th>KGs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($transactions as $txn): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($txn['drNo']); ?></td>
+                                    <td><?php echo htmlspecialchars($txn['outletName']); ?></td>
+                                    <td><?php echo number_format($txn['quantity'], 2); ?></td>
+                                    <td><?php echo number_format($txn['kgs'], 2); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+
+                    <!-- Fuel Details -->
+                    <h5 class="mt-4">Fuel Details</h5>
+                    <p><strong>Date:</strong> <?php echo htmlspecialchars($fuel_data['date']); ?></p>
+                    <p><strong>Liters:</strong> <?php echo number_format($fuel_data['liters'], 2); ?></p>
+                    <p><strong>Unit Price:</strong> ₱<?php echo number_format($fuel_data['unit_price'], 2); ?></p>
+                    <p><strong>Fuel Type:</strong> <?php echo htmlspecialchars($fuel_data['type']); ?></p>
+                    <p><strong>Amount:</strong> ₱<?php echo number_format($fuel_data['amount'], 2); ?></p>
+
+                    <!-- Expenses Details -->
+                    <h5 class="mt-4">Expenses Details</h5>
+                    <p><strong>Salary Amount:</strong> ₱<?php echo number_format($expenses_data['salary'], 2); ?></p>
+                    <p><strong>Mobile Fee Amount:</strong> ₱<?php echo number_format($expenses_data['mobile_fee'], 2); ?></p>
+                    <p><strong>Other Amount:</strong> ₱<?php echo number_format($expenses_data['other_amount'], 2); ?></p>
+                    <p><strong>Total Expense:</strong> ₱<?php echo number_format($expenses_data['total'], 2); ?></p>
+
+                    <!-- Toll Fee Amount -->
+                    <h5 class="mt-4">Toll Fee Amount</h5>
+                    <div class="mb-3">
+                        <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
+                        <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount" step="0.01" required>
+                    </div>
+
+                    <!-- Calculated Fields -->
+                    <h5 class="mt-4">Calculated Totals</h5>
+                    <p><strong>Original Total KGs:</strong> <?php echo number_format($total_kgs, 2); ?></p>
+                    <p><strong>Rounded Total KGs:</strong> <?php echo number_format($rounded_total_kgs, 0); ?></p>
+                    <p><strong>Cluster ID:</strong> <?php echo htmlspecialchars($cluster_id); ?></p>
+                    <p><strong>Rate Amount:</strong> ₱<?php echo number_format($rate_amount, 2); ?></p>
+                    <p><strong>Final Amount:</strong> ₱<?php echo number_format($final_amount, 2); ?></p>
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="expenses_entry.php" class="btn btn-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Confirm and Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

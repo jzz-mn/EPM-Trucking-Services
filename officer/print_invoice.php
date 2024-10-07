@@ -1,29 +1,32 @@
 <?php
 require_once '../includes/db_connection.php';
-require_once '../vendor/autoload.php'; // Adjust the path if necessary
+require_once '../vendor/autoload.php'; // Ensure the path is correct
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-// Get the BillingInvoiceNo from POST
+// --- Step 1: Retrieve BillingInvoiceNo from POST ---
 if (!isset($_POST['BillingInvoiceNo'])) {
     die('No invoice number provided.');
 }
 
 $billingInvoiceNo = intval($_POST['BillingInvoiceNo']);
 
-// Read and encode the logo image
-$logoPath = 'assets/images/logos/epm-logo-no-bg.png'; // Adjust the path as needed
+// --- Step 2: Handle Logo Image ---
+$logoPath = 'assets/images/logos/epm-logo-no-bg.png'; // Adjust the path as necessary
 if (file_exists($logoPath)) {
     $logoData = file_get_contents($logoPath);
     $base64Logo = base64_encode($logoData);
 } else {
-    $base64Logo = ''; // Handle missing logo
+    $base64Logo = ''; // Optional: Provide a default image or leave blank
 }
 
-// Fetch invoice details
+// --- Step 3: Fetch Invoice Details ---
 $invoiceQuery = "SELECT * FROM invoices WHERE BillingInvoiceNo = ?";
 $stmt = $conn->prepare($invoiceQuery);
+if (!$stmt) {
+    die("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+}
 $stmt->bind_param('i', $billingInvoiceNo);
 $stmt->execute();
 $invoiceResult = $stmt->get_result();
@@ -33,16 +36,19 @@ if ($invoiceResult->num_rows === 0) {
 $invoice = $invoiceResult->fetch_assoc();
 $stmt->close();
 
-// Fetch transaction groups associated with this invoice
+// --- Step 4: Fetch Transaction Groups Associated with the Invoice ---
 $tgQuery = "
-    SELECT tg.*, ti.PlateNo, f.FuelType, f.UnitPrice, e.TotalExpense
+    SELECT tg.*, ti.PlateNo, e.TotalExpense, e.FuelID, f.FuelType, f.UnitPrice
     FROM transactiongroup tg
     JOIN trucksinfo ti ON tg.TruckID = ti.TruckID
-    LEFT JOIN fuel f ON tg.FuelID = f.FuelID
     LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
+    LEFT JOIN fuel f ON e.FuelID = f.FuelID
     WHERE tg.BillingInvoiceNo = ?
 ";
 $stmt = $conn->prepare($tgQuery);
+if (!$stmt) {
+    die("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+}
 $stmt->bind_param('i', $billingInvoiceNo);
 $stmt->execute();
 $tgResult = $stmt->get_result();
@@ -52,25 +58,27 @@ while ($row = $tgResult->fetch_assoc()) {
 }
 $stmt->close();
 
-// Get TransactionGroupIDs
+// --- Step 5: Fetch Transactions Associated with These Transaction Groups ---
 $transactionGroupIDs = array_column($transactionGroups, 'TransactionGroupID');
 
-// Fetch transactions associated with these TransactionGroupIDs, sorted by DRno
 $transactionsByGroup = [];
 if (!empty($transactionGroupIDs)) {
+    // Secure the IDs by ensuring they are integers
     $ids = implode(',', array_map('intval', $transactionGroupIDs));
-    $txnQuery = "SELECT * FROM transactions WHERE TransactionGroupID IN ($ids) ORDER BY DRno";
+    $txnQuery = "SELECT * FROM transactions WHERE TransactionGroupID IN ($ids) ORDER BY DRno ASC";
     $txnResult = $conn->query($txnQuery);
-    while ($txn = $txnResult->fetch_assoc()) {
-        $tgid = $txn['TransactionGroupID'];
-        if (!isset($transactionsByGroup[$tgid])) {
-            $transactionsByGroup[$tgid] = [];
+    if ($txnResult) {
+        while ($txn = $txnResult->fetch_assoc()) {
+            $tgid = $txn['TransactionGroupID'];
+            if (!isset($transactionsByGroup[$tgid])) {
+                $transactionsByGroup[$tgid] = [];
+            }
+            $transactionsByGroup[$tgid][] = $txn;
         }
-        $transactionsByGroup[$tgid][] = $txn;
     }
 }
 
-// Generate the HTML content for the PDF
+// --- Step 6: Generate HTML for PDF ---
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -81,8 +89,8 @@ ob_start();
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 10px; /* Smaller font size */
-            text-transform: uppercase; /* Uppercase text */
+            font-size: 10px;
+            text-transform: uppercase;
         }
         .invoice-header {
             margin-bottom: 20px;
@@ -100,6 +108,7 @@ ob_start();
         .transactions-table {
             border-collapse: collapse;
             width: 100%;
+            margin-top: 20px;
         }
         .transactions-table th, .transactions-table td {
             border: 1px solid #000;
@@ -123,7 +132,7 @@ ob_start();
         }
         .totals-table {
             width: 50%;
-            margin-left: auto; /* Align the table to the right */
+            margin-left: auto;
             border-collapse: collapse;
         }
         .totals-table td {
@@ -152,7 +161,7 @@ ob_start();
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header Section -->
     <div class="invoice-header">
         <div class="logo">
             <?php if ($base64Logo): ?>
@@ -205,8 +214,8 @@ ob_start();
         $subtotalKGs = 0;
 
         $fuelUnitPrice = $tg['UnitPrice'] ?? 0; // UnitPrice from fuel table
-        $tollFeePW = $tg['TotalExpense'] ?? 0; // TollFee/PW from expenses
-        $rate = $tg['RateAmount'] ?? 0; // Rate from transactiongroup
+        $tollFeePW = $tg['TollFeeAmount'] ?? 0; // TollFeeAmount from transactiongroup
+        $rate_amount = $tg['RateAmount'] ?? 0; // RateAmount from transactiongroup
         $amount = $tg['Amount'] ?? 0; // Amount from transactiongroup
 
         // Start of transaction group
@@ -243,7 +252,7 @@ ob_start();
             <td></td>
             <td class="numeric"><?php echo number_format($subtotalQty, 2); ?></td>
             <td class="numeric"><?php echo number_format($subtotalKGs, 2); ?></td>
-            <td class="numeric"><?php echo '₱' . number_format($rate, 2); ?></td>
+            <td class="numeric"><?php echo '₱' . number_format($rate_amount, 2); ?></td>
             <td class="numeric"><?php echo '₱' . number_format($tollFeePW, 2); ?></td>
             <td class="numeric"><?php echo '₱' . number_format($amount, 2); ?></td>
         </tr>
@@ -252,7 +261,7 @@ ob_start();
         echo '<!-- End of Transaction Group -->';
 
         // Accumulate totals
-        $totalRate += $rate;
+        $totalRate += $rate_amount;
         $totalTollFee += $tollFeePW;
         $totalAmount += $amount;
 
@@ -268,9 +277,9 @@ ob_start();
         </tbody>
     </table>
 
-    <!-- Totals Section -->
+    <!-- Totals Section from Invoices Table -->
     <?php
-    // Use the totals from the 'invoices' table for the final calculations
+    // Extract totals from the invoices table
     $grossAmount = $invoice['GrossAmount'];
     $vat = $invoice['VAT'];
     $totalAmountInvoice = $invoice['TotalAmount'];
@@ -313,7 +322,7 @@ ob_start();
         </table>
     </div>
 
-    <!-- Signatures -->
+    <!-- Signatures Section -->
     <div class="signatures">
         <table class="signature-table">
             <tr>
@@ -347,18 +356,18 @@ ob_start();
 <?php
 $html = ob_get_clean();
 
-// Set up Dompdf options
+// --- Step 7: Configure Dompdf ---
 $options = new Options();
-$options->set('defaultFont', 'DejaVu Sans');
-$options->set('isRemoteEnabled', true);
+$options->set('defaultFont', 'DejaVu Sans'); // Ensure UTF-8 support
+$options->set('isRemoteEnabled', true); // Enable loading of remote content (if needed)
 
-// Instantiate Dompdf
+// Instantiate Dompdf with options
 $dompdf = new Dompdf($options);
 
-// Load HTML content
+// Load the HTML content
 $dompdf->loadHtml($html);
 
-// (Optional) Setup the paper size and orientation
+// (Optional) Set paper size and orientation
 $dompdf->setPaper('A4', 'portrait');
 
 // Render the HTML as PDF
