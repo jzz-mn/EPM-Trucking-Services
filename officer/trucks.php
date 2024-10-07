@@ -507,52 +507,52 @@ include '../officer/header.php';
     <script>
       // Function to populate the Edit Maintenance modal with the selected record data
       function populateEditMaintenanceForm(maintenance) {
-        // Map month names to numbers
-        const monthMap = {
-          'January': '1',
-          'February': '2',
-          'March': '3',
-          'April': '4',
-          'May': '5',
-          'June': '6',
-          'July': '7',
-          'August': '8',
-          'September': '9',
-          'October': '10',
-          'November': '11',
-          'December': '12'
-        };
+    // Map month names to numbers
+    const monthMap = {
+      'January': '1',
+      'February': '2',
+      'March': '3',
+      'April': '4',
+      'May': '5',
+      'June': '6',
+      'July': '7',
+      'August': '8',
+      'September': '9',
+      'October': '10',
+      'November': '11',
+      'December': '12'
+    };
 
-        let monthValue = maintenance.Month;
+    let monthValue = maintenance.Month;
 
-        // If the month is a name, map it to its numeric value
-        if (isNaN(monthValue)) {
-          monthValue = monthMap[monthValue];
-        }
+    // If the month is a name, map it to its numeric value
+    if (isNaN(monthValue)) {
+      monthValue = monthMap[monthValue];
+    }
 
-        // Set values in the modal based on the selected maintenance row
-        document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-        document.getElementById("maintenanceYear").value = maintenance.Year;
-        document.getElementById("maintenanceMonth").value = monthValue; // Set month
-        document.getElementById("maintenanceCategory").value = maintenance.Category;
-        document.getElementById("maintenanceDescription").value = maintenance.Description;
-        document.getElementById("maintenanceAmount").value = maintenance.Amount;
-      }
+    // Set values in the modal based on the selected maintenance row
+    document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+    document.getElementById("maintenanceYear").value = maintenance.Year;
+    document.getElementById("maintenanceMonth").value = monthValue; // Set month
+    document.getElementById("maintenanceCategory").value = maintenance.Category;
+    document.getElementById("maintenanceDescription").value = maintenance.Description;
+    document.getElementById("maintenanceAmount").value = maintenance.Amount;
+  }
 
-      // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
-      function attachMaintenanceEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-        editButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
-            populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
-            $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
-          });
-        });
-      }
+  // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
+  function attachMaintenanceEditButtons() {
+    const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
+        populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
+        $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+      });
+    });
+  }
 
-      // Execute this function when the document is fully loaded
-      document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
+  // Execute this function when the document is fully loaded
+  document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
     </script>
 
     <script>

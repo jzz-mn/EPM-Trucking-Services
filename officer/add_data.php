@@ -11,7 +11,7 @@ $truck_result = $conn->query($truck_query);
     <div class="container-fluid">
         <!-- Existing card and breadcrumb code -->
         <div class="card card-body py-3">
-            Add Data
+            <h5 class="m-0">Add Data</h5>
         </div>
         <div class="widget-content searchable-container list">
             <h5 class="border-bottom py-2 px-4 mb-4">Truck Selection</h5>

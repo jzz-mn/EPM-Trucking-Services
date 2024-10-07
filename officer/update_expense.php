@@ -6,14 +6,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $expenseId = $_POST['updateExpenseID'];
   $date = $_POST['updateDate'];
   $salaryAmount = $_POST['updateSalaryAmount'];
-  $tollFeeAmount = $_POST['updateTollFeeAmount'];
   $mobileAmount = $_POST['updateMobileAmount'];
   $otherAmount = $_POST['updateOtherAmount'];
-  $totalExpense = $salaryAmount + $tollFeeAmount + $mobileAmount + $otherAmount;
+  $totalExpense = $salaryAmount + $mobileAmount + $otherAmount;
 
   // Update the record in the database
   $sql = "UPDATE expenses 
-          SET Date='$date', TollFeeAmount='$tollFeeAmount', SalaryAmount='$salaryAmount', 
+          SET Date='$date', SalaryAmount='$salaryAmount', 
               MobileAmount='$mobileAmount', OtherAmount='$otherAmount' , TotalExpense ='$totalExpense'
           WHERE ExpenseID='$expenseId'";
 
