@@ -7,15 +7,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $maintenanceDate = $_POST['maintenanceDate'];
     $category = $_POST['maintenanceCategory'];
     $description = $_POST['maintenanceDescription'];
-    $amount = $_POST['maintenanceAmount'];
 
     // Extract Year and Month from the maintenanceDate
     $year = date('Y', strtotime($maintenanceDate));
     $month = date('F', strtotime($maintenanceDate));
 
     // Insert query
-    $sql = "INSERT INTO truckmaintenance (MaintenanceID, Year, Month, Category, Description, Amount) 
-            VALUES ('$maintenanceId', '$year', '$month', '$category', '$description', '$amount')";
+    $sql = "INSERT INTO truckmaintenance (MaintenanceID, Year, Month, Category, Description) 
+            VALUES ('$maintenanceId', '$year', '$month', '$category', '$description')";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: maintenance.php");
