@@ -388,7 +388,6 @@ include '../officer/header.php';
           </tbody>
         </table>
       </div>
-
     </div>
   </div>
 </div>

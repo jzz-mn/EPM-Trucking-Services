@@ -101,14 +101,6 @@ include '../officer/header.php';
                                 name="updateSalaryAmount" step="0.01" oninput="computeTotalExpense()">
                             </div>
                           </div>
-                          <!-- Toll Fee -->
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="updateTollFee" class="form-label">Toll Fee Amount</label>
-                              <input type="number" class="form-control" id="updateTollFeeAmount"
-                                name="updateTollFeeAmount" step="0.01" oninput="computeTotalExpense()">
-                            </div>
-                          </div>
                           <!-- Mobile -->
                           <div class="col-lg-4">
                             <div class="mb-3">
@@ -194,7 +186,6 @@ include '../officer/header.php';
                         <th>ExpenseID</th>
                         <th>Date</th>
                         <th>SalaryAmount</th>
-                        <th>TollFeeAmount</th>
                         <th>MobileAmount</th>
                         <th>OtherAmount</th>
                         <th>TotalExpense</th>
@@ -217,7 +208,6 @@ include '../officer/header.php';
                           echo "<td>" . $row['ExpenseID'] . "</td>";
                           echo "<td>" . $row['Date'] . "</td>";
                           echo "<td>" . $row['SalaryAmount'] . "</td>";
-                          echo "<td>" . $row['TollFeeAmount'] . "</td>";
                           echo "<td>" . $row['MobileAmount'] . "</td>";
                           echo "<td>" . $row['OtherAmount'] . "</td>";
                           echo "<td>" . $row['TotalExpense'] . "</td>";
@@ -416,7 +406,6 @@ include '../officer/header.php';
     document.getElementById("updateExpenseID").value = expense.ExpenseID;
     document.getElementById("updateDate").value = expense.Date;
     document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
-    document.getElementById("updateTollFeeAmount").value = expense.TollFeeAmount;
     document.getElementById("updateMobileAmount").value = expense.MobileAmount;
     document.getElementById("updateOtherAmount").value = expense.OtherAmount;
     document.getElementById("updateTotalExpense").value = expense.TotalExpense;
@@ -425,12 +414,11 @@ include '../officer/header.php';
   function computeTotalExpense() {
     // Get the values from the input fields
     const salaryAmount = parseFloat(document.getElementById("updateSalaryAmount").value) || 0;
-    const tollFeeAmount = parseFloat(document.getElementById("updateTollFeeAmount").value) || 0;
     const mobileAmount = parseFloat(document.getElementById("updateMobileAmount").value) || 0;
     const otherAmount = parseFloat(document.getElementById("updateOtherAmount").value) || 0;
 
     // Calculate the total amount
-    const totalExpense = salaryAmount + tollFeeAmount + mobileAmount + otherAmount;
+    const totalExpense = salaryAmount + mobileAmount + otherAmount;
 
     // Set the total amount in the totalAmount input field
     document.getElementById("updateTotalExpense").value = totalExpense.toFixed(2); // Rounds to 2 decimal places
