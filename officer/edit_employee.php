@@ -19,15 +19,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Data for the useraccounts table
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $emailAddress = isset($_POST['emailAddress']) ? trim($_POST['emailAddress']) : '';
-    $password = isset($_POST['password']) ? trim($_POST['password']) : ''; // Optionally use the provided password directly
-    $activationStatus = isset($_POST['activationStatus']) ? trim($_POST['activationStatus']) : ''; // Add ActivationStatus
+    $activationStatus = isset($_POST['activationStatus']) ? trim($_POST['activationStatus']) : '';
+
+    // Password-related fields
+    $currentPassword = isset($_POST['currentPassword']) ? trim($_POST['currentPassword']) : '';
+    $newPassword = isset($_POST['newPassword']) ? trim($_POST['newPassword']) : '';
+    $confirmNewPassword = isset($_POST['confirmNewPassword']) ? trim($_POST['confirmNewPassword']) : '';
+
+    // Fetch the current password from the database
+    $sql_fetch_password = "SELECT password FROM useraccounts WHERE EmployeeID = ?";
+    $stmt_fetch = $conn->prepare($sql_fetch_password);
+    $stmt_fetch->bind_param('i', $employeeID);
+    $stmt_fetch->execute();
+    $stmt_fetch->bind_result($dbPassword);
+    $stmt_fetch->fetch();
+    $stmt_fetch->close();
+
+    // Verify the current password
+    if ($currentPassword !== $dbPassword) {
+        echo json_encode(['success' => false, 'message' => 'Current password is incorrect.']);
+        exit;
+    }
 
     // First, update the employees table
     $sql_employee = "UPDATE employees 
                      SET FirstName = ?, MiddleInitial = ?, LastName = ?, Gender = ?, DateOfBirth = ?, MobileNo = ?, EmploymentDate = ?, Position = ?, Address = ? 
                      WHERE EmployeeID = ?";
-
-    // Prepare the statement for employees table update
     $stmt_employee = $conn->prepare($sql_employee);
     if ($stmt_employee) {
         $stmt_employee->bind_param('sssssssssi', $firstName, $middleInitial, $lastName, $gender, $dob, $mobileNo, $employmentDate, $position, $address, $employeeID);
@@ -41,26 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Then, update the useraccounts table
-    $sql_user = "UPDATE useraccounts SET username = ?, emailAddress = ?, ActivationStatus = ?"; // Added ActivationStatus
-
-    // If the password field is provided, append it to the SQL query
-    if (!empty($password)) {
-        // Hash the password
-        $hashedPassword = ($password);
-        $sql_user .= ", password = ?";
-    }
-
-    $sql_user .= " WHERE EmployeeID = ?";
-
-    // Prepare the statement for useraccounts table update
+    $sql_user = "UPDATE useraccounts SET username = ?, emailAddress = ?, ActivationStatus = ? WHERE EmployeeID = ?";
     $stmt_user = $conn->prepare($sql_user);
     if ($stmt_user) {
-        if (!empty($password)) {
-            $stmt_user->bind_param('sssii', $username, $emailAddress, $activationStatus, $hashedPassword, $employeeID);
-        } else {
-            $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
-        }
-
+        $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
         if (!$stmt_user->execute()) {
             echo json_encode(['success' => false, 'message' => 'Error updating user account: ' . $stmt_user->error]);
             exit;
@@ -70,6 +71,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // If both updates are successful, return success message
+    // If the new password is provided, update the password
+    if (!empty($newPassword)) {
+        if ($newPassword === $confirmNewPassword) {
+            // Update the password in plain text (without hashing)
+            $sql_password = "UPDATE useraccounts SET password = ? WHERE EmployeeID = ?";
+            $stmt_password = $conn->prepare($sql_password);
+            if ($stmt_password) {
+                $stmt_password->bind_param('si', $newPassword, $employeeID);
+                if (!$stmt_password->execute()) {
+                    echo json_encode(['success' => false, 'message' => 'Error updating password: ' . $stmt_password->error]);
+                    exit;
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error preparing password update statement']);
+                exit;
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'New password and confirmation do not match.']);
+            exit;
+        }
+    }
+
+    // Success message
     echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
 }
+?>

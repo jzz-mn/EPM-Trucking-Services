@@ -71,12 +71,21 @@ include '../officer/header.php';
                               <label for="usernameInput" class="form-label">Username</label>
                               <input type="text" class="form-control" id="usernameInput" name="username"
                                 placeholder="Enter username" required>
+                              <div class="invalid-feedback">
+                                This username is already taken.
+                              </div>
                             </div>
+
                             <div class="mb-3">
                               <label for="emailInput" class="form-label">Email address</label>
                               <input type="email" class="form-control" id="emailInput" name="emailAddress"
                                 placeholder="Enter email" required>
+                              <div class="invalid-feedback">
+                                This email address is already taken.
+                              </div>
                             </div>
+
+
                             <div class="mb-3">
                               <label for="passwordInput" class="form-label">New Password</label>
                               <input type="password" class="form-control" id="passwordInput" name="password"
@@ -87,6 +96,7 @@ include '../officer/header.php';
                               <input type="password" class="form-control" id="confirmPasswordInput"
                                 name="confirmPassword" placeholder="Confirm password" required>
                             </div>
+
                           </div>
                         </div>
                       </div>
@@ -116,8 +126,10 @@ include '../officer/header.php';
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="genderInput" class="form-label">Gender</label>
-                              <input type="text" class="form-control" id="genderInput" name="gender"
-                                placeholder="Enter gender" required>
+                              <select class="form-control" id="genderInput" name="gender" required>
+                                <option value="MALE">MALE</option>
+                                <option value="FEMALE">FEMALE</option>
+                              </select>
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="dobInput" class="form-label">Date of Birth</label>
@@ -136,8 +148,11 @@ include '../officer/header.php';
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="positionInput" class="form-label">Position</label>
-                              <input type="text" class="form-control" id="positionInput" name="position"
+                              <select class="form-control" id="positionInput" name="position"
                                 placeholder="Enter position" required>
+                                <option value="Driver">Driver</option>
+                                <option value="Helper/Crew">Helper/Crew</option>
+                              </select>
                             </div>
                             <div class="col-12 mb-3">
                               <label for="addressInput" class="form-label">Address</label>
@@ -146,8 +161,7 @@ include '../officer/header.php';
                             </div>
                             <div class="col-12 mb-3">
                               <div class="d-flex gap-6 m-0 justify-content-end">
-                                <button class="btn bg-danger-subtle text-danger"
-                                  data-bs-dismiss="modal">Discard</button>
+                                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
                                 <button id="btn-add" class="btn btn-primary" type="submit">Save</button>
                               </div>
                             </div>
@@ -213,14 +227,19 @@ include '../officer/header.php';
                                 placeholder="Enter email" required>
                             </div>
                             <div class="mb-3">
-                              <label for="editPasswordInput" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="editPasswordInput" name="password"
-                                placeholder="Enter password">
+                              <label for="editCurrentPasswordInput" class="form-label">Current Password</label>
+                              <input type="password" class="form-control" id="editCurrentPasswordInput" name="currentPassword"
+                                placeholder="Enter current password" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="editNewPasswordInput" class="form-label">New Password</label>
+                              <input type="password" class="form-control" id="editNewPasswordInput" name="newPassword"
+                                placeholder="Enter new password">
                             </div>
                             <div>
-                              <label for="editConfirmPasswordInput" class="form-label">Confirm Password</label>
-                              <input type="password" class="form-control" id="editConfirmPasswordInput"
-                                name="confirmPassword" placeholder="Confirm password">
+                              <label for="editConfirmNewPasswordInput" class="form-label">Confirm New Password</label>
+                              <input type="password" class="form-control" id="editConfirmNewPasswordInput"
+                                name="confirmNewPassword" placeholder="Confirm new password">
                             </div>
                           </div>
                         </div>
@@ -317,6 +336,7 @@ include '../officer/header.php';
               <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
             </form>
           </div>
+
           <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
             <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
               data-bs-target="#addContactModal">
@@ -329,13 +349,13 @@ include '../officer/header.php';
         <table id="" class="table table-striped table-bordered text-nowrap align-middle text-center">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Position</th>
-              <th>Activation Status</th>
+              <th class="sortable" data-sort="name">Name</th>
+              <th class="sortable" data-sort="position">Position</th>
+              <th class="sortable" data-sort="status">Activation Status</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="employeeTableBody">
             <?php
             $query = "SELECT e.EmployeeID, e.FirstName, e.MiddleInitial, e.LastName, e.Position, e.Address, e.MobileNo, e.EmailAddress, e.EmploymentDate,
                        ua.ActivationStatus
@@ -366,24 +386,22 @@ include '../officer/header.php';
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 }
 
-                echo "<tr>";
+                // Output the table row with the data attribute to enable searching
+                echo "<tr data-name='{$fullName}' data-position='{$row['Position']}' data-status='{$row['ActivationStatus']}'>";
                 echo "<td><div class='d-flex align-items-center'>";
                 echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
                 echo "<div class='ms-3'>";
                 echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
                 echo "</div></div></td>";
                 echo "<td>{$positionBadge}</td>";
-                echo "<td>{$activationStatus}</td>";  // Output ActivationStatus
-                echo "<td>";
-                echo "<a data-bs-toggle='modal' data-bs-target='#editContactModal' href='#' class='me-3 text-primary' data-id='{$row['EmployeeID']}'>";
-                echo "<i class='fs-4 ti ti-edit'></i></a>";
-                echo "</td>";
+                echo "<td>{$activationStatus}</td>";
+                echo "<td><a data-bs-toggle='modal' data-bs-target='#editContactModal' href='#' class='me-3 text-primary' data-id='{$row['EmployeeID']}'>";
+                echo "<i class='fs-4 ti ti-edit'></i></a></td>";
                 echo "</tr>";
               }
             } else {
               echo "<tr><td colspan='8' class='text-center'>No employees found</td></tr>";
             }
-            $conn->close();
             ?>
           </tbody>
         </table>
@@ -393,10 +411,10 @@ include '../officer/header.php';
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const employeeID = this.getAttribute('data-id');
         fetch(`../officer/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -418,6 +436,8 @@ include '../officer/header.php';
             // Populate the user account details
             document.getElementById('editUsernameInput').value = data.Username;
             document.getElementById('editEmailInput').value = data.accountEmail;
+            document.getElementById('editPasswordInput').value = data.Password;
+
 
             const activationStatus = data.ActivationStatus === 'Active' ? 'Activated' : 'Deactivated';
             document.getElementById('editActivationStatus').value = activationStatus;
@@ -428,15 +448,15 @@ include '../officer/header.php';
 
     // Handle form submission to edit employee details
     const editForm = document.getElementById('editEmployeeForm');
-    editForm.addEventListener('submit', function (e) {
+    editForm.addEventListener('submit', function(e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       const formData = new FormData(editForm);
 
       fetch('../officer/edit_employee.php', {
-        method: 'POST',
-        body: formData
-      })
+          method: 'POST',
+          body: formData
+        })
         .then(response => response.json())
         .then(data => {
           // Log the entire response to check its structure
@@ -466,6 +486,243 @@ include '../officer/header.php';
     });
   });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPasswordInput = document.getElementById('editCurrentPasswordInput');
+    const newPasswordInput = document.getElementById('editNewPasswordInput');
+    const confirmNewPasswordInput = document.getElementById('editConfirmNewPasswordInput');
+
+    // Validate if the new password and confirm new password match
+    function validateNewPasswordMatch() {
+      if (newPasswordInput.value === confirmNewPasswordInput.value && newPasswordInput.value !== '') {
+        confirmNewPasswordInput.classList.add('is-valid');
+        confirmNewPasswordInput.classList.remove('is-invalid');
+      } else {
+        confirmNewPasswordInput.classList.add('is-invalid');
+        confirmNewPasswordInput.classList.remove('is-valid');
+      }
+    }
+
+    newPasswordInput.addEventListener('input', validateNewPasswordMatch);
+    confirmNewPasswordInput.addEventListener('input', validateNewPasswordMatch);
+  });
+</script>
+
+<!-- Place this script before the closing </body> tag -->
+<script>
+  // Get references to the password input fields
+  const passwordInput = document.getElementById('passwordInput');
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+
+  // Function to validate passwords
+  function validatePassword() {
+    if (confirmPasswordInput.value === passwordInput.value && confirmPasswordInput.value !== '') {
+      // Passwords match and are not empty
+      confirmPasswordInput.classList.remove('is-invalid');
+      confirmPasswordInput.classList.add('is-valid');
+    } else {
+      // Passwords do not match
+      confirmPasswordInput.classList.remove('is-valid');
+      confirmPasswordInput.classList.add('is-invalid');
+    }
+  }
+
+  // Add event listeners to the password fields
+  passwordInput.addEventListener('input', validatePassword);
+  confirmPasswordInput.addEventListener('input', validatePassword);
+</script>
+
+<!-- Place this script before the closing </body> tag -->
+<script>
+  // Get references to the form and the discard button
+  const addEmployeeForm = document.getElementById('addEmployeeForm');
+  const discardButton = document.querySelector('[data-bs-dismiss="modal"]');
+
+  // Function to clear the form when discard is clicked
+  function clearForm() {
+    addEmployeeForm.reset(); // This will reset the form fields
+    // Remove validation classes
+    const formControls = addEmployeeForm.querySelectorAll('.form-control');
+    formControls.forEach(function(control) {
+      control.classList.remove('is-valid', 'is-invalid');
+    });
+  }
+
+  // Add event listener to the discard button
+  discardButton.addEventListener('click', clearForm);
+</script>
+
+<script>
+  // Function to validate the username
+  function checkUsernameAvailability(username) {
+    const formData = new FormData();
+    formData.append('username', username);
+
+    // AJAX request to check username
+    fetch('check_user.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.text())
+      .then(data => {
+        const usernameInput = document.getElementById('usernameInput');
+        if (data === 'taken') {
+          usernameInput.classList.add('is-invalid'); // Red border
+          usernameInput.classList.remove('is-valid'); // Remove green border
+        } else {
+          usernameInput.classList.remove('is-invalid');
+          usernameInput.classList.add('is-valid'); // Green border
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // Function to validate the email address
+  function checkEmailAvailability(email) {
+    const formData = new FormData();
+    formData.append('emailAddress', email);
+
+    // AJAX request to check email
+    fetch('check_user.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.text())
+      .then(data => {
+        const emailInput = document.getElementById('emailInput');
+        if (data === 'taken') {
+          emailInput.classList.add('is-invalid'); // Red border
+          emailInput.classList.remove('is-valid'); // Remove green border
+        } else {
+          emailInput.classList.remove('is-invalid');
+          emailInput.classList.add('is-valid'); // Green border
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // Event listeners for username and email input fields
+  const usernameInput = document.getElementById('usernameInput');
+  const emailInput = document.getElementById('emailInput');
+
+  // Validate username when user types
+  usernameInput.addEventListener('input', () => checkUsernameAvailability(usernameInput.value));
+
+  // Validate email when user types
+  emailInput.addEventListener('input', () => checkEmailAvailability(emailInput.value));
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('input-search');
+    const tableRows = document.querySelectorAll('#employeeTableBody tr');
+
+    searchInput.addEventListener('input', function() {
+      const searchValue = searchInput.value.toLowerCase();
+
+      tableRows.forEach(row => {
+        const name = row.getAttribute('data-name').toLowerCase();
+        const position = row.getAttribute('data-position').toLowerCase();
+        const status = row.getAttribute('data-status').toLowerCase();
+
+        // Check if search value is part of the name, position, or activation status
+        if (name.includes(searchValue) || position.includes(searchValue) || status.includes(searchValue)) {
+          row.style.display = ''; // Show the row
+        } else {
+          row.style.display = 'none'; // Hide the row
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('input-search');
+  const tableRows = document.querySelectorAll('#employeeTableBody tr');
+  const table = document.getElementById('employeeTableBody');
+
+  // Sorting
+  const headers = document.querySelectorAll('.sortable');
+  let currentSortColumn = '';
+  let isAscending = true;
+
+  // Function to compare values for sorting
+  const compareValues = (a, b, column, ascending) => {
+    const valA = a.getAttribute(`data-${column}`).toLowerCase();
+    const valB = b.getAttribute(`data-${column}`).toLowerCase();
+
+    if (valA < valB) return ascending ? -1 : 1;
+    if (valA > valB) return ascending ? 1 : -1;
+    return 0;
+  };
+
+  // Function to sort the table rows
+  const sortTable = (column) => {
+    const rowsArray = Array.from(tableRows);
+    rowsArray.sort((a, b) => compareValues(a, b, column, isAscending));
+    rowsArray.forEach(row => table.appendChild(row)); // Re-attach sorted rows to the table
+  };
+
+  // Add click event listener to each sortable header
+  headers.forEach(header => {
+    header.addEventListener('click', function () {
+      const column = this.getAttribute('data-sort');
+      
+      // Toggle sorting order if clicking on the same column
+      if (currentSortColumn === column) {
+        isAscending = !isAscending;
+      } else {
+        currentSortColumn = column;
+        isAscending = true;
+      }
+
+      // Sort the table based on the clicked column
+      sortTable(column);
+
+      // Optionally, update the header to show the sorting order
+      headers.forEach(h => h.classList.remove('ascending', 'descending'));
+      this.classList.add(isAscending ? 'ascending' : 'descending');
+    });
+  });
+
+  // Search functionality
+  searchInput.addEventListener('input', function () {
+    const searchValue = searchInput.value.toLowerCase();
+
+    tableRows.forEach(row => {
+      const name = row.getAttribute('data-name').toLowerCase();
+      const position = row.getAttribute('data-position').toLowerCase();
+      const status = row.getAttribute('data-status').toLowerCase();
+
+      // Check if search value is part of the name, position, or activation status
+      if (name.includes(searchValue) || position.includes(searchValue) || status.includes(searchValue)) {
+        row.style.display = ''; // Show the row
+      } else {
+        row.style.display = 'none'; // Hide the row
+      }
+    });
+  });
+});
+</script>
+
+<style>
+  .sortable {
+  cursor: pointer;
+}
+
+.ascending::after {
+  content: ' ↑';
+}
+
+.descending::after {
+  content: ' ↓';
+}
+
+</style>
+
+
 
 <?php
 include '../officer/footer.php';
