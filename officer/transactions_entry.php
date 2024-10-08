@@ -31,34 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="body-wrapper">
     <div class="container-fluid">
-        <div class="card card-body py-3">
-            <div class="row align-items-center">
-                <div class="col-12">
-                    <div class="d-sm-flex align-items-center justify-space-between">
-                        <h4 class="mb-4 mb-sm-0 card-title">Add Data</h4>
-                        <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item d-flex align-items-center">
-                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
-                                        <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
-                                    </a>
-                                </li>
-                                <li class="breadcrumb-item" aria-current="page">
-                                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                                        Add Data
-                                    </span>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
+        <!-- Truck Details -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Transactions for Truck: <?php echo htmlspecialchars($truck['PlateNo'] . ' - ' . $truck['TruckBrand']); ?></h4>
+                <p class="card-subtitle mb-4">Date: <?php echo htmlspecialchars($_SESSION['transaction_date']); ?></p>
             </div>
         </div>
-        <h5 class="border-bottom py-2 px-4 mb-4">
-            Transactions for Truck:
-            <?php echo htmlspecialchars($truck['PlateNo'] . ' - ' . $truck['TruckBrand']); ?>
-            Date: <?php echo htmlspecialchars($_SESSION['transaction_date']); ?>
-        </h5>
 
         <!-- Add New Transaction Form -->
         <div class="card mb-4">
@@ -69,10 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <!-- Outlet Name with Autocomplete and Validation -->
                         <div class="col-md-4 position-relative">
                             <label for="input-outlet-name" class="form-label">Outlet Name</label>
-                            <input type="text" class="form-control" id="input-outlet-name"
-                                placeholder="Search Outlet Name" autocomplete="off" required>
-                            <div id="outlet-suggestions" class="list-group position-absolute w-100"
-                                style="z-index: 1000; background-color: white;"></div>
+                            <input type="text" class="form-control" id="input-outlet-name" placeholder="Search Outlet Name" autocomplete="off" required>
+                            <div id="outlet-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; background-color: white;"></div>
                             <!-- Validation Feedback -->
                             <div class="invalid-feedback" id="outlet-error">
                                 Outlet Name does not exist.
@@ -81,19 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <!-- Quantity -->
                         <div class="col-md-3">
                             <label for="input-quantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="input-quantity" placeholder="Quantity"
-                                step="0.01" required>
+                            <input type="number" class="form-control" id="input-quantity" placeholder="Quantity" step="0.01" required>
                         </div>
                         <!-- KGs -->
                         <div class="col-md-3">
                             <label for="input-kgs" class="form-label">KGs</label>
-                            <input type="number" class="form-control" id="input-kgs" placeholder="KGs" step="0.01"
-                                required>
+                            <input type="number" class="form-control" id="input-kgs" placeholder="KGs" step="0.01" required>
                         </div>
                         <!-- Add Transaction Button -->
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-success w-100" id="add-transaction-btn">Add
-                                Transaction</button>
+                            <button type="button" class="btn btn-success w-100" id="add-transaction-btn">Add Transaction</button>
                         </div>
                     </div>
                 </form>
@@ -105,8 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="card-body">
                 <h5 class="card-title">Transactions Entry</h5>
                 <div class="table-responsive">
-                    <table class="table table-striped table-bordered text-nowrap align-middle text-center"
-                        id="transactions-table">
+                    <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="transactions-table">
                         <thead>
                             <tr>
                                 <th>DR No</th>
@@ -136,8 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <!-- Edit Transaction Modal -->
-<div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalTitle"
-    aria-hidden="true">
+<div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
             <div class="modal-header">
@@ -149,10 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <form id="edit-transaction-form">
                     <div class="mb-3 position-relative">
                         <label for="edit-outlet-name" class="form-label">Outlet Name</label>
-                        <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name"
-                            autocomplete="off" required>
-                        <div id="edit-outlet-suggestions" class="list-group position-absolute w-100"
-                            style="z-index: 1000; background-color: white;"></div>
+                        <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name" autocomplete="off" required>
+                        <div id="edit-outlet-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; background-color: white;"></div>
                         <!-- Validation Feedback -->
                         <div class="invalid-feedback" id="edit-outlet-error">
                             Outlet Name does not exist.
@@ -160,8 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                     <div class="mb-3">
                         <label for="edit-quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="edit-quantity" placeholder="Quantity" step="0.01"
-                            required>
+                        <input type="number" class="form-control" id="edit-quantity" placeholder="Quantity" step="0.01" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit-kgs" class="form-label">KGs</label>
