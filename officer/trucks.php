@@ -553,8 +553,8 @@ include '../officer/header.php';
   // Execute this function when the document is fully loaded
   document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
     </script>
-
-      // Function to populate the Edit Transaction modal with the selected record data
+<script>
+      // Function to populate the Edit Transaction modal with the selected record data1
       function populateEditTransactionForm(transaction) {
         // Set values in the modal based on the selected transaction
         document.getElementById("transactionId").value = transaction.TransactionID;

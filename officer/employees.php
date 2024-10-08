@@ -267,8 +267,11 @@ include '../officer/header.php';
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="editGenderInput" class="form-label">Gender</label>
-                              <input type="text" class="form-control" id="editGenderInput" name="gender"
+                              <select type="text" class="form-control" id="editGenderInput" name="gender"
                                 placeholder="Enter gender" required>
+                                <option value="MALE">MALE</option>
+                                <option value="FEMALE">FEMALE</option>
+                              </select>
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="editDobInput" class="form-label">Date of Birth</label>
@@ -286,8 +289,11 @@ include '../officer/header.php';
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="editPositionInput" class="form-label">Position</label>
-                              <input type="text" class="form-control" id="editPositionInput" name="position"
+                              <select type="text" class="form-control" id="editPositionInput" name="position"
                                 placeholder="Enter position" required>
+                                <option value="Driver">Driver</option>
+                                <option value="Helper/Crew">Helper/Crew</option>
+                              </select>
                             </div>
                             <div class="col-7 mb-3">
                               <label for="editAddressInput" class="form-label">Address</label>
