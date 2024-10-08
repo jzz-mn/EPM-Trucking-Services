@@ -162,6 +162,7 @@
         document.documentElement.setAttribute("data-color-theme", e);
     }
 </script>
+</div>
 
 <!--  Search Bar -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
@@ -173,10 +174,95 @@
                     <i class="ti ti-x fs-5 ms-3"></i>
                 </a>
             </div>
+            <div class="modal-body message-body" data-simplebar="">
+                <h5 class="mb-0 fs-5 p-1">Quick Page Links</h5>
+                <ul class="list mb-0 py-2">
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Analytics</span>
+                            <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">eCommerce</span>
+                            <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">CRM</span>
+                            <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard3</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Contacts</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Posts</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Detail</span>
+                            <span
+                                class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Shop</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Modern</span>
+                            <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Dashboard</span>
+                            <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Contacts</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Posts</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Detail</span>
+                            <span
+                                class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
+                        </a>
+                    </li>
+                    <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
+                        <a href="javascript:void(0)">
+                            <span class="text-dark fw-semibold d-block">Shop</span>
+                            <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
-
+</div>
 <div class="dark-transparent sidebartoggler"></div>
 
 <!-- jQuery (Must be loaded first) -->
@@ -188,17 +274,9 @@
 <!-- SimpleBar JS -->
 <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
 
-<!-- DataTables JS and Extensions -->
-<script src="https://cdn.datatables.net/2.4.2/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
 <!-- DataTables Initialization -->
-<script src="../assets/js/datatable/datatable-advanced.init.js"></script>
+<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="../assets/js/datatable/datatable-basic.init.js"></script>
 
 <!-- Theme Scripts -->
 <script src="../assets/js/theme/app.init.js"></script>
@@ -209,24 +287,21 @@
 <!-- Solar Icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
-<!-- FullCalendar JS (if needed) -->
+<!-- FullCalendar JS -->
 <script src="../assets/libs/fullcalendar/index.global.min.js"></script>
 
 <!-- Additional JS Files -->
 <script src="../assets/js/apps/invoice.js"></script>
 <script src="../assets/js/apps/jquery.PrintArea.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
-
-<!-- solar icons -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../assets/js/datatable/datatable-basic.init.js"></script>
 <script src="../assets/js/apps/contact.js"></script>
+<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+
+<!-- ApexCharts -->
+<script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
+
+<!-- Dashboard Script -->
+<script src="../assets/js/dashboards/dashboard3.js"></script>
+<script src="../assets/js/vendor.min.js"></script>
 </body>
 
 </html>
