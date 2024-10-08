@@ -29,8 +29,6 @@ include '../officer/header.php';
       </div>
     </div>
 
-
-
     <!-- Edit Transaction Modal -->
     <div class="modal fade" id="updateTransactionModal" tabindex="-1" role="dialog"
       aria-labelledby="updateTransactionModalTitle" aria-hidden="true">
@@ -162,8 +160,8 @@ include '../officer/header.php';
                         <div class="col-lg-6">
                           <div class="mb-3">
                             <label for="updateWeightKgs" class="form-label">Weight (Kgs)</label>
-                            <input type="number" class="form-control" id="updateWeightKgs" name="weightKgs"
-                              step="0.01" placeholder="Enter Weight">
+                            <input type="number" class="form-control" id="updateWeightKgs" name="weightKgs" step="0.01"
+                              placeholder="Enter Weight">
 
                           </div>
                         </div>
@@ -218,7 +216,8 @@ include '../officer/header.php';
                         <div class="col-lg-6">
                           <div class="mb-3">
                             <label for="maintenanceYear" class="form-label">Year</label>
-                            <input type="number" class="form-control" id="maintenanceYear" name="maintenanceYear" placeholder="Enter Year" min="1900" max="2100" step="1">
+                            <input type="number" class="form-control" id="maintenanceYear" name="maintenanceYear"
+                              placeholder="Enter Year" min="1900" max="2100" step="1">
                           </div>
                         </div>
 
@@ -248,7 +247,8 @@ include '../officer/header.php';
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="maintenanceCategory" class="form-label">Category</label>
-                            <input type="text" class="form-control" id="maintenanceCategory" name="maintenanceCategory" placeholder="Enter Category">
+                            <input type="text" class="form-control" id="maintenanceCategory" name="maintenanceCategory"
+                              placeholder="Enter Category">
                           </div>
                         </div>
 
@@ -256,7 +256,8 @@ include '../officer/header.php';
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="maintenanceDescription" class="form-label">Description</label>
-                            <input type="text" class="form-control" id="maintenanceDescription" name="maintenanceDescription" placeholder="Enter Description">
+                            <input type="text" class="form-control" id="maintenanceDescription"
+                              name="maintenanceDescription" placeholder="Enter Description">
                           </div>
                         </div>
 
@@ -264,19 +265,20 @@ include '../officer/header.php';
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="maintenanceAmount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="maintenanceAmount" name="maintenanceAmount" placeholder="Enter Amount" step="0.01" min="0" max="1000000000000">
+                            <input type="number" class="form-control" id="maintenanceAmount" name="maintenanceAmount"
+                              placeholder="Enter Amount" step="0.01" min="0" max="1000000000000">
                           </div>
                         </div>
 
                         <div class="col-12">
                           <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn bg-danger-subtle text-danger"
+                              data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save</button>
                           </div>
                         </div>
                       </div>
                     </form>
-
                   </div>
                 </div>
               </div>
@@ -287,7 +289,8 @@ include '../officer/header.php';
     </div>
 
     <!-- Edit Transaction Modal -->
-    <div class="modal fade" id="editTransactionModal" tabindex="-1" role="dialog" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editTransactionModal" tabindex="-1" role="dialog"
+      aria-labelledby="editTransactionModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -381,7 +384,8 @@ include '../officer/header.php';
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
                   <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search-maintenance" placeholder="Search" />
+                    <input type="text" class="form-control product-search" id="input-search-maintenance"
+                      placeholder="Search" />
                   </form>
                 </div>
               </div>
@@ -442,11 +446,11 @@ include '../officer/header.php';
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
                   <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search-transactions" placeholder="Search" />
+                    <input type="text" class="form-control product-search" id="input-search-transactions"
+                      placeholder="Search" />
                   </form>
                 </div>
               </div>
-
               <div class="py-3">
                 <!-- Transactions Table -->
                 <?php
@@ -472,7 +476,7 @@ include '../officer/header.php';
                       <?php
                       while ($row = $result->fetch_assoc()) {
                         $transactionData = json_encode($row);  // Prepare the row data as a JSON object
-
+                      
                         echo "<tr>";
                         echo "<td>" . $row['TransactionID'] . "</td>";
                         echo "<td>" . $row['TransactionGroupID'] . "</td>";
@@ -493,17 +497,12 @@ include '../officer/header.php';
                     </tbody>
                   </table>
                 </div>
-                <?php
-                $conn->close();
-                ?>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-
     <script>
       // Function to populate the Edit Maintenance modal with the selected record data
       function populateEditMaintenanceForm(maintenance) {
@@ -555,7 +554,6 @@ include '../officer/header.php';
   document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
     </script>
 
-    <script>
       // Function to populate the Edit Transaction modal with the selected record data
       function populateEditTransactionForm(transaction) {
         // Set values in the modal based on the selected transaction
@@ -571,7 +569,7 @@ include '../officer/header.php';
       function attachTransactionEditButtons() {
         const editButtons = document.querySelectorAll('.edit-transaction-btn');
         editButtons.forEach(button => {
-          button.addEventListener('click', function() {
+          button.addEventListener('click', function () {
             const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
             populateEditTransactionForm(transactionData); // Populate modal with transaction data
             $('#editTransactionModal').modal('show'); // Show the modal
@@ -582,290 +580,9 @@ include '../officer/header.php';
       // Execute this function when the document is fully loaded
       document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
     </script>
-
-
-
-
-
-    <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
-      aria-labelledby="offcanvasExampleLabel">
-      <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-        <h4 class="offcanvas-title fw-semibold" id="offcanvasExampleLabel">
-          Settings
-        </h4>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body" data-simplebar style="height: calc(100vh - 80px)">
-        <h6 class="fw-semibold fs-4 mb-2">Theme</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check light-layout" name="theme-layout" id="light-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="light-layout">
-            <i class="icon ti ti-brightness-up fs-7 me-2"></i>Light
-          </label>
-
-          <input type="radio" class="btn-check dark-layout" name="theme-layout" id="dark-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="dark-layout">
-            <i class="icon ti ti-moon fs-7 me-2"></i>Dark
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Direction</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="direction-l" id="ltr-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="ltr-layout">
-            <i class="icon ti ti-text-direction-ltr fs-7 me-2"></i>LTR
-          </label>
-
-          <input type="radio" class="btn-check" name="direction-l" id="rtl-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="rtl-layout">
-            <i class="icon ti ti-text-direction-rtl fs-7 me-2"></i>RTL
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Colors</h6>
-
-        <div class="d-flex flex-row flex-wrap gap-3 customizer-box color-pallete" role="group">
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Blue_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Blue_Theme')" for="Blue_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="BLUE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-1">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Aqua_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Aqua_Theme')" for="Aqua_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="AQUA_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-2">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Purple_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Purple_Theme')" for="Purple_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="PURPLE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-3">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="green-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Green_Theme')" for="green-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="GREEN_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-4">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="cyan-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Cyan_Theme')" for="cyan-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="CYAN_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-5">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="orange-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Orange_Theme')" for="orange-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="ORANGE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-6">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Layout Type</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <div>
-            <input type="radio" class="btn-check" name="page-layout" id="vertical-layout" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="vertical-layout">
-              <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Vertical
-            </label>
-          </div>
-          <div>
-            <input type="radio" class="btn-check" name="page-layout" id="horizontal-layout" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="horizontal-layout">
-              <i class="icon ti ti-layout-navbar fs-7 me-2"></i>Horizontal
-            </label>
-          </div>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Container Option</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="layout" id="boxed-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="boxed-layout">
-            <i class="icon ti ti-layout-distribute-vertical fs-7 me-2"></i>Boxed
-          </label>
-
-          <input type="radio" class="btn-check" name="layout" id="full-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="full-layout">
-            <i class="icon ti ti-layout-distribute-horizontal fs-7 me-2"></i>Full
-          </label>
-        </div>
-
-        <h6 class="fw-semibold fs-4 mb-2 mt-5">Sidebar Type</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <a href="javascript:void(0)" class="fullsidebar">
-            <input type="radio" class="btn-check" name="sidebar-type" id="full-sidebar" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="full-sidebar">
-              <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Full
-            </label>
-          </a>
-          <div>
-            <input type="radio" class="btn-check" name="sidebar-type" id="mini-sidebar" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="mini-sidebar">
-              <i class="icon ti ti-layout-sidebar fs-7 me-2"></i>Collapse
-            </label>
-          </div>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Card With</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="card-layout" id="card-with-border" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="card-with-border">
-            <i class="icon ti ti-border-outer fs-7 me-2"></i>Border
-          </label>
-
-          <input type="radio" class="btn-check" name="card-layout" id="card-without-border" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="card-without-border">
-            <i class="icon ti ti-border-none fs-7 me-2"></i>Shadow
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      function handleColorTheme(e) {
-        document.documentElement.setAttribute("data-color-theme", e);
-      }
-    </script>
   </div>
-
-  <!--  Search Bar -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-bottom">
-          <input type="search" class="form-control" placeholder="Search here" id="search" />
-          <a href="javascript:void(0)" data-bs-dismiss="modal" class="lh-1">
-            <i class="ti ti-x fs-5 ms-3"></i>
-          </a>
-        </div>
-        <div class="modal-body message-body" data-simplebar="">
-          <h5 class="mb-0 fs-5 p-1">Quick Page Links</h5>
-          <ul class="list mb-0 py-2">
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Analytics</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">eCommerce</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">CRM</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard3</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Contacts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Posts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Detail</span>
-                <span
-                  class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Shop</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Modern</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Dashboard</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Contacts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Posts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Detail</span>
-                <span
-                  class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Shop</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
 </div>
-<div class="dark-transparent sidebartoggler"></div>
-<script src="../assets/js/vendor.min.js"></script>
-<!-- Import Js Files -->
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
-
-<!-- solar icons -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/fullcalendar/index.global.min.js"></script>
-<script src="../assets/js/apps/contact.js"></script>
-
-</body>
-
-</html>
+<?php
+$conn->close();
+include '../officer/footer.php';
+?>
