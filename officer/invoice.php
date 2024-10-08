@@ -1,6 +1,5 @@
 <?php
 session_start();
-include '../officer/header.php';
 include '../includes/db_connection.php';
 
 
@@ -151,270 +150,271 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
   }
 }
+
+// Rest of your PHP code to display the page
+include '../officer/header.php';
 ?>
 
 
 <div class="body-wrapper">
   <div class="container-fluid">
-    <div class="widget-content searchable-container list">
-      <?php if (isset($error_message)): ?>
-        <div class="alert alert-danger mt-3">
-          <?php echo htmlspecialchars($error_message); ?>
-        </div>
-      <?php endif; ?>
-
-      <?php if (isset($success_message)): ?>
-        <div class="alert alert-success mt-3">
-          <?php echo htmlspecialchars($success_message); ?>
-        </div>
-      <?php endif; ?>
-      <div class="card card-body py-3">
-        <div class="row align-items-center">
-          <div class="col-12">
-            <div class="d-sm-flex align-items-center justify-space-between">
-              <h4 class="mb-4 mb-sm-0 card-title">Invoices</h4>
-              <nav aria-label="breadcrumb" class="ms-auto">
-                <ol class="breadcrumb">
-                  <li class="breadcrumb-item d-flex align-items-center">
-                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
-                      <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
-                    </a>
-                  </li>
-                  <li class="breadcrumb-item" aria-current="page">
-                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                      Invoice
-                    </span>
-                  </li>
-                </ol>
-              </nav>
-            </div>
-          </div>
-        </div>
+    <?php if (isset($error_message)): ?>
+      <div class="alert alert-danger mt-3">
+        <?php echo htmlspecialchars($error_message); ?>
       </div>
+    <?php endif; ?>
 
-      <div class="card overflow-hidden invoice-application">
-        <div class="d-flex">
-          <div class="w-100 w-xs-100 chat-container">
-            <div class="invoice-inner-part h-100">
-              <div class="invoiceing-box">
-                <div class="invoice-header d-flex align-items-center border-bottom p-3">
-                  <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
-                    data-bs-target="#addInvoiceModal">
-                    <i class="ti ti-users text-white me-1 fs-5"></i> Add Invoice
+    <?php if (isset($success_message)): ?>
+      <div class="alert alert-success mt-3">
+        <?php echo htmlspecialchars($success_message); ?>
+      </div>
+    <?php endif; ?>
+    <div class="card card-body py-3">
+      <div class="row align-items-center">
+        <div class="col-12">
+          <div class="d-sm-flex align-items-center justify-space-between">
+            <h4 class="mb-4 mb-sm-0 card-title">Invoices</h4>
+            <nav aria-label="breadcrumb" class="ms-auto">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item d-flex align-items-center">
+                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
-                </div>
-                <?php
-                // Fetch invoices from the 'invoices' table
-                $invoicesQuery = "SELECT * FROM invoices ORDER BY BillingInvoiceNo DESC";
-                $invoicesResult = $conn->query($invoicesQuery);
-                ?>
+                </li>
+                <li class="breadcrumb-item" aria-current="page">
+                  <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
+                    Invoice
+                  </span>
+                </li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                <div class="table-responsive mt-3">
-                  <?php if ($invoicesResult->num_rows > 0): ?>
-                    <table class="table text-center table-striped">
-                      <thead>
-                        <tr>
-                          <th>Invoice No</th>
-                          <th>Date Range</th>
-                          <th>Billed To</th>
-                          <th>Gross Amount</th>
-                          <th>Net Amount</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php while ($invoice = $invoicesResult->fetch_assoc()): ?>
-                          <tr>
-                            <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
-                            <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
-                              <?php echo htmlspecialchars($invoice['BillingEndDate']); ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($invoice['BilledTo']); ?></td>
-                            <td><?php echo number_format($invoice['GrossAmount'], 2); ?></td>
-                            <td><?php echo number_format($invoice['NetAmount'], 2); ?></td>
-                            <td>
-                              <!-- Print Button -->
-                              <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
-                                <input type="hidden" name="BillingInvoiceNo"
-                                  value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
-                                <button type="submit" class="btn btn-primary btn-sm">Print</button>
-                              </form>
-                            </td>
-                          </tr>
-                        <?php endwhile; ?>
-                      </tbody>
-                    </table>
-                  <?php else: ?>
-                    <p>No invoices found.</p>
-                  <?php endif; ?>
-                </div>
+    <div class="card overflow-hidden invoice-application">
+      <div class="d-flex">
+        <div class="w-100 w-xs-100 chat-container">
+          <div class="invoice-inner-part h-100">
+            <div class="invoiceing-box">
+              <div class="invoice-header d-flex align-items-center border-bottom p-3">
+                <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
+                  data-bs-target="#addInvoiceModal">
+                  <i class="ti ti-users text-white me-1 fs-5"></i> Add Invoice
+                </a>
               </div>
+              <?php
+              // Fetch invoices from the 'invoices' table
+              $invoicesQuery = "SELECT * FROM invoices ORDER BY BillingInvoiceNo DESC";
+              $invoicesResult = $conn->query($invoicesQuery);
+              ?>
+
+              <div class="table-responsive mt-3">
+                <?php if ($invoicesResult->num_rows > 0): ?>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Invoice No</th>
+                        <th>Date Range</th>
+                        <th>Billed To</th>
+                        <th>Gross Amount</th>
+                        <th>Net Amount</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php while ($invoice = $invoicesResult->fetch_assoc()): ?>
+                        <tr>
+                          <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
+                          <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
+                            <?php echo htmlspecialchars($invoice['BillingEndDate']); ?>
+                          </td>
+                          <td><?php echo htmlspecialchars($invoice['BilledTo']); ?></td>
+                          <td><?php echo number_format($invoice['GrossAmount'], 2); ?></td>
+                          <td><?php echo number_format($invoice['NetAmount'], 2); ?></td>
+                          <td>
+                            <!-- Print Button -->
+                            <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
+                              <input type="hidden" name="BillingInvoiceNo"
+                                value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
+                              <button type="submit" class="btn btn-primary btn-sm">Print</button>
+                            </form>
+                          </td>
+                        </tr>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                <?php else: ?>
+                  <p>No invoices found.</p>
+                <?php endif; ?>
+              </div>
+
+
             </div>
           </div>
+        </div>
 
-          <!-- Add Invoice Modal -->
-          <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog"
-            aria-labelledby="addInvoiceModalTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-              <div class="modal-content">
-                <div class="modal-header d-flex align-items-center bg-primary">
-                  <h5 class="modal-title text-white fs-4">Add Invoice Details</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <div class="add-contact-box">
-                    <div class="add-contact-content">
-                      <!-- Add the method and action attributes -->
-                      <form id="addInvoiceForm">
-                        <div class="mb-3">
-                          <label for="billingStartDate" class="form-label">Billing Start Date</label>
-                          <input type="date" class="form-control" id="billingStartDate" name="billingStartDate"
-                            required>
-                        </div>
-                        <div class="mb-3">
-                          <label for="billingEndDate" class="form-label">Billing End Date</label>
-                          <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required>
-                        </div>
-                        <div class="mb-3">
-                          <label for="billedTo" class="form-label">Billed To</label>
-                          <select class="form-select" id="billedTo" name="billedTo" required>
-                            <option value="">Select Client</option>
-                            <option value="Bounty Plus">Bounty Plus</option>
-                            <option value="Chooks to Go">Chooks to Go</option>
-                          </select>
-                        </div>
-                        <div class="col-12 mb-3">
-                          <div class="d-flex gap-6 m-0 justify-content-end">
-                            <button type="button" class="btn bg-danger-subtle text-danger"
-                              data-bs-dismiss="modal">Discard</button>
-                            <button id="btn-add-invoice" class="btn btn-primary" type="button">Generate Invoice</button>
-                          </div>
-                        </div>
-                      </form>
-
-                    </div>
-                  </div>
-                </div>
+        <!-- Add Invoice Modal -->
+        <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header d-flex align-items-center bg-primary">
+                <h5 class="modal-title text-white fs-4">Add Invoice Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-            </div>
-          </div>
-          <!-- Selected Records Modal -->
-          <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 90%;">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title fw-bold" id="selectedRecordsModalLabel">Selected Transaction Groups</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <!-- Table to display selected records -->
-                  <div class="table-responsive">
-                    <table class="table table-striped" id="selectedRecordsTable">
-                      <thead>
-                        <tr>
-                          <th>Transaction Group ID</th>
-                          <th>Date</th>
-                          <th>Rate Amount</th>
-                          <th>Total KGs</th>
-                          <th>Total Expense</th>
-                          <!-- Add other columns as needed -->
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <!-- Data will be populated via AJAX -->
-                      </tbody>
-                    </table>
+              <div class="modal-body">
+                <div class="add-contact-box">
+                  <div class="add-contact-content">
+                    <!-- Add the method and action attributes -->
+                    <form id="addInvoiceForm">
+                      <div class="mb-3">
+                        <label for="billingStartDate" class="form-label">Billing Start Date</label>
+                        <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required>
+                      </div>
+                      <div class="mb-3">
+                        <label for="billingEndDate" class="form-label">Billing End Date</label>
+                        <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required>
+                      </div>
+                      <div class="mb-3">
+                        <label for="billedTo" class="form-label">Billed To</label>
+                        <select class="form-select" id="billedTo" name="billedTo" required>
+                          <option value="">Select Client</option>
+                          <option value="Bounty Plus">Bounty Plus</option>
+                          <option value="Chooks to Go">Chooks to Go</option>
+                        </select>
+                      </div>
+                      <div class="col-12 mb-3">
+                        <div class="d-flex gap-6 m-0 justify-content-end">
+                          <button type="button" class="btn bg-danger-subtle text-danger"
+                            data-bs-dismiss="modal">Discard</button>
+                          <button id="btn-add-invoice" class="btn btn-primary" type="button">Generate Invoice</button>
+                        </div>
+                      </div>
+                    </form>
+
                   </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                  <button type="button" class="btn btn-primary" id="confirmGenerateInvoice">Confirm and Generate
-                    Invoice</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <!-- Selected Records Modal -->
+        <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 90%;">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="selectedRecordsModalLabel">Selected Transaction Groups</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <!-- Table to display selected records -->
+                <div class="table-responsive">
+                  <table class="table table-striped" id="selectedRecordsTable">
+                    <thead>
+                      <tr>
+                        <th>Transaction Group ID</th>
+                        <th>Date</th>
+                        <th>Rate Amount</th>
+                        <th>Total KGs</th>
+                        <th>Total Expense</th>
+                        <!-- Add other columns as needed -->
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Data will be populated via AJAX -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmGenerateInvoice">Confirm and Generate
+                  Invoice</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
-      <script>
-        $(document).ready(function () {
-          $('#btn-add-invoice').click(function () {
-            // Get form data
-            var billingStartDate = $('#billingStartDate').val();
-            var billingEndDate = $('#billingEndDate').val();
-            var billedTo = $('#billedTo').val();
+    </div>
+    <?php
+    include '../officer/footer.php';
+    $conn->close();
+    ?>
+    <script>
+      $(document).ready(function () {
+        $('#btn-add-invoice').click(function () {
+          // Get form data
+          var billingStartDate = $('#billingStartDate').val();
+          var billingEndDate = $('#billingEndDate').val();
+          var billedTo = $('#billedTo').val();
 
-            // Validate inputs
-            if (!billingStartDate || !billingEndDate || !billedTo) {
-              alert('Please fill in all required fields.');
-              return;
+          // Validate inputs
+          if (!billingStartDate || !billingEndDate || !billedTo) {
+            alert('Please fill in all required fields.');
+            return;
+          }
+
+          // Send AJAX request to fetch selected records
+          $.ajax({
+            url: 'invoice.php',
+            type: 'POST',
+            data: {
+              action: 'fetch_records',
+              billingStartDate: billingStartDate,
+              billingEndDate: billingEndDate,
+              billedTo: billedTo
+            },
+            dataType: 'json',
+            success: function (response) {
+              if (response.success) {
+                // Populate the modal with the data
+                $('#selectedRecordsTable tbody').html(response.html);
+                // Show the modal
+                $('#selectedRecordsModal').modal('show');
+                // Close the add invoice modal
+                $('#addInvoiceModal').modal('hide');
+              } else {
+                alert(response.message);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error(xhr.responseText);
+              alert('An error occurred while fetching the records.');
             }
-
-            // Send AJAX request to fetch selected records
-            $.ajax({
-              url: 'invoice.php',
-              type: 'POST',
-              data: {
-                action: 'fetch_records',
-                billingStartDate: billingStartDate,
-                billingEndDate: billingEndDate,
-                billedTo: billedTo
-              },
-              dataType: 'json',
-              success: function (response) {
-                if (response.success) {
-                  // Populate the modal with the data
-                  $('#selectedRecordsTable tbody').html(response.html);
-                  // Show the modal
-                  $('#selectedRecordsModal').modal('show');
-                  // Close the add invoice modal
-                  $('#addInvoiceModal').modal('hide');
-                } else {
-                  alert(response.message);
-                }
-              },
-              error: function (xhr, status, error) {
-                console.error(xhr.responseText);
-                alert('An error occurred while fetching the records.');
-              }
-            });
-          });
-
-          // Handle invoice confirmation
-          $('#confirmGenerateInvoice').click(function () {
-            // Send AJAX request to generate the invoice
-            $.ajax({
-              url: 'invoice.php',
-              type: 'POST',
-              data: {
-                action: 'generate_invoice',
-                billingStartDate: $('#billingStartDate').val(),
-                billingEndDate: $('#billingEndDate').val(),
-                billedTo: $('#billedTo').val()
-              },
-              dataType: 'json',
-              success: function (response) {
-                if (response.success) {
-                  alert('Invoice generated successfully.');
-                  // Reload the page to show the new invoice
-                  location.reload();
-                } else {
-                  alert(response.message);
-                }
-              },
-              error: function (xhr, status, error) {
-                console.error(xhr.responseText);
-                alert('An error occurred while generating the invoice.');
-              }
-            });
           });
         });
-      </script>
-    </div>
-  </div>
-</div>
-<?php
-include '../officer/footer.php';
-$conn->close();
-?>
+
+        // Handle invoice confirmation
+        $('#confirmGenerateInvoice').click(function () {
+          // Send AJAX request to generate the invoice
+          $.ajax({
+            url: 'invoice.php',
+            type: 'POST',
+            data: {
+              action: 'generate_invoice',
+              billingStartDate: $('#billingStartDate').val(),
+              billingEndDate: $('#billingEndDate').val(),
+              billedTo: $('#billedTo').val()
+            },
+            dataType: 'json',
+            success: function (response) {
+              if (response.success) {
+                alert('Invoice generated successfully.');
+                // Reload the page to show the new invoice
+                location.reload();
+              } else {
+                alert(response.message);
+              }
+            },
+            error: function (xhr, status, error) {
+              console.error(xhr.responseText);
+              alert('An error occurred while generating the invoice.');
+            }
+          });
+        });
+      });
+    </script>
