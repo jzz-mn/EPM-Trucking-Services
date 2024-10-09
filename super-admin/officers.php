@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../includes/header.php';
+include '../super-admin/header.php';
 ?>
 
 <div class="body-wrapper">
@@ -62,7 +62,6 @@ include '../includes/header.php';
                           </div>
                         </div>
                       </div>
-
                       <!-- Create Account Section -->
                       <div class="col-lg-6">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -73,26 +72,29 @@ include '../includes/header.php';
                               <label for="usernameInput" class="form-label">Username</label>
                               <input type="text" class="form-control" id="usernameInput" name="username"
                                 placeholder="Enter username" required>
+                              <div class="invalid-feedback">Username is already taken.</div>
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="email" class="form-control" id="exampleInputEmail" name="userEmailAddress"
+                              <label for="emailInput" class="form-label">Email Address</label>
+                              <input type="email" class="form-control" id="emailInput" name="emailAddress"
                                 placeholder="Enter email" required>
+                              <div class="invalid-feedback">Email is already taken.</div>
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputPassword" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="exampleInputPassword" name="password" placeholder="Enter new password">
+                              <label for="passwordInput" class="form-label">New Password</label>
+                              <input type="password" class="form-control" id="passwordInput" name="password"
+                                placeholder="Enter new password">
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputConfirmPassword" class="form-label">Confirm Password</label>
-                              <input type="password" class="form-control" id="exampleInputConfirmPassword"
+                              <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
+                              <input type="password" class="form-control" id="confirmPasswordInput"
                                 name="confirmPassword" placeholder="Confirm password" required>
+                              <div class="invalid-feedback">Passwords do not match.</div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-
                     <!-- Personal Details Section -->
                     <div class="card w-100 border position-relative overflow-hidden mt-4">
                       <div class="card-body p-4">
@@ -123,8 +125,11 @@ include '../includes/header.php';
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="gender" class="form-label">Gender</label>
-                              <input type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
+                              <select type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
                                 required>
+                                <option value="MALE">MALE</option>
+                                <option value="FEMALE">FEMALE</option>
+                              </select>
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -156,8 +161,13 @@ include '../includes/header.php';
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="position" class="form-label">Position</label>
-                              <input type="text" class="form-control" id="position" name="position"
+                              <select type="text" class="form-control" id="position" name="position"
                                 placeholder="Position" required>
+                                <option value="Proprietor">Proprietor</option>
+                                <option value="Operation Manager/Proprietor">Operation Manager/Proprietor</option>
+                                <option value="Asst. Operation Manager">Asst. Operation Manager</option>
+                                <option value="Secretary">Secretary</option>
+                              </select>
                             </div>
                           </div>
                           <div class="col-12">
@@ -197,7 +207,7 @@ include '../includes/header.php';
               <div class="edit-contact-box">
                 <div class="edit-contact-content">
                   <form id="editOfficerForm" method="POST" action="edit_officer.php">
-                  <input type="hidden" name="officerID" value="">
+                    <input type="hidden" name="officerID" value="">
                     <div class="row">
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -226,11 +236,13 @@ include '../includes/header.php';
                             <p class="card-subtitle mb-4">Update officer's login credentials.</p>
                             <div class="mb-3">
                               <label for="usernameInput" class="form-label">Username</label>
-                              <input type="text" class="form-control" id="usernameInput" name="username" placeholder="Enter username" required>
+                              <input type="text" class="form-control" id="usernameInput" name="username"
+                                placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress" placeholder="Enter Email Address">
+                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress"
+                                placeholder="Enter Email Address">
                             </div>
                             <div class="mb-3">
                               <label for="exampleInputPassword" class="form-label">New Password</label>
@@ -279,8 +291,11 @@ include '../includes/header.php';
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="gender" class="form-label">Gender</label>
-                              <input type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
+                              <select type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
                                 required>
+                                <option value="MALE">MALE</option>
+                                <option value="FEMALE">FEMALE</option>
+                              </select>
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -312,8 +327,13 @@ include '../includes/header.php';
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="position" class="form-label">Position</label>
-                              <input type="text" class="form-control" id="position" name="position"
+                              <select type="text" class="form-control" id="position" name="position"
                                 placeholder="Position" required>
+                                <option value="Proprietor">Proprietor</option>
+                                <option value="Operation Manager/Proprietor">Operation Manager/Proprietor</option>
+                                <option value="Asst. Operation Manager">Asst. Operation Manager</option>
+                                <option value="Secretary">Secretary</option>
+                              </select>
                             </div>
                           </div>
                           <div class="col-12">
@@ -366,17 +386,11 @@ include '../includes/header.php';
       </div>
     </div>
     <div class="table-responsive p-0 card card-body">
-      <table id="zero_config" class="table table-striped table-bordered text-nowrap align-middle">
+      <table id="" class="table table-striped table-bordered text-nowrap align-middle">
         <thead>
           <tr>
             <th>Name</th>
             <th>Position</th>
-            <th>Gender</th>
-            <th>City Address</th>
-            <th>Mobile No</th>
-            <th>Email Address</th>
-            <th>College</th>
-            <th>Year Graduated</th>
             <th>Activation Status</th>
             <th>Actions</th>
           </tr>
@@ -397,10 +411,12 @@ include '../includes/header.php';
 
               // Assign badges for specific positions
               $positionBadge = '';
-              if ($row['Position'] === 'President') {
-                $positionBadge = "<span class='badge text-bg-primary'>President</span>";
-              } elseif ($row['Position'] === 'Vice President') {
-                $positionBadge = "<span class='badge text-bg-danger'>Vice President</span>";
+              if ($row['Position'] === 'Proprietor') {
+                $positionBadge = "<span class='badge text-bg-primary'>Proprietor</span>";
+              } elseif ($row['Position'] === 'Operation Manager/Proprietor') {
+                $positionBadge = "<span class='badge text-bg-secondary'>Operation Manager/Proprietor</span>";
+              } elseif ($row['Position'] === 'Asst. Operation Manager') {
+                $positionBadge = "<span class='badge text-bg-danger'>Asst. Operation Manager</span>";
               } else {
                 $positionBadge = "<span class='badge text-bg-secondary'>{$row['Position']}</span>";
               }
@@ -424,12 +440,6 @@ include '../includes/header.php';
               echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
               echo "</div></div></td>";
               echo "<td>{$positionBadge}</td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['Gender']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['CityAddress']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$formattedMobileNo}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['EmailAddress']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['College']}</p></td>";
-              echo "<td><p class='mb-0 fw-normal'>{$row['YearGraduated']}</p></td>";
               echo "<td>{$activationStatus}</td>";
               echo "<td>";
               echo "<a href='#' class='me-3 text-primary edit-button' data-officerid='{$row['OfficerID']}' data-bs-toggle='modal' data-bs-target='#editContactModal'>";
@@ -483,7 +493,7 @@ include '../includes/header.php';
             $('#editOfficerForm input[name="activationStatus"]').val(data.officer.ActivationStatus);
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
 
-            
+
 
 
           } else {
@@ -498,311 +508,182 @@ include '../includes/header.php';
   });
 </script>
 
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   $(document).ready(function() {
     $('#editOfficerForm').submit(function(event) {
-        event.preventDefault(); // Prevent the form from submitting via the browser.
-        var formData = $(this).serialize(); // Get form data.
+      event.preventDefault(); // Prevent the form from submitting via the browser.
+      var formData = $(this).serialize(); // Get form data.
 
-        $.ajax({
-            type: "POST",
-            url: "edit_officer.php",
-            data: formData,
-            dataType: "json",
-            success: function(response) {
-                if(response.user_message) {
-                    $('#editContactModal').modal('hide'); // Hide the modal if success
-                    window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
-                } else {
-                    alert('Failed to update: ' + response.error);
-                }
-            },
-            error: function() {
-                alert('Error updating officer.');
-            }
-        });
+      $.ajax({
+        type: "POST",
+        url: "edit_officer.php",
+        data: formData,
+        dataType: "json",
+        success: function(response) {
+          if (response.user_message) {
+            $('#editContactModal').modal('hide'); // Hide the modal if success
+            window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
+          } else {
+            alert('Failed to update: ' + response.error);
+          }
+        },
+        error: function() {
+          alert('Error updating officer.');
+        }
+      });
     });
-});
+  });
 </script>
 
-
-
-<div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
-  aria-labelledby="offcanvasExampleLabel">
-  <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-    <h4 class="offcanvas-title fw-semibold" id="offcanvasExampleLabel">
-      Settings
-    </h4>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body" data-simplebar style="height: calc(100vh - 80px)">
-    <h6 class="fw-semibold fs-4 mb-2">Theme</h6>
-
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <input type="radio" class="btn-check light-layout" name="theme-layout" id="light-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="light-layout">
-        <i class="icon ti ti-brightness-up fs-7 me-2"></i>Light
-      </label>
-
-      <input type="radio" class="btn-check dark-layout" name="theme-layout" id="dark-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="dark-layout">
-        <i class="icon ti ti-moon fs-7 me-2"></i>Dark
-      </label>
-    </div>
-
-    <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Direction</h6>
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <input type="radio" class="btn-check" name="direction-l" id="ltr-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="ltr-layout">
-        <i class="icon ti ti-text-direction-ltr fs-7 me-2"></i>LTR
-      </label>
-
-      <input type="radio" class="btn-check" name="direction-l" id="rtl-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="rtl-layout">
-        <i class="icon ti ti-text-direction-rtl fs-7 me-2"></i>RTL
-      </label>
-    </div>
-
-    <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Colors</h6>
-
-    <div class="d-flex flex-row flex-wrap gap-3 customizer-box color-pallete" role="group">
-      <input type="radio" class="btn-check" name="color-theme-layout" id="Blue_Theme" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Blue_Theme')" for="Blue_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-title="BLUE_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-1">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-
-      <input type="radio" class="btn-check" name="color-theme-layout" id="Aqua_Theme" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Aqua_Theme')" for="Aqua_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-title="AQUA_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-2">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-
-      <input type="radio" class="btn-check" name="color-theme-layout" id="Purple_Theme" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Purple_Theme')" for="Purple_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-        data-bs-title="PURPLE_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-3">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-
-      <input type="radio" class="btn-check" name="color-theme-layout" id="green-theme-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Green_Theme')" for="green-theme-layout" data-bs-toggle="tooltip"
-        data-bs-placement="top" data-bs-title="GREEN_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-4">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-
-      <input type="radio" class="btn-check" name="color-theme-layout" id="cyan-theme-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Cyan_Theme')" for="cyan-theme-layout" data-bs-toggle="tooltip"
-        data-bs-placement="top" data-bs-title="CYAN_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-5">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-
-      <input type="radio" class="btn-check" name="color-theme-layout" id="orange-theme-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-        onclick="handleColorTheme('Orange_Theme')" for="orange-theme-layout" data-bs-toggle="tooltip"
-        data-bs-placement="top" data-bs-title="ORANGE_THEME">
-        <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-6">
-          <i class="ti ti-check text-white d-flex icon fs-5"></i>
-        </div>
-      </label>
-    </div>
-
-    <h6 class="mt-5 fw-semibold fs-4 mb-2">Layout Type</h6>
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <div>
-        <input type="radio" class="btn-check" name="page-layout" id="vertical-layout" autocomplete="off" />
-        <label class="btn p-9 btn-outline-primary rounded-2" for="vertical-layout">
-          <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Vertical
-        </label>
-      </div>
-      <div>
-        <input type="radio" class="btn-check" name="page-layout" id="horizontal-layout" autocomplete="off" />
-        <label class="btn p-9 btn-outline-primary rounded-2" for="horizontal-layout">
-          <i class="icon ti ti-layout-navbar fs-7 me-2"></i>Horizontal
-        </label>
-      </div>
-    </div>
-
-    <h6 class="mt-5 fw-semibold fs-4 mb-2">Container Option</h6>
-
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <input type="radio" class="btn-check" name="layout" id="boxed-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="boxed-layout">
-        <i class="icon ti ti-layout-distribute-vertical fs-7 me-2"></i>Boxed
-      </label>
-
-      <input type="radio" class="btn-check" name="layout" id="full-layout" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="full-layout">
-        <i class="icon ti ti-layout-distribute-horizontal fs-7 me-2"></i>Full
-      </label>
-    </div>
-
-    <h6 class="fw-semibold fs-4 mb-2 mt-5">Sidebar Type</h6>
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <a href="javascript:void(0)" class="fullsidebar">
-        <input type="radio" class="btn-check" name="sidebar-type" id="full-sidebar" autocomplete="off" />
-        <label class="btn p-9 btn-outline-primary rounded-2" for="full-sidebar">
-          <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Full
-        </label>
-      </a>
-      <div>
-        <input type="radio" class="btn-check" name="sidebar-type" id="mini-sidebar" autocomplete="off" />
-        <label class="btn p-9 btn-outline-primary rounded-2" for="mini-sidebar">
-          <i class="icon ti ti-layout-sidebar fs-7 me-2"></i>Collapse
-        </label>
-      </div>
-    </div>
-
-    <h6 class="mt-5 fw-semibold fs-4 mb-2">Card With</h6>
-
-    <div class="d-flex flex-row gap-3 customizer-box" role="group">
-      <input type="radio" class="btn-check" name="card-layout" id="card-with-border" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="card-with-border">
-        <i class="icon ti ti-border-outer fs-7 me-2"></i>Border
-      </label>
-
-      <input type="radio" class="btn-check" name="card-layout" id="card-without-border" autocomplete="off" />
-      <label class="btn p-9 btn-outline-primary rounded-2" for="card-without-border">
-        <i class="icon ti ti-border-none fs-7 me-2"></i>Shadow
-      </label>
-    </div>
-  </div>
-</div>
-
-<script>
-  function handleColorTheme(e) {
-    document.documentElement.setAttribute("data-color-theme", e);
-  }
-</script>
-
-<!--  Search Bar -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+<!-- Add Officer Modal -->
+<div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addOfficerModalTitle"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
-      <div class="modal-header border-bottom">
-        <input type="search" class="form-control" placeholder="Search here" id="search" />
-        <a href="javascript:void(0)" data-bs-dismiss="modal" class="lh-1">
-          <i class="ti ti-x fs-5 ms-3"></i>
-        </a>
+      <div class="modal-header d-flex align-items-center bg-primary">
+        <h5 class="modal-title text-white fs-4">Add Officer Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body message-body" data-simplebar="">
-        <h5 class="mb-0 fs-5 p-1">Quick Page Links</h5>
-        <ul class="list mb-0 py-2">
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Analytics</span>
-              <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">eCommerce</span>
-              <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">CRM</span>
-              <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard3</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Contacts</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Posts</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Detail</span>
-              <span
-                class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Shop</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Modern</span>
-              <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Dashboard</span>
-              <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Contacts</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Posts</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Detail</span>
-              <span
-                class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-            </a>
-          </li>
-          <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-            <a href="javascript:void(0)">
-              <span class="text-dark fw-semibold d-block">Shop</span>
-              <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-            </a>
-          </li>
-        </ul>
+      <div class="modal-body">
+        <div class="add-contact-box">
+          <div class="add-contact-content">
+            <form id="addOfficerForm" method="POST" action="add_officer.php">
+              <div class="row">
+                <!-- Profile Picture Section (Omitted for brevity) -->
+
+                <!-- Create Account Section -->
+                <div class="col-lg-6">
+                  <div class="card w-100 border position-relative overflow-hidden">
+                    <div class="card-body p-4">
+                      <h4 class="card-title">Create Account</h4>
+                      <p class="card-subtitle mb-4">Please enter the officer's login credentials.</p>
+                      <div class="mb-3">
+                        <label for="usernameInput" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="usernameInput" name="username"
+                          placeholder="Enter username" required>
+                        <div class="invalid-feedback">Username is already taken.</div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="emailInput" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="emailInput" name="emailAddress"
+                          placeholder="Enter email" required>
+                        <div class="invalid-feedback">Email is already taken.</div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="passwordInput" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="passwordInput" name="password"
+                          placeholder="Enter new password">
+                      </div>
+                      <div class="mb-3">
+                        <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPasswordInput"
+                          name="confirmPassword" placeholder="Confirm password" required>
+                        <div class="invalid-feedback">Passwords do not match.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Personal Details Section (Omitted for brevity) -->
+
+              <div class="col-12 mb-3">
+                <div class="d-flex gap-6 m-0 justify-content-end">
+                  <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
+                  <button id="btn-add" class="btn btn-primary" type="submit">Save</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
-<div class="dark-transparent sidebartoggler"></div>
-<!-- Import Js Files -->
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
 
-<!-- solar icons -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/js/datatable/datatable-basic.init.js"></script>
-<script src="../assets/js/apps/contact.js"></script>
-</body>
+<!-- JavaScript for Real-Time Validation -->
+<script>
+  // Function to validate the username
+  function checkUsernameAvailability(username) {
+    const formData = new FormData();
+    formData.append('username', username);
 
-</html>
+    // AJAX request to check username
+    fetch('check_user.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.text())
+      .then(data => {
+        const usernameInput = document.getElementById('usernameInput');
+        if (data === 'taken') {
+          usernameInput.classList.add('is-invalid'); // Red border
+          usernameInput.classList.remove('is-valid'); // Remove green border
+        } else {
+          usernameInput.classList.remove('is-invalid');
+          usernameInput.classList.add('is-valid'); // Green border
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // Function to validate the email address
+  function checkEmailAvailability(email) {
+    const formData = new FormData();
+    formData.append('emailAddress', email);
+
+    // AJAX request to check email
+    fetch('check_user.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.text())
+      .then(data => {
+        const emailInput = document.getElementById('emailInput');
+        if (data === 'taken') {
+          emailInput.classList.add('is-invalid'); // Red border
+          emailInput.classList.remove('is-valid'); // Remove green border
+        } else {
+          emailInput.classList.remove('is-invalid');
+          emailInput.classList.add('is-valid'); // Green border
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // Function to validate password matching
+  function validatePasswordMatch() {
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+
+    if (passwordInput.value === confirmPasswordInput.value && passwordInput.value !== '') {
+      confirmPasswordInput.classList.remove('is-invalid');
+      confirmPasswordInput.classList.add('is-valid');
+    } else {
+      confirmPasswordInput.classList.add('is-invalid');
+      confirmPasswordInput.classList.remove('is-valid');
+    }
+  }
+
+  // Event listeners for username and email input fields
+  const usernameInput = document.getElementById('usernameInput');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+
+  // Validate username when user types
+  usernameInput.addEventListener('input', () => checkUsernameAvailability(usernameInput.value));
+
+  // Validate email when user types
+  emailInput.addEventListener('input', () => checkEmailAvailability(emailInput.value));
+
+  // Validate password match when user types
+  passwordInput.addEventListener('input', validatePasswordMatch);
+  confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+</script>
+
+
+
+<?php
+include '../super-admin/footer.php';
+?>

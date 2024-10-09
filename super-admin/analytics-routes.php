@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../includes/header.php';
+include '../super-admin/header.php';
 include '../includes/db_connection.php';
 ?>
     
@@ -16,7 +16,7 @@ include '../includes/db_connection.php';
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
                 <a class="text-muted text-decoration-none d-flex" href="../super-admin/home.php">
-                <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
               </ol>

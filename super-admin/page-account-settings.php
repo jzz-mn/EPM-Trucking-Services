@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include '../includes/header.php';
+include '../super-admin/header.php';
 include '../includes/db_connection.php';
 
 ?>
