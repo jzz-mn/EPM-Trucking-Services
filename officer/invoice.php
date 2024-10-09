@@ -340,81 +340,83 @@ include '../officer/header.php';
 
       </div>
     </div>
-    <?php
-    include '../officer/footer.php';
-    $conn->close();
-    ?>
-    <script>
-      $(document).ready(function () {
-        $('#btn-add-invoice').click(function () {
-          // Get form data
-          var billingStartDate = $('#billingStartDate').val();
-          var billingEndDate = $('#billingEndDate').val();
-          var billedTo = $('#billedTo').val();
+  </div>
+</div>
+<?php
+include '../officer/footer.php';
+$conn->close();
+?>
+<script>
+  $(document).ready(function () {
+    $('#btn-add-invoice').click(function () {
+      // Get form data
+      var billingStartDate = $('#billingStartDate').val();
+      var billingEndDate = $('#billingEndDate').val();
+      var billedTo = $('#billedTo').val();
 
-          // Validate inputs
-          if (!billingStartDate || !billingEndDate || !billedTo) {
-            alert('Please fill in all required fields.');
-            return;
+      // Validate inputs
+      if (!billingStartDate || !billingEndDate || !billedTo) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      // Send AJAX request to fetch selected records
+      $.ajax({
+        url: 'invoice.php',
+        type: 'POST',
+        data: {
+          action: 'fetch_records',
+          billingStartDate: billingStartDate,
+          billingEndDate: billingEndDate,
+          billedTo: billedTo
+        },
+        dataType: 'json',
+        success: function (response) {
+          if (response.success) {
+            // Populate the modal with the data
+            $('#selectedRecordsTable tbody').html(response.html);
+            // Show the modal
+            $('#selectedRecordsModal').modal('show');
+            // Close the add invoice modal
+            $('#addInvoiceModal').modal('hide');
+          } else {
+            alert(response.message);
           }
-
-          // Send AJAX request to fetch selected records
-          $.ajax({
-            url: 'invoice.php',
-            type: 'POST',
-            data: {
-              action: 'fetch_records',
-              billingStartDate: billingStartDate,
-              billingEndDate: billingEndDate,
-              billedTo: billedTo
-            },
-            dataType: 'json',
-            success: function (response) {
-              if (response.success) {
-                // Populate the modal with the data
-                $('#selectedRecordsTable tbody').html(response.html);
-                // Show the modal
-                $('#selectedRecordsModal').modal('show');
-                // Close the add invoice modal
-                $('#addInvoiceModal').modal('hide');
-              } else {
-                alert(response.message);
-              }
-            },
-            error: function (xhr, status, error) {
-              console.error(xhr.responseText);
-              alert('An error occurred while fetching the records.');
-            }
-          });
-        });
-
-        // Handle invoice confirmation
-        $('#confirmGenerateInvoice').click(function () {
-          // Send AJAX request to generate the invoice
-          $.ajax({
-            url: 'invoice.php',
-            type: 'POST',
-            data: {
-              action: 'generate_invoice',
-              billingStartDate: $('#billingStartDate').val(),
-              billingEndDate: $('#billingEndDate').val(),
-              billedTo: $('#billedTo').val()
-            },
-            dataType: 'json',
-            success: function (response) {
-              if (response.success) {
-                alert('Invoice generated successfully.');
-                // Reload the page to show the new invoice
-                location.reload();
-              } else {
-                alert(response.message);
-              }
-            },
-            error: function (xhr, status, error) {
-              console.error(xhr.responseText);
-              alert('An error occurred while generating the invoice.');
-            }
-          });
-        });
+        },
+        error: function (xhr, status, error) {
+          console.error(xhr.responseText);
+          alert('An error occurred while fetching the records.');
+        }
       });
-    </script>
+    });
+
+    // Handle invoice confirmation
+    $('#confirmGenerateInvoice').click(function () {
+      // Send AJAX request to generate the invoice
+      $.ajax({
+        url: 'invoice.php',
+        type: 'POST',
+        data: {
+          action: 'generate_invoice',
+          billingStartDate: $('#billingStartDate').val(),
+          billingEndDate: $('#billingEndDate').val(),
+          billedTo: $('#billedTo').val()
+        },
+        dataType: 'json',
+        success: function (response) {
+          if (response.success) {
+            alert('Invoice generated successfully.');
+            // Reload the page to show the new invoice
+            location.reload();
+          } else {
+            alert(response.message);
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error(xhr.responseText);
+          alert('An error occurred while generating the invoice.');
+        }
+      });
+    });
+  });
+</script>
