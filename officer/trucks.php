@@ -375,18 +375,32 @@ include '../officer/header.php';
                 <span>Transactions</span>
               </a>
             </li>
-          </ul>
+          <li class="nav-item">
+              <a class="nav-link" data-bs-toggle="tab" href="#trucks" role="tab">
+                <span>Trucks</span>
+              </a>
+            </li>
+            </ul>
 
+                        <!-- Transactions Tab -->
+                        
+          
           <!-- Single Tab Content Wrapper -->
           <div class="tab-content p-4">
             <!-- Maintenance Tab -->
             <div class="tab-pane active" id="maintenance" role="tabpanel">
-              <div class="row mt-3">
-                <div class="col-md-4 col-xl-3">
-                  <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search-maintenance"
-                      placeholder="Search" />
-                  </form>
+              <div class="table-controls mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search..." onkeyup="filterMaintenanceTable()">
+                  </div>
+                  <div class="col-md-4 offset-md-4 text-end">
+                    <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline" onchange="changeMaintenanceRowsPerPage()">
+                      <option value="5">5 rows</option>
+                      <option value="10">10 rows</option>
+                      <option value="20">20 rows</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -398,23 +412,23 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="maintenanceTable" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
-                        <th>Maintenance ID</th>
-                        <th>Year</th>
-                        <th>Month</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Amount</th>
+                        <th onclick="sortMaintenanceTable(0)">Maintenance ID</th>
+                        <th onclick="sortMaintenanceTable(1)">Year</th>
+                        <th onclick="sortMaintenanceTable(2)">Month</th>
+                        <th onclick="sortMaintenanceTable(3)">Category</th>
+                        <th onclick="sortMaintenanceTable(4)">Description</th>
+                        <th onclick="sortMaintenanceTable(5)">Amount</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="maintenanceTableBody">
                       <?php
                       if ($result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
-                          $maintenanceData = json_encode($row);
+                          $maintenanceData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                           echo "<tr>";
                           echo "<td>" . $row['MaintenanceID'] . "</td>";
                           echo "<td>" . $row['Year'] . "</td>";
@@ -423,7 +437,7 @@ include '../officer/header.php';
                           echo "<td>" . $row['Description'] . "</td>";
                           echo "<td>" . $row['Amount'] . "</td>";
                           echo "<td>";
-                          echo "<a href='#' class='me-3 text-primary edit-maintenance-btn' data-bs-toggle='modal' data-maintenance='" . htmlspecialchars($maintenanceData) . "'>";
+                          echo "<a href='#' class='me-3 text-primary edit-maintenance-btn' data-bs-toggle='modal' data-maintenance='" . $maintenanceData . "'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
                           echo "</td>";
                           echo "</tr>";
@@ -435,22 +449,32 @@ include '../officer/header.php';
                     </tbody>
                   </table>
                 </div>
-                <?php
-                $conn->close();
-                ?>
+                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
+                  <button id="maintenancePrevBtn" class="btn btn-primary me-2" onclick="prevMaintenancePage()">Previous</button>
+                  <button id="maintenanceNextBtn" class="btn btn-primary me-3" onclick="nextMaintenancePage()">Next</button>
+                </div>
+                <?php $conn->close(); ?>
               </div>
             </div>
 
+
             <!-- Transactions Tab -->
             <div class="tab-pane" id="transactions" role="tabpanel">
-              <div class="row mt-3">
-                <div class="col-md-4 col-xl-3">
-                  <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search-transactions"
-                      placeholder="Search" />
-                  </form>
+              <div class="table-controls mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTransactionsTable()">
+                  </div>
+                  <div class="col-md-4 offset-md-4 text-end">
+                    <select id="transactionsRowsPerPage" class="form-select w-auto d-inline" onchange="changeTransactionsRowsPerPage()">
+                      <option value="5">5 rows</option>
+                      <option value="10">10 rows</option>
+                      <option value="20">20 rows</option>
+                    </select>
+                  </div>
                 </div>
               </div>
+
               <div class="py-3">
                 <!-- Transactions Table -->
                 <?php
@@ -459,24 +483,23 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="transactionsTable" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
-                        <th>Transaction ID</th>
-                        <th>Transaction Group ID</th>
-                        <th>Transaction Date</th>
-                        <th>DR No</th>
-                        <th>Outlet Name</th>
-                        <th>Qty</th>
-                        <th>KGs</th>
+                        <th onclick="sortTransactionsTable(0)">Transaction ID</th>
+                        <th onclick="sortTransactionsTable(1)">Transaction Group ID</th>
+                        <th onclick="sortTransactionsTable(2)">Transaction Date</th>
+                        <th onclick="sortTransactionsTable(3)">DR No</th>
+                        <th onclick="sortTransactionsTable(4)">Outlet Name</th>
+                        <th onclick="sortTransactionsTable(5)">Qty</th>
+                        <th onclick="sortTransactionsTable(6)">KGs</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="transactionsTableBody">
                       <?php
                       while ($row = $result->fetch_assoc()) {
-                        $transactionData = json_encode($row);  // Prepare the row data as a JSON object
-                      
+                        $transactionData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                         echo "<tr>";
                         echo "<td>" . $row['TransactionID'] . "</td>";
                         echo "<td>" . $row['TransactionGroupID'] . "</td>";
@@ -485,6 +508,54 @@ include '../officer/header.php';
                         echo "<td>" . $row['OutletName'] . "</td>";
                         echo "<td>" . $row['Qty'] . "</td>";
                         echo "<td>" . $row['KGs'] . "</td>";
+                        echo "<td>";
+                        echo "<a href='#' class='me-3 text-primary edit-transaction-btn' data-bs-toggle='modal' data-transaction='" . $transactionData . "'>";
+                        echo "<i class='fs-4 ti ti-edit'></i></a>";
+                        echo "</td>";
+                        echo "</tr>";
+                      }
+                      ?>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
+                  <button id="transactionsPrevBtn" class="btn btn-primary me-2" onclick="prevTransactionsPage()">Previous</button>
+                  <button id="transactionsNextBtn" class="btn btn-primary me-3" onclick="nextTransactionsPage()">Next</button>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="trucks" role="tabpanel">
+              <div class="row mt-3">
+                <div class="col-md-4 col-xl-3">
+                  
+                </div>
+              </div>
+              <div class="py-3">
+                <!-- Trucks Table -->
+                <?php
+                include '../includes/db_connection.php';
+                $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+                $result = $conn->query($query);
+                ?>
+                <div class="table-responsive">
+                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
+                    <thead>
+                      <t>
+                        <th>Truck ID</th>
+                        <th>Plate Number</th>
+                        <th>Truck Brand</th>
+                        <th>Actions</th>
+                      </t>
+                    </thead>
+                    <tbody>
+                      <?php
+                      while ($row = $result->fetch_assoc()) {
+                        $transactionData = json_encode($row);  // Prepare the row data as a JSON object
+                      
+                        echo "<tr>";
+                        echo "<td>" . $row['TruckID'] . "</td>";
+                        echo "<td>" . $row['PlateNo'] . "</td>";
+                        echo "<td>" . $row['TruckBrand'] . "</td>";
                         echo "<td>";
                         // Add a data-attribute to store the row data and attach the edit button
                         echo "<a href='#' class='me-3 text-primary edit-transaction-btn' data-bs-toggle='modal' data-transaction='" . htmlspecialchars($transactionData) . "'>";
@@ -500,60 +571,61 @@ include '../officer/header.php';
               </div>
             </div>
           </div>
+          
         </div>
       </div>
     </div>
     <script>
       // Function to populate the Edit Maintenance modal with the selected record data
       function populateEditMaintenanceForm(maintenance) {
-    // Map month names to numbers
-    const monthMap = {
-      'January': '1',
-      'February': '2',
-      'March': '3',
-      'April': '4',
-      'May': '5',
-      'June': '6',
-      'July': '7',
-      'August': '8',
-      'September': '9',
-      'October': '10',
-      'November': '11',
-      'December': '12'
-    };
+        // Map month names to numbers
+        const monthMap = {
+          'January': '1',
+          'February': '2',
+          'March': '3',
+          'April': '4',
+          'May': '5',
+          'June': '6',
+          'July': '7',
+          'August': '8',
+          'September': '9',
+          'October': '10',
+          'November': '11',
+          'December': '12'
+        };
 
-    let monthValue = maintenance.Month;
+        let monthValue = maintenance.Month;
 
-    // If the month is a name, map it to its numeric value
-    if (isNaN(monthValue)) {
-      monthValue = monthMap[monthValue];
-    }
+        // If the month is a name, map it to its numeric value
+        if (isNaN(monthValue)) {
+          monthValue = monthMap[monthValue];
+        }
 
-    // Set values in the modal based on the selected maintenance row
-    document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-    document.getElementById("maintenanceYear").value = maintenance.Year;
-    document.getElementById("maintenanceMonth").value = monthValue; // Set month
-    document.getElementById("maintenanceCategory").value = maintenance.Category;
-    document.getElementById("maintenanceDescription").value = maintenance.Description;
-    document.getElementById("maintenanceAmount").value = maintenance.Amount;
-  }
+        // Set values in the modal based on the selected maintenance row
+        document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+        document.getElementById("maintenanceYear").value = maintenance.Year;
+        document.getElementById("maintenanceMonth").value = monthValue; // Set month
+        document.getElementById("maintenanceCategory").value = maintenance.Category;
+        document.getElementById("maintenanceDescription").value = maintenance.Description;
+        document.getElementById("maintenanceAmount").value = maintenance.Amount;
+      }
 
-  // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
-  function attachMaintenanceEditButtons() {
-    const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-    editButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
-        populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
-        $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
-      });
-    });
-  }
+      // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
+      function attachMaintenanceEditButtons() {
+        const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+        editButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
+            populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
+            $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+          });
+        });
+      }
 
-  // Execute this function when the document is fully loaded
-  document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
+      // Execute this function when the document is fully loaded
+      document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
     </script>
-<script>
+    <script>
       // Function to populate the Edit Transaction modal with the selected record data1
       function populateEditTransactionForm(transaction) {
         // Set values in the modal based on the selected transaction
@@ -569,7 +641,7 @@ include '../officer/header.php';
       function attachTransactionEditButtons() {
         const editButtons = document.querySelectorAll('.edit-transaction-btn');
         editButtons.forEach(button => {
-          button.addEventListener('click', function () {
+          button.addEventListener('click', function() {
             const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
             populateEditTransactionForm(transactionData); // Populate modal with transaction data
             $('#editTransactionModal').modal('show'); // Show the modal
@@ -582,6 +654,176 @@ include '../officer/header.php';
     </script>
   </div>
 </div>
+
+<script>
+  // Maintenance Table Functions
+let maintenanceCurrentPage = 1;
+let maintenanceRowsPerPage = 5;
+
+function changeMaintenanceRowsPerPage() {
+  maintenanceRowsPerPage = parseInt(document.getElementById("maintenanceRowsPerPage").value);
+  maintenanceCurrentPage = 1;
+  updateMaintenanceTable();
+}
+
+function filterMaintenanceTable() {
+  let input = document.getElementById("maintenanceSearchBar").value.toLowerCase();
+  let table = document.getElementById("maintenanceTable");
+  let rows = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < rows.length; i++) {
+    let row = rows[i];
+    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+  }
+}
+
+function sortMaintenanceTable(columnIndex) {
+  let table = document.getElementById("maintenanceTable");
+  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+  let sortedRows = rows.sort((a, b) => {
+    let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
+    let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+    return aValue.localeCompare(bValue);
+  });
+
+  let tableBody = document.getElementById("maintenanceTableBody");
+  tableBody.innerHTML = "";
+  sortedRows.forEach(row => tableBody.appendChild(row));
+}
+
+function updateMaintenanceTable() {
+  let table = document.getElementById("maintenanceTable");
+  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+  let startIndex = (maintenanceCurrentPage - 1) * maintenanceRowsPerPage;
+  let endIndex = startIndex + maintenanceRowsPerPage;
+
+  rows.forEach((row, index) => {
+    row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+  });
+
+  document.getElementById("maintenancePrevBtn").disabled = maintenanceCurrentPage === 1;
+  document.getElementById("maintenanceNextBtn").disabled = endIndex >= rows.length;
+}
+
+function nextMaintenancePage() {
+  maintenanceCurrentPage++;
+  updateMaintenanceTable();
+}
+
+function prevMaintenancePage() {
+  maintenanceCurrentPage--;
+  updateMaintenanceTable();
+}
+
+// Transactions Table Functions
+let transactionsCurrentPage = 1;
+let transactionsRowsPerPage = 5;
+
+function changeTransactionsRowsPerPage() {
+  transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
+  transactionsCurrentPage = 1;
+  updateTransactionsTable();
+}
+
+function filterTransactionsTable() {
+  let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
+  let table = document.getElementById("transactionsTable");
+  let rows = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < rows.length; i++) {
+    let row = rows[i];
+    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+  }
+}
+
+function sortTransactionsTable(columnIndex) {
+  let table = document.getElementById("transactionsTable");
+  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+  let sortedRows = rows.sort((a, b) => {
+    let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
+    let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+    return aValue.localeCompare(bValue);
+  });
+
+  let tableBody = document.getElementById("transactionsTableBody");
+  tableBody.innerHTML = "";
+  sortedRows.forEach(row => tableBody.appendChild(row));
+}
+
+function updateTransactionsTable() {
+  let table = document.getElementById("transactionsTable");
+  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+  let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
+  let endIndex = startIndex + transactionsRowsPerPage;
+
+  rows.forEach((row, index) => {
+    row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+  });
+
+  document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
+  document.getElementById("transactionsNextBtn").disabled = endIndex >= rows.length;
+}
+
+function nextTransactionsPage() {
+  transactionsCurrentPage++;
+  updateTransactionsTable();
+}
+
+function prevTransactionsPage() {
+  transactionsCurrentPage--;
+  updateTransactionsTable();
+}
+
+// Modal Population Functions
+function populateEditMaintenanceForm(maintenance) {
+  document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+  document.getElementById("maintenanceYear").value = maintenance.Year;
+  document.getElementById("maintenanceMonth").value = maintenance.Month;
+  document.getElementById("maintenanceCategory").value = maintenance.Category;
+  document.getElementById("maintenanceDescription").value = maintenance.Description;
+  document.getElementById("maintenanceAmount").value = maintenance.Amount;
+}
+
+function populateEditTransactionForm(transaction) {
+  document.getElementById("transactionId").value = transaction.TransactionID;
+  document.getElementById("transactionDate").value = transaction.TransactionDate;
+  document.getElementById("drNo").value = transaction.DRno;
+  document.getElementById("outletName").value = transaction.OutletName;
+  document.getElementById("qty").value = transaction.Qty;
+  document.getElementById("kgs").value = transaction.KGs;
+}
+
+// Attach the buttons to open modals
+document.addEventListener('DOMContentLoaded', function() {
+  attachMaintenanceEditButtons();
+  attachTransactionEditButtons();
+});
+</script>
+
+<script>
+  function attachMaintenanceEditButtons() {
+  const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+  editButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const maintenanceData = JSON.parse(this.dataset.maintenance);
+      populateEditMaintenanceForm(maintenanceData);
+      $('#updateMaintenanceRecordModal').modal('show');
+    });
+  });
+}
+
+function attachTransactionEditButtons() {
+  const editButtons = document.querySelectorAll('.edit-transaction-btn');
+  editButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const transactionData = JSON.parse(this.dataset.transaction);
+      populateEditTransactionForm(transactionData);
+      $('#editTransactionModal').modal('show');
+    });
+  });
+}
+
+</script>
 <?php
 $conn->close();
 include '../officer/footer.php';
