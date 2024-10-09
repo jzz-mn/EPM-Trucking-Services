@@ -212,7 +212,7 @@ include '../officer/header.php';
 
               <div class="table-responsive mt-3">
                 <?php if ($invoicesResult->num_rows > 0): ?>
-                  <table class="table table-striped">
+                  <table class="table table-striped table-bordered text-nowrap align-middle text-center">
                     <thead>
                       <tr>
                         <th>Invoice No</th>
@@ -234,11 +234,19 @@ include '../officer/header.php';
                           <td><?php echo number_format($invoice['GrossAmount'], 2); ?></td>
                           <td><?php echo number_format($invoice['NetAmount'], 2); ?></td>
                           <td>
-                            <!-- Print Button -->
+                            <!-- Print PDF Button -->
                             <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
                               <input type="hidden" name="BillingInvoiceNo"
                                 value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
-                              <button type="submit" class="btn btn-primary btn-sm">Print</button>
+                              <input type="hidden" name="format" value="pdf">
+                              <button type="submit" class="btn btn-primary btn-sm">Print PDF</button>
+                            </form>
+                            <!-- Export Excel Button -->
+                            <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
+                              <input type="hidden" name="BillingInvoiceNo"
+                                value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
+                              <input type="hidden" name="format" value="excel">
+                              <button type="submit" class="btn btn-success btn-sm">Export Excel</button>
                             </form>
                           </td>
                         </tr>
