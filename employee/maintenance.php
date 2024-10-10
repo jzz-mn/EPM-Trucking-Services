@@ -49,8 +49,7 @@ include '../employee/header.php';
       ?>
 
       <!-- Add Maintenance Modal -->
-      <div class="modal fade" id="addMaintenanceRecordModal" tabindex="-1" role="dialog"
-        aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
+      <div class="modal fade" id="addMaintenanceRecordModal" tabindex="-1" role="dialog" aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
             <div class="modal-header d-flex align-items-center bg-primary">
@@ -64,21 +63,18 @@ include '../employee/header.php';
                     <div class="card-body p-4">
                       <h4 class="card-title">Add Maintenance Record</h4>
                       <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
-                      <form action="add_maintenance.php" method="POST">
+                      <form id="addMaintenanceForm" action="add_maintenance.php" method="POST">
                         <div class="row">
                           <div class="col-lg-6 d-none">
                             <div class="mb-3">
                               <label for="maintenanceId" class="form-label">Maintenance ID</label>
-                              <input type="text" class="form-control" id="maintenanceId" name="maintenanceId"
-                                value="<?php echo $nextMaintenanceID; ?>" readonly>
+                              <input type="text" class="form-control" id="maintenanceId" name="maintenanceId" value="<?php echo $nextMaintenanceID; ?>" readonly>
                             </div>
                           </div>
-
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="maintenanceDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="maintenanceDate" name="maintenanceDate"
-                                placeholder="Select Date" required>
+                              <input type="date" class="form-control" id="maintenanceDate" name="maintenanceDate" placeholder="Select Date" required>
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -91,18 +87,17 @@ include '../employee/header.php';
                               </select>
                             </div>
                           </div>
-
                           <div class="col-lg-12">
                             <div class="mb-3">
                               <label for="maintenanceDescription" class="form-label">Description</label>
-                              <input type="text" class="form-control" id="maintenanceDescription"
-                                name="maintenanceDescription" placeholder="Enter Description" required>
+                              <input type="text" class="form-control" id="maintenanceDescription" name="maintenanceDescription" placeholder="Enter Description" required>
                             </div>
                           </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button type="submit" class="btn btn-primary">Save</button>
+                              <!-- Trigger the confirmation modal on click -->
+                              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmationModal" onclick="reviewData()">Save</button>
                             </div>
                           </div>
                         </div>
@@ -118,75 +113,32 @@ include '../employee/header.php';
 
 
 
-      <!-- Edit Maintenance Modal -->
-      <div class="modal fade" id="updateMaintenanceRecordModal" tabindex="-1" role="dialog"
-        aria-labelledby="updateMaintenanceRecordModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <!-- Confirmation Modal -->
+      <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
-            <div class="modal-header d-flex align-items-center bg-primary">
-              <h5 class="modal-title text-white fs-4">Edit Maintenance Record</h5>
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmationModalLabel">Confirm Submission</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <div class="row">
-                <div class="col-12">
-                  <div class="card w-100 border position-relative overflow-hidden mb-0">
-                    <div class="card-body p-4">
-                      <h4 class="card-title">Edit Maintenance Record</h4>
-                      <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
-                      <form>
-                        <div class="row">
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="maintenanceId" class="form-label">Maintenance ID</label>
-                              <input type="text" class="form-control" id="maintenanceId"
-                                placeholder="Enter Maintenance ID">
-                            </div>
-                          </div>
-                          <div class="col-lg-6">
-                            <div class="mb-3">
-                              <label for="maintenanceDate" class="form-label">Date</label>
-                              <input type="date" class="form-control" id="maintenanceDate" placeholder="Select Date">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="maintenanceCategory" class="form-label">Category</label>
-                              <input type="text" class="form-control" id="maintenanceCategory"
-                                placeholder="Enter Category">
-                            </div>
-                          </div>
-                          <div class="col-lg-4">
-                            <div class="mb-3">
-                              <label for="maintenanceDescription" class="form-label">Description</label>
-                              <input type="text" class="form-control" id="maintenanceDescription"
-                                placeholder="Enter Description">
-                            </div>
-                          </div>
-
-                          <div class="col-lg-12">
-                            <div class="mb-3">
-                              <label for="maintenanceDetails" class="form-label">Details</label>
-                              <input type="text" class="form-control" id="maintenanceDetails"
-                                placeholder="Enter Maintenance Details">
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <button class="btn btn-primary">Save</button>
-                            </div>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <p>Please review the details below before submitting:</p>
+              <ul class="list-group">
+                <li class="list-group-item"><strong>Date:</strong> <span id="reviewDate"></span></li>
+                <li class="list-group-item"><strong>Category:</strong> <span id="reviewCategory"></span></li>
+                <li class="list-group-item"><strong>Description:</strong> <span id="reviewDescription"></span></li>
+              </ul>
+              <p class="mt-3 text-danger">Are you sure you want to submit this record? You will not be allowed to make changes once submitted.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="confirmSubmit">Yes, Confirm</button>
             </div>
           </div>
         </div>
       </div>
+
+
 
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
@@ -230,7 +182,6 @@ include '../employee/header.php';
                           <th>Month</th>
                           <th>Category</th>
                           <th>Description</th>
-                          <th>Actions</th>
                         </tr>
                         <!-- end row -->
                       </thead>
@@ -247,12 +198,7 @@ include '../employee/header.php';
                             echo "<td>" . $row['Category'] . "</td>";
                             echo "<td>" . $row['Description'] . "</td>";
                             echo "<td>";
-                            echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#updateMaintenanceRecordModal'>";
-                            echo "<i class='fs-4 ti ti-edit'></i></a>";
 
-                            echo "<a href='#' class='text-danger' onclick='openDeleteExpenseModal({$row['MaintenanceID']}); return false;'>";
-                            echo "<i class='fs-4 ti ti-trash'></i></a>";
-                            echo "</td>";
                             echo "</tr>";
                           }
                         } else {
@@ -279,6 +225,24 @@ include '../employee/header.php';
 </div>
 
 
+<script>
+  // Function to review data before submitting
+  function reviewData() {
+    const maintenanceDate = document.getElementById('maintenanceDate').value;
+    const maintenanceCategory = document.getElementById('maintenanceCategory').value;
+    const maintenanceDescription = document.getElementById('maintenanceDescription').value;
+
+    // Populate the confirmation modal with the form data
+    document.getElementById('reviewDate').innerText = maintenanceDate;
+    document.getElementById('reviewCategory').innerText = maintenanceCategory;
+    document.getElementById('reviewDescription').innerText = maintenanceDescription;
+  }
+
+  // Submit form if user confirms
+  document.getElementById('confirmSubmit').addEventListener('click', function() {
+    document.getElementById('addMaintenanceForm').submit(); // Submit the form
+  });
+</script>
 
 
 <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"

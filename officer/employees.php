@@ -309,8 +309,7 @@ include '../officer/header.php';
                             </div>
                             <div class="col-12 mb-3">
                               <div class="d-flex gap-6 justify-content-end">
-                                <button class="btn bg-danger-subtle text-danger"
-                                  data-bs-dismiss="modal">Discard</button>
+                                <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal" type="button">Discard</button>
                                 <button id="btn-edit" class="btn btn-primary" type="submit">Save Changes</button>
                               </div>
                             </div>
@@ -644,88 +643,87 @@ include '../officer/header.php';
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const searchInput = document.getElementById('input-search');
-  const tableRows = document.querySelectorAll('#employeeTableBody tr');
-  const table = document.getElementById('employeeTableBody');
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('input-search');
+    const tableRows = document.querySelectorAll('#employeeTableBody tr');
+    const table = document.getElementById('employeeTableBody');
 
-  // Sorting
-  const headers = document.querySelectorAll('.sortable');
-  let currentSortColumn = '';
-  let isAscending = true;
+    // Sorting
+    const headers = document.querySelectorAll('.sortable');
+    let currentSortColumn = '';
+    let isAscending = true;
 
-  // Function to compare values for sorting
-  const compareValues = (a, b, column, ascending) => {
-    const valA = a.getAttribute(`data-${column}`).toLowerCase();
-    const valB = b.getAttribute(`data-${column}`).toLowerCase();
+    // Function to compare values for sorting
+    const compareValues = (a, b, column, ascending) => {
+      const valA = a.getAttribute(`data-${column}`).toLowerCase();
+      const valB = b.getAttribute(`data-${column}`).toLowerCase();
 
-    if (valA < valB) return ascending ? -1 : 1;
-    if (valA > valB) return ascending ? 1 : -1;
-    return 0;
-  };
+      if (valA < valB) return ascending ? -1 : 1;
+      if (valA > valB) return ascending ? 1 : -1;
+      return 0;
+    };
 
-  // Function to sort the table rows
-  const sortTable = (column) => {
-    const rowsArray = Array.from(tableRows);
-    rowsArray.sort((a, b) => compareValues(a, b, column, isAscending));
-    rowsArray.forEach(row => table.appendChild(row)); // Re-attach sorted rows to the table
-  };
+    // Function to sort the table rows
+    const sortTable = (column) => {
+      const rowsArray = Array.from(tableRows);
+      rowsArray.sort((a, b) => compareValues(a, b, column, isAscending));
+      rowsArray.forEach(row => table.appendChild(row)); // Re-attach sorted rows to the table
+    };
 
-  // Add click event listener to each sortable header
-  headers.forEach(header => {
-    header.addEventListener('click', function () {
-      const column = this.getAttribute('data-sort');
-      
-      // Toggle sorting order if clicking on the same column
-      if (currentSortColumn === column) {
-        isAscending = !isAscending;
-      } else {
-        currentSortColumn = column;
-        isAscending = true;
-      }
+    // Add click event listener to each sortable header
+    headers.forEach(header => {
+      header.addEventListener('click', function() {
+        const column = this.getAttribute('data-sort');
 
-      // Sort the table based on the clicked column
-      sortTable(column);
+        // Toggle sorting order if clicking on the same column
+        if (currentSortColumn === column) {
+          isAscending = !isAscending;
+        } else {
+          currentSortColumn = column;
+          isAscending = true;
+        }
 
-      // Optionally, update the header to show the sorting order
-      headers.forEach(h => h.classList.remove('ascending', 'descending'));
-      this.classList.add(isAscending ? 'ascending' : 'descending');
+        // Sort the table based on the clicked column
+        sortTable(column);
+
+        // Optionally, update the header to show the sorting order
+        headers.forEach(h => h.classList.remove('ascending', 'descending'));
+        this.classList.add(isAscending ? 'ascending' : 'descending');
+      });
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+      const searchValue = searchInput.value.toLowerCase();
+
+      tableRows.forEach(row => {
+        const name = row.getAttribute('data-name').toLowerCase();
+        const position = row.getAttribute('data-position').toLowerCase();
+        const status = row.getAttribute('data-status').toLowerCase();
+
+        // Check if search value is part of the name, position, or activation status
+        if (name.includes(searchValue) || position.includes(searchValue) || status.includes(searchValue)) {
+          row.style.display = ''; // Show the row
+        } else {
+          row.style.display = 'none'; // Hide the row
+        }
+      });
     });
   });
-
-  // Search functionality
-  searchInput.addEventListener('input', function () {
-    const searchValue = searchInput.value.toLowerCase();
-
-    tableRows.forEach(row => {
-      const name = row.getAttribute('data-name').toLowerCase();
-      const position = row.getAttribute('data-position').toLowerCase();
-      const status = row.getAttribute('data-status').toLowerCase();
-
-      // Check if search value is part of the name, position, or activation status
-      if (name.includes(searchValue) || position.includes(searchValue) || status.includes(searchValue)) {
-        row.style.display = ''; // Show the row
-      } else {
-        row.style.display = 'none'; // Hide the row
-      }
-    });
-  });
-});
 </script>
 
 <style>
   .sortable {
-  cursor: pointer;
-}
+    cursor: pointer;
+  }
 
-.ascending::after {
-  content: ' ↑';
-}
+  .ascending::after {
+    content: ' ↑';
+  }
 
-.descending::after {
-  content: ' ↓';
-}
-
+  .descending::after {
+    content: ' ↓';
+  }
 </style>
 
 
