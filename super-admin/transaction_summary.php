@@ -205,7 +205,7 @@ $_SESSION['final_amount'] = $final_amount; // Store Final Amount in session
 
                     <!-- Transactions Summary -->
                     <h5 class="mt-4">Transactions Summary</h5>
-                    <table class="table table-bordered">
+                    <table class="table table-striped table-bordered text-nowrap align-middle text-center">
                         <thead>
                             <tr>
                                 <th>DR No</th>
@@ -237,15 +237,18 @@ $_SESSION['final_amount'] = $final_amount; // Store Final Amount in session
                     <!-- Expenses Details -->
                     <h5 class="mt-4">Expenses Details</h5>
                     <p><strong>Salary Amount:</strong> ₱<?php echo number_format($expenses_data['salary'], 2); ?></p>
-                    <p><strong>Mobile Fee Amount:</strong> ₱<?php echo number_format($expenses_data['mobile_fee'], 2); ?></p>
-                    <p><strong>Other Amount:</strong> ₱<?php echo number_format($expenses_data['other_amount'], 2); ?></p>
+                    <p><strong>Mobile Fee Amount:</strong>
+                        ₱<?php echo number_format($expenses_data['mobile_fee'], 2); ?></p>
+                    <p><strong>Other Amount:</strong> ₱<?php echo number_format($expenses_data['other_amount'], 2); ?>
+                    </p>
                     <p><strong>Total Expense:</strong> ₱<?php echo number_format($expenses_data['total'], 2); ?></p>
 
                     <!-- Toll Fee Amount -->
                     <h5 class="mt-4">Toll Fee Amount</h5>
                     <div class="mb-3">
                         <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
-                        <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount" step="0.01" required>
+                        <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount"
+                            step="0.01" required>
                     </div>
 
                     <!-- Calculated Fields -->

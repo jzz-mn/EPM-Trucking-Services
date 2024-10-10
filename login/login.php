@@ -9,59 +9,85 @@ $success_message = "Please enter your credentials to continue.";
 
 // Check if form data has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ensure the keys 'EmailAddress' and 'Password' exist before accessing them
-    if (isset($_POST['EmailAddress']) && isset($_POST['Password'])) {
-        // Get form data
-        $email = $_POST['EmailAddress'];
-        $password = $_POST['Password'];
+  // Ensure the keys 'EmailAddress' and 'Password' exist before accessing them
+  if (isset($_POST['EmailAddress']) && isset($_POST['Password'])) {
+    // Get form data and trim whitespace
+    $email = trim($_POST['EmailAddress']);
+    $password = trim($_POST['Password']);
 
-        // Validate input
-        if (empty($email) || empty($password)) {
-            $error_message = "Please enter both email and password.";
-        } else {
-            // Query to check if user exists in the database
-            $sql = "SELECT * FROM useraccounts WHERE EmailAddress = ? LIMIT 1";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $email); // Bind email to the query
-            $stmt->execute();
-            $result = $stmt->get_result();
+    // Validate input
+    if (empty($email) || empty($password)) {
+      $error_message = "Please enter both email and password.";
+    } else {
+      // Prepare the SQL statement to prevent SQL injection
+      $sql = "SELECT * FROM useraccounts WHERE EmailAddress = ? LIMIT 1";
+      if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("s", $email); // Bind email to the query
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-            // Check if user was found
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
+        // Check if user was found
+        if ($result->num_rows > 0) {
+          $row = $result->fetch_assoc();
 
-                // Check if the password matches (simple string comparison for now, since passwords are not hashed)
-                if ($password === $row['Password']) {
-                    // Login successful, set session variables
-                    $_SESSION['UserID'] = $row['UserID'];
-                    $_SESSION['Username'] = $row['Username'];
-                    $_SESSION['Role'] = $row['Role'];
-                    $_SESSION['EmailAddress'] = $row['EmailAddress'];
+          // Check if the password matches (simple string comparison for now, since passwords are not hashed)
+          if ($password === $row['Password']) {
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
 
-                    // Redirect to the appropriate home page based on role
-                    if ($row['Role'] === 'SuperAdmin') {
-                        header("Location: ../super-admin/home.php");
-                    } elseif ($row['Role'] === 'Officer') {
-                        header("Location: ../officer/home.php");
-                    } elseif ($row['Role'] === 'Employee') {
-                        header("Location: ../employee/home.php");
-                    } else {
-                        $error_message = "User role not recognized!";
-                    }
-                    exit();
-                } else {
-                    $error_message = "Invalid password!";
-                }
+            // Login successful, set session variables
+            $_SESSION['UserID'] = $row['UserID'];
+            $_SESSION['Username'] = $row['Username'];
+            $_SESSION['Role'] = $row['Role'];
+            $_SESSION['EmailAddress'] = $row['EmailAddress'];
+
+            // Insert activity log
+            $action = "Login";
+            $current_timestamp = date("Y-m-d H:i:s"); // Current date and time
+
+            // Prepare the INSERT statement
+            $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+            if ($insert_stmt = $conn->prepare($insert_sql)) {
+              $insert_stmt->bind_param("iss", $row['UserID'], $action, $current_timestamp);
+              if (!$insert_stmt->execute()) {
+                // Handle insertion error (optional)
+                error_log("Failed to insert activity log: " . $insert_stmt->error);
+              }
+              $insert_stmt->close();
             } else {
-                $error_message = "No user found with that email!";
+              // Handle preparation error (optional)
+              error_log("Failed to prepare activity log insertion: " . $conn->error);
             }
 
-            $stmt->close();
+            // Redirect to the appropriate home page based on role
+            if ($row['Role'] === 'SuperAdmin') {
+              header("Location: ../super-admin/home.php");
+            } elseif ($row['Role'] === 'Officer') {
+              header("Location: ../officer/home.php");
+            } elseif ($row['Role'] === 'Employee') {
+              header("Location: ../employee/home.php");
+            } else {
+              $error_message = "User role not recognized!";
+            }
+            exit();
+          } else {
+            $error_message = "Invalid email or password!";
+          }
+        } else {
+          $error_message = "Invalid email or password!";
         }
-    } else {
-        // If fields are missing, output an error message
-        $error_message = "Please fill in both the email and password fields.";
+
+        $stmt->close();
+      } else {
+        // Handle preparation error
+        $error_message = "An error occurred. Please try again later.";
+        error_log("Failed to prepare user selection statement: " . $conn->error);
+      }
     }
+  } else {
+    // If fields are missing, output an error message
+    $error_message = "Please fill in both the email and password fields.";
+  }
 }
 
 $conn->close();
@@ -131,14 +157,17 @@ $conn->close();
 
           <div class="col-lg-6 col-xl-7 col-xxl-8 position-relative overflow-hidden bg-dark d-none d-lg-block">
             <div class="position-absolute top-0 start-0 w-100 h-100">
-              <img src="../assetsEPM/images/epm-background.png" class="w-100 h-100 object-fit-cover" alt="Background Image" />
+              <img src="../assetsEPM/images/epm-background.png" class="w-100 h-100 object-fit-cover"
+                alt="Background Image" />
             </div>
 
             <!-- Adjusted Text Section -->
-            <div class="d-flex align-items-center justify-content-start text-start z-index-5 position-relative h-100 ps-5">
+            <div
+              class="d-flex align-items-center justify-content-start text-start z-index-5 position-relative h-100 ps-5">
               <div class="text-white">
                 <h1 class="fw-bold mb-2 text-white" style="font-size: 3rem;">Welcome!</h1>
-                <p class="mb-0" style="font-size: 1.25rem;">EPM Trucking Services System is designed to optimize performance and efficiency across the organization.</p>
+                <p class="mb-0" style="font-size: 1.25rem;">EPM Trucking Services System is designed to optimize
+                  performance and efficiency across the organization.</p>
               </div>
             </div>
           </div>

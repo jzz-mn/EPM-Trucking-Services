@@ -1,6 +1,21 @@
 <?php
+// Start the session and verify user authentication
+session_start();
+
+// Check if the user is logged in
+if (!isset($_SESSION['UserID'])) {
+    // Redirect to login page if not logged in
+    header("Location: ../login/login.php");
+    exit();
+}
+
 // Include the database connection file
 include('../includes/db_connection.php');
+
+// Enable error reporting for debugging (disable in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,8 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmNewPassword = isset($_POST['confirmNewPassword']) ? trim($_POST['confirmNewPassword']) : '';
 
     // Fetch the current password from the database
-    $sql_fetch_password = "SELECT password FROM useraccounts WHERE EmployeeID = ?";
+    $sql_fetch_password = "SELECT Password FROM useraccounts WHERE EmployeeID = ?";
     $stmt_fetch = $conn->prepare($sql_fetch_password);
+    if ($stmt_fetch === false) {
+        echo json_encode(['success' => false, 'message' => 'Error preparing password fetch statement: ' . $conn->error]);
+        exit;
+    }
     $stmt_fetch->bind_param('i', $employeeID);
     $stmt_fetch->execute();
     $stmt_fetch->bind_result($dbPassword);
@@ -36,64 +55,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt_fetch->close();
 
     // Verify the current password
+    // If passwords are hashed, use password_verify()
+    // Assuming passwords are stored in plain text as per your current implementation
     if ($currentPassword !== $dbPassword) {
         echo json_encode(['success' => false, 'message' => 'Current password is incorrect.']);
         exit;
     }
 
-    // First, update the employees table
-    $sql_employee = "UPDATE employees 
-                     SET FirstName = ?, MiddleInitial = ?, LastName = ?, Gender = ?, DateOfBirth = ?, MobileNo = ?, EmploymentDate = ?, Position = ?, Address = ? 
-                     WHERE EmployeeID = ?";
-    $stmt_employee = $conn->prepare($sql_employee);
-    if ($stmt_employee) {
+    // Begin a transaction to ensure data integrity
+    $conn->begin_transaction();
+
+    try {
+        // First, update the employees table
+        $sql_employee = "UPDATE employees 
+                         SET FirstName = ?, MiddleInitial = ?, LastName = ?, Gender = ?, DateOfBirth = ?, MobileNo = ?, EmploymentDate = ?, Position = ?, Address = ? 
+                         WHERE EmployeeID = ?";
+        $stmt_employee = $conn->prepare($sql_employee);
+        if ($stmt_employee === false) {
+            throw new Exception('Error preparing employee update statement: ' . $conn->error);
+        }
         $stmt_employee->bind_param('sssssssssi', $firstName, $middleInitial, $lastName, $gender, $dob, $mobileNo, $employmentDate, $position, $address, $employeeID);
         if (!$stmt_employee->execute()) {
-            echo json_encode(['success' => false, 'message' => 'Error updating employee: ' . $stmt_employee->error]);
-            exit;
+            throw new Exception('Error updating employee: ' . $stmt_employee->error);
         }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Error preparing employee update statement']);
-        exit;
-    }
+        $stmt_employee->close();
 
-    // Then, update the useraccounts table
-    $sql_user = "UPDATE useraccounts SET username = ?, emailAddress = ?, ActivationStatus = ? WHERE EmployeeID = ?";
-    $stmt_user = $conn->prepare($sql_user);
-    if ($stmt_user) {
+        // Then, update the useraccounts table
+        $sql_user = "UPDATE useraccounts SET Username = ?, EmailAddress = ?, ActivationStatus = ? WHERE EmployeeID = ?";
+        $stmt_user = $conn->prepare($sql_user);
+        if ($stmt_user === false) {
+            throw new Exception('Error preparing user account update statement: ' . $conn->error);
+        }
         $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
         if (!$stmt_user->execute()) {
-            echo json_encode(['success' => false, 'message' => 'Error updating user account: ' . $stmt_user->error]);
-            exit;
+            throw new Exception('Error updating user account: ' . $stmt_user->error);
         }
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Error preparing user account update statement']);
-        exit;
-    }
+        $stmt_user->close();
 
-    // If the new password is provided, update the password
-    if (!empty($newPassword)) {
-        if ($newPassword === $confirmNewPassword) {
-            // Update the password in plain text (without hashing)
-            $sql_password = "UPDATE useraccounts SET password = ? WHERE EmployeeID = ?";
-            $stmt_password = $conn->prepare($sql_password);
-            if ($stmt_password) {
+        // If the new password is provided, update the password
+        if (!empty($newPassword)) {
+            if ($newPassword === $confirmNewPassword) {
+                // Optional: Hash the new password for security
+                // $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                // For now, updating in plain text as per current implementation
+                $sql_password = "UPDATE useraccounts SET Password = ? WHERE EmployeeID = ?";
+                $stmt_password = $conn->prepare($sql_password);
+                if ($stmt_password === false) {
+                    throw new Exception('Error preparing password update statement: ' . $conn->error);
+                }
                 $stmt_password->bind_param('si', $newPassword, $employeeID);
                 if (!$stmt_password->execute()) {
-                    echo json_encode(['success' => false, 'message' => 'Error updating password: ' . $stmt_password->error]);
-                    exit;
+                    throw new Exception('Error updating password: ' . $stmt_password->error);
                 }
+                $stmt_password->close();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Error preparing password update statement']);
-                exit;
+                throw new Exception('New password and confirmation do not match.');
             }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'New password and confirmation do not match.']);
-            exit;
         }
+
+        // ---- Insert Activity Log ----
+        // Retrieve the logged-in user's UserID from the session
+        $currentUserID = $_SESSION['UserID'];
+
+        // Define the action description
+        $action = "Updated Employee: " . $firstName . " " . $lastName;
+
+        // Get the current timestamp
+        $currentTimestamp = date("Y-m-d H:i:s");
+
+        // Prepare the INSERT statement for activitylogs
+        $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+        $stmtLog = $conn->prepare($sqlInsertLog);
+        if ($stmtLog === false) {
+            throw new Exception('Error preparing activity log insertion: ' . $conn->error);
+        }
+        $stmtLog->bind_param('iss', $currentUserID, $action, $currentTimestamp);
+        if (!$stmtLog->execute()) {
+            // Log the error without halting the transaction
+            error_log("Failed to insert activity log: " . $stmtLog->error);
+            // Optionally, you can choose to throw an exception here to rollback the entire transaction
+            // throw new Exception('Failed to insert activity log.');
+        }
+        $stmtLog->close();
+        // ---- End of Activity Log Insertion ----
+
+        // Commit the transaction
+        $conn->commit();
+
+        // Success message
+        echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
+    } catch (Exception $e) {
+        // Rollback the transaction on error
+        $conn->rollback();
+        // Return error message
+        echo json_encode(['success' => false, 'message' => 'Transaction failed: ' . $e->getMessage()]);
     }
 
-    // Success message
-    echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
+    // Close the database connection
+    $conn->close();
 }
 ?>

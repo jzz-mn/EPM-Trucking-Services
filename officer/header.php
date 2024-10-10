@@ -1,3 +1,22 @@
+<?php
+// Start the session if it's not already started
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
+
+// Check if the user is logged in
+if (!isset($_SESSION['Username'])) {
+  // Redirect to login page if not logged in
+  header("Location: ../login/login.php");
+  exit();
+}
+
+// Retrieve and sanitize user data from session
+$username = htmlspecialchars($_SESSION['Username'], ENT_QUOTES, 'UTF-8');
+$role = htmlspecialchars($_SESSION['Role'], ENT_QUOTES, 'UTF-8');
+$email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
+?>
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
 
@@ -21,6 +40,9 @@
 <body class="link-sidebar">
 
   <!-- Preloader -->
+  <div class="preloader">
+    <img src="../assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
+  </div>
 
   <div id="main-wrapper">
     <!-- Sidebar Start -->
@@ -227,110 +249,16 @@
                         <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
                         <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">5 new</span>
                       </div>
-                      <div class="message-body" data-simplebar>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-danger-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-danger">
-                            <iconify-icon icon="solar:widget-3-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-warning-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-warning">
-                            <iconify-icon icon="solar:widget-4-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                      </div>
                       <div class="py-6 px-7 mb-1">
                         <button class="btn btn-primary w-100">See All Notifications</button>
                       </div>
-
                     </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end notification Dropdown -->
-                  <!-- ------------------------------- -->
-
-                  <!-- ------------------------------- -->
-                  <!-- start profile Dropdown -->
-                  <!-- ------------------------------- -->
-
-
-
-                  <!-- Dropdown menu -->
+                  <!-- Mini Profile -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
+                        <!-- Placeholder image; update dynamically if image data becomes available -->
                         <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
                           alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
@@ -340,13 +268,16 @@
                       aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
+                          <!-- Placeholder image; update dynamically if image data becomes available -->
                           <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
                             alt="user-img" />
                           <div>
-                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span
-                                class="text-success fs-11">Pro</span></h5>
+                            <h5 class="mb-0 fs-12">
+                              <?php echo $username; ?>
+                              <span class="text-success fs-11"><?php echo $role; ?></span>
+                            </h5>
                             <p class="mb-0 text-dark">
-                              <?php echo htmlspecialchars($dbEmail); ?>
+                              <?php echo $email; ?>
                             </p>
                           </div>
                         </div>
@@ -354,29 +285,20 @@
                           <a href="../officer/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
+
                         </div>
                       </div>
                     </div>
                   </li>
 
-
-                  <!-- ------------------------------- -->
-                  <!-- end profile Dropdown -->
-                  <!-- ------------------------------- -->
                 </ul>
               </div>
             </div>
           </nav>
-          <!-- ---------------------------------- -->
           <!-- End Vertical Layout Header -->
-          <!-- ---------------------------------- -->
-
-          <!-- ------------------------------- -->
-          <!-- apps Dropdown in Small screen -->
-
 
         </div>
         <div class="app-header with-horizontal">
@@ -458,102 +380,13 @@
                         <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
                         <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">5 new</span>
                       </div>
-                      <div class="message-body" data-simplebar>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-danger-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-danger">
-                            <iconify-icon icon="solar:widget-3-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-warning-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-warning">
-                            <iconify-icon icon="solar:widget-4-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                      </div>
                       <div class="py-6 px-7 mb-1">
                         <button class="btn btn-primary w-100">See All Notifications</button>
                       </div>
-
                     </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end notification Dropdown -->
-                  <!-- ------------------------------- -->
-                  <!-- ------------------------------- -->
+
                   <!-- start profile Dropdown -->
-                  <!-- ------------------------------- -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
@@ -562,47 +395,10 @@
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1">
-                      <div class="position-relative px-4 pt-3 pb-2">
-                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
-                            alt="matdash-img" />
-                          <div>
-                            <h5 class="mb-0 fs-12">David McMichael <span class="text-success fs-11">Pro</span>
-                            </h5>
-                            <p class="mb-0 text-dark">
-                              david@wrappixel.com
-                            </p>
-                          </div>
-                        </div>
-                        <div class="message-body">
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Profile
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Subscription
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Statements <span class="badge bg-danger-subtle text-danger rounded ms-8">4</span>
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            Account Settings
-                          </a>
-                          <a href="../officer/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
-                            Sign Out
-                          </a>
-                        </div>
-                      </div>
-                    </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end profile Dropdown -->
-                  <!-- ------------------------------- -->
                 </ul>
               </div>
             </div>
           </nav>
-
         </div>
       </header>
