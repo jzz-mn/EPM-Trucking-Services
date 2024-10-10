@@ -293,68 +293,83 @@ include '../officer/header.php';
       aria-labelledby="editTransactionModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editTransactionModalLabel">Edit Transaction</h5>
+          <div class="modal-header d-flex align-items-center bg-primary">
+            <h5 class="modal-title text-white fs-4" id="editTransactionModalLabel">Edit Transaction</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form id="updateTransactionForm" method="POST" action="update_transaction.php">
-              <div class="row">
-                <!-- Transaction ID (hidden) -->
-                <input type="hidden" id="transactionId" name="transactionId">
+            <div class="row">
+              <div class="col-12">
+                <div class="card w-100 border position-relative overflow-hidden mb-0">
+                  <div class="card-body p-4">
+                    <h4 class="card-title">Edit Transaction</h4>
+                    <p class="card-subtitle mb-4">Fill out the form to update the transaction.</p>
 
-                <!-- Transaction Date -->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="transactionDate" class="form-label">Transaction Date</label>
-                    <input type="date" class="form-control" id="transactionDate" name="transactionDate" required>
-                  </div>
-                </div>
+                    <form id="updateTransactionForm" method="POST" action="update_transaction.php">
+                      <div class="row">
 
-                <!-- DR No -->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="drNo" class="form-label">DR No</label>
-                    <input type="text" class="form-control" id="drNo" name="drNo" required>
-                  </div>
-                </div>
+                        <!-- Transaction ID (hidden) -->
+                        <input type="hidden" id="transactionId" name="transactionId">
 
-                <!-- Outlet Name -->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="outletName" class="form-label">Outlet Name</label>
-                    <input type="text" class="form-control" id="outletName" name="outletName" required>
-                  </div>
-                </div>
+                        <!-- Transaction Date -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="transactionDate" class="form-label">Transaction Date</label>
+                            <input type="date" class="form-control" id="transactionDate" name="transactionDate" required>
+                          </div>
+                        </div>
 
-                <!-- Quantity -->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="qty" class="form-label">Qty</label>
-                    <input type="number" class="form-control" id="qty" name="qty" required>
-                  </div>
-                </div>
+                        <!-- DR No -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="drNo" class="form-label">DR No</label>
+                            <input type="text" class="form-control" id="drNo" name="drNo" readonly>
+                          </div>
+                        </div>
 
-                <!-- KGs -->
-                <div class="col-lg-6">
-                  <div class="mb-3">
-                    <label for="kgs" class="form-label">KGs</label>
-                    <input type="number" class="form-control" id="kgs" name="kgs" required>
-                  </div>
-                </div>
+                        <!-- Outlet Name -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="outletName" class="form-label">Outlet Name</label>
+                            <input type="text" class="form-control" id="outletName" name="outletName" required>
+                          </div>
+                        </div>
 
-                <div class="col-12">
-                  <div class="d-flex justify-content-end gap-3">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <!-- Quantity -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="qty" class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="qty" name="qty" required>
+                          </div>
+                        </div>
+
+                        <!-- KGs -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="kgs" class="form-label">KGs</label>
+                            <input type="number" class="form-control" id="kgs" name="kgs" required>
+                          </div>
+                        </div>
+
+                        <!-- Submit and Cancel Buttons -->
+                        <div class="col-12">
+                          <div class="d-flex justify-content-end mt-4 gap-3">
+                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                          </div>
+                        </div>
+                      </div> <!-- End of row -->
+                    </form> <!-- End of form -->
+
                   </div>
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
 
 
 
@@ -375,16 +390,16 @@ include '../officer/header.php';
                 <span>Transactions</span>
               </a>
             </li>
-          <li class="nav-item">
+            <li class="nav-item">
               <a class="nav-link" data-bs-toggle="tab" href="#trucks" role="tab">
                 <span>Trucks</span>
               </a>
             </li>
-            </ul>
+          </ul>
 
-                        <!-- Transactions Tab -->
-                        
-          
+          <!-- Transactions Tab -->
+
+
           <!-- Single Tab Content Wrapper -->
           <div class="tab-content p-4">
             <!-- Maintenance Tab -->
@@ -527,7 +542,7 @@ include '../officer/header.php';
             <div class="tab-pane" id="trucks" role="tabpanel">
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
-                  
+
                 </div>
               </div>
               <div class="py-3">
@@ -551,7 +566,7 @@ include '../officer/header.php';
                       <?php
                       while ($row = $result->fetch_assoc()) {
                         $transactionData = json_encode($row);  // Prepare the row data as a JSON object
-                      
+
                         echo "<tr>";
                         echo "<td>" . $row['TruckID'] . "</td>";
                         echo "<td>" . $row['PlateNo'] . "</td>";
@@ -571,7 +586,7 @@ include '../officer/header.php';
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </div>
@@ -657,172 +672,171 @@ include '../officer/header.php';
 
 <script>
   // Maintenance Table Functions
-let maintenanceCurrentPage = 1;
-let maintenanceRowsPerPage = 5;
+  let maintenanceCurrentPage = 1;
+  let maintenanceRowsPerPage = 5;
 
-function changeMaintenanceRowsPerPage() {
-  maintenanceRowsPerPage = parseInt(document.getElementById("maintenanceRowsPerPage").value);
-  maintenanceCurrentPage = 1;
-  updateMaintenanceTable();
-}
-
-function filterMaintenanceTable() {
-  let input = document.getElementById("maintenanceSearchBar").value.toLowerCase();
-  let table = document.getElementById("maintenanceTable");
-  let rows = table.getElementsByTagName("tr");
-
-  for (let i = 1; i < rows.length; i++) {
-    let row = rows[i];
-    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+  function changeMaintenanceRowsPerPage() {
+    maintenanceRowsPerPage = parseInt(document.getElementById("maintenanceRowsPerPage").value);
+    maintenanceCurrentPage = 1;
+    updateMaintenanceTable();
   }
-}
 
-function sortMaintenanceTable(columnIndex) {
-  let table = document.getElementById("maintenanceTable");
-  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-  let sortedRows = rows.sort((a, b) => {
-    let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-    let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
-    return aValue.localeCompare(bValue);
-  });
+  function filterMaintenanceTable() {
+    let input = document.getElementById("maintenanceSearchBar").value.toLowerCase();
+    let table = document.getElementById("maintenanceTable");
+    let rows = table.getElementsByTagName("tr");
 
-  let tableBody = document.getElementById("maintenanceTableBody");
-  tableBody.innerHTML = "";
-  sortedRows.forEach(row => tableBody.appendChild(row));
-}
-
-function updateMaintenanceTable() {
-  let table = document.getElementById("maintenanceTable");
-  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-  let startIndex = (maintenanceCurrentPage - 1) * maintenanceRowsPerPage;
-  let endIndex = startIndex + maintenanceRowsPerPage;
-
-  rows.forEach((row, index) => {
-    row.style.display = index >= startIndex && index < endIndex ? "" : "none";
-  });
-
-  document.getElementById("maintenancePrevBtn").disabled = maintenanceCurrentPage === 1;
-  document.getElementById("maintenanceNextBtn").disabled = endIndex >= rows.length;
-}
-
-function nextMaintenancePage() {
-  maintenanceCurrentPage++;
-  updateMaintenanceTable();
-}
-
-function prevMaintenancePage() {
-  maintenanceCurrentPage--;
-  updateMaintenanceTable();
-}
-
-// Transactions Table Functions
-let transactionsCurrentPage = 1;
-let transactionsRowsPerPage = 5;
-
-function changeTransactionsRowsPerPage() {
-  transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
-  transactionsCurrentPage = 1;
-  updateTransactionsTable();
-}
-
-function filterTransactionsTable() {
-  let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
-  let table = document.getElementById("transactionsTable");
-  let rows = table.getElementsByTagName("tr");
-
-  for (let i = 1; i < rows.length; i++) {
-    let row = rows[i];
-    row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    for (let i = 1; i < rows.length; i++) {
+      let row = rows[i];
+      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    }
   }
-}
 
-function sortTransactionsTable(columnIndex) {
-  let table = document.getElementById("transactionsTable");
-  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-  let sortedRows = rows.sort((a, b) => {
-    let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-    let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
-    return aValue.localeCompare(bValue);
+  function sortMaintenanceTable(columnIndex) {
+    let table = document.getElementById("maintenanceTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let sortedRows = rows.sort((a, b) => {
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      return aValue.localeCompare(bValue);
+    });
+
+    let tableBody = document.getElementById("maintenanceTableBody");
+    tableBody.innerHTML = "";
+    sortedRows.forEach(row => tableBody.appendChild(row));
+  }
+
+  function updateMaintenanceTable() {
+    let table = document.getElementById("maintenanceTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let startIndex = (maintenanceCurrentPage - 1) * maintenanceRowsPerPage;
+    let endIndex = startIndex + maintenanceRowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+    });
+
+    document.getElementById("maintenancePrevBtn").disabled = maintenanceCurrentPage === 1;
+    document.getElementById("maintenanceNextBtn").disabled = endIndex >= rows.length;
+  }
+
+  function nextMaintenancePage() {
+    maintenanceCurrentPage++;
+    updateMaintenanceTable();
+  }
+
+  function prevMaintenancePage() {
+    maintenanceCurrentPage--;
+    updateMaintenanceTable();
+  }
+
+  // Transactions Table Functions
+  let transactionsCurrentPage = 1;
+  let transactionsRowsPerPage = 5;
+
+  function changeTransactionsRowsPerPage() {
+    transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
+    transactionsCurrentPage = 1;
+    updateTransactionsTable();
+  }
+
+  function filterTransactionsTable() {
+    let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
+    let table = document.getElementById("transactionsTable");
+    let rows = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < rows.length; i++) {
+      let row = rows[i];
+      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    }
+  }
+
+  function sortTransactionsTable(columnIndex) {
+    let table = document.getElementById("transactionsTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let sortedRows = rows.sort((a, b) => {
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      return aValue.localeCompare(bValue);
+    });
+
+    let tableBody = document.getElementById("transactionsTableBody");
+    tableBody.innerHTML = "";
+    sortedRows.forEach(row => tableBody.appendChild(row));
+  }
+
+  function updateTransactionsTable() {
+    let table = document.getElementById("transactionsTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
+    let endIndex = startIndex + transactionsRowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+    });
+
+    document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
+    document.getElementById("transactionsNextBtn").disabled = endIndex >= rows.length;
+  }
+
+  function nextTransactionsPage() {
+    transactionsCurrentPage++;
+    updateTransactionsTable();
+  }
+
+  function prevTransactionsPage() {
+    transactionsCurrentPage--;
+    updateTransactionsTable();
+  }
+
+  // Modal Population Functions
+  function populateEditMaintenanceForm(maintenance) {
+    document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+    document.getElementById("maintenanceYear").value = maintenance.Year;
+    document.getElementById("maintenanceMonth").value = maintenance.Month;
+    document.getElementById("maintenanceCategory").value = maintenance.Category;
+    document.getElementById("maintenanceDescription").value = maintenance.Description;
+    document.getElementById("maintenanceAmount").value = maintenance.Amount;
+  }
+
+  function populateEditTransactionForm(transaction) {
+    document.getElementById("transactionId").value = transaction.TransactionID;
+    document.getElementById("transactionDate").value = transaction.TransactionDate;
+    document.getElementById("drNo").value = transaction.DRno;
+    document.getElementById("outletName").value = transaction.OutletName;
+    document.getElementById("qty").value = transaction.Qty;
+    document.getElementById("kgs").value = transaction.KGs;
+  }
+
+  // Attach the buttons to open modals
+  document.addEventListener('DOMContentLoaded', function() {
+    attachMaintenanceEditButtons();
+    attachTransactionEditButtons();
   });
-
-  let tableBody = document.getElementById("transactionsTableBody");
-  tableBody.innerHTML = "";
-  sortedRows.forEach(row => tableBody.appendChild(row));
-}
-
-function updateTransactionsTable() {
-  let table = document.getElementById("transactionsTable");
-  let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-  let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
-  let endIndex = startIndex + transactionsRowsPerPage;
-
-  rows.forEach((row, index) => {
-    row.style.display = index >= startIndex && index < endIndex ? "" : "none";
-  });
-
-  document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
-  document.getElementById("transactionsNextBtn").disabled = endIndex >= rows.length;
-}
-
-function nextTransactionsPage() {
-  transactionsCurrentPage++;
-  updateTransactionsTable();
-}
-
-function prevTransactionsPage() {
-  transactionsCurrentPage--;
-  updateTransactionsTable();
-}
-
-// Modal Population Functions
-function populateEditMaintenanceForm(maintenance) {
-  document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-  document.getElementById("maintenanceYear").value = maintenance.Year;
-  document.getElementById("maintenanceMonth").value = maintenance.Month;
-  document.getElementById("maintenanceCategory").value = maintenance.Category;
-  document.getElementById("maintenanceDescription").value = maintenance.Description;
-  document.getElementById("maintenanceAmount").value = maintenance.Amount;
-}
-
-function populateEditTransactionForm(transaction) {
-  document.getElementById("transactionId").value = transaction.TransactionID;
-  document.getElementById("transactionDate").value = transaction.TransactionDate;
-  document.getElementById("drNo").value = transaction.DRno;
-  document.getElementById("outletName").value = transaction.OutletName;
-  document.getElementById("qty").value = transaction.Qty;
-  document.getElementById("kgs").value = transaction.KGs;
-}
-
-// Attach the buttons to open modals
-document.addEventListener('DOMContentLoaded', function() {
-  attachMaintenanceEditButtons();
-  attachTransactionEditButtons();
-});
 </script>
 
 <script>
   function attachMaintenanceEditButtons() {
-  const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-  editButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const maintenanceData = JSON.parse(this.dataset.maintenance);
-      populateEditMaintenanceForm(maintenanceData);
-      $('#updateMaintenanceRecordModal').modal('show');
+    const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const maintenanceData = JSON.parse(this.dataset.maintenance);
+        populateEditMaintenanceForm(maintenanceData);
+        $('#updateMaintenanceRecordModal').modal('show');
+      });
     });
-  });
-}
+  }
 
-function attachTransactionEditButtons() {
-  const editButtons = document.querySelectorAll('.edit-transaction-btn');
-  editButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const transactionData = JSON.parse(this.dataset.transaction);
-      populateEditTransactionForm(transactionData);
-      $('#editTransactionModal').modal('show');
+  function attachTransactionEditButtons() {
+    const editButtons = document.querySelectorAll('.edit-transaction-btn');
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const transactionData = JSON.parse(this.dataset.transaction);
+        populateEditTransactionForm(transactionData);
+        $('#editTransactionModal').modal('show');
+      });
     });
-  });
-}
-
+  }
 </script>
 <?php
 $conn->close();
