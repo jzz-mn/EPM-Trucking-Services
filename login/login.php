@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['EmailAddress'] = $row['EmailAddress'];
 
             // Insert activity log
-            $action = "Login";
+            $action = "Logged In";
             $current_timestamp = date("Y-m-d H:i:s"); // Current date and time
 
             // Prepare the INSERT statement

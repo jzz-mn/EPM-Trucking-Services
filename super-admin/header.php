@@ -1,3 +1,22 @@
+<?php
+// Start the session if it's not already started
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
+
+// Check if the user is logged in
+if (!isset($_SESSION['Username'])) {
+  // Redirect to login page if not logged in
+  header("Location: ../login/login.php");
+  exit();
+}
+
+// Retrieve and sanitize user data from session
+$username = htmlspecialchars($_SESSION['Username'], ENT_QUOTES, 'UTF-8');
+$role = htmlspecialchars($_SESSION['Role'], ENT_QUOTES, 'UTF-8');
+$email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
+?>
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Aqua_Theme" data-layout="vertical">
 
@@ -24,6 +43,7 @@
   <div class="preloader">
     <img src="../assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
   </div>
+
   <div id="main-wrapper">
     <!-- Sidebar Start -->
     <aside class="left-sidebar with-vertical">
@@ -66,6 +86,7 @@
               </a>
             </li>
 
+
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
                 <iconify-icon icon="mdi:folder-outline"></iconify-icon>
@@ -98,7 +119,6 @@
                 </li>
               </ul>
             </li>
-
             <li class="sidebar-item">
               <a class="sidebar-link has-arrow" href="#" aria-expanded="false">
                 <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
@@ -132,7 +152,6 @@
                 <span class="hide-menu">Invoice</span>
               </a>
             </li>
-
             <li class="sidebar-item">
               <a class="sidebar-link" href="../super-admin/activity-logs.php">
                 <iconify-icon icon="mdi:history"></iconify-icon>
@@ -147,7 +166,6 @@
     </aside>
     <!--  Sidebar End -->
 
-
     <style>
       /* Override visited and active link styles */
       .sidebar-link iconify-icon {
@@ -161,7 +179,6 @@
         /* Prevent color change after click */
       }
     </style>
-
 
 
     <div class="page-wrapper">
@@ -199,6 +216,7 @@
                   <li class="nav-item">
                     <a class="btn btn-primary" href="add_data.php">Add Data</a>
                   </li>
+
                   <li class="nav-item dropdown">
                     <a href="javascript:void(0)"
                       class="nav-link nav-icon-hover-bg rounded-circle d-flex d-lg-none align-items-center justify-content-center"
@@ -236,111 +254,16 @@
                         <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
                         <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">5 new</span>
                       </div>
-                      <div class="message-body" data-simplebar>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-danger-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-danger">
-                            <iconify-icon icon="solar:widget-3-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-warning-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-warning">
-                            <iconify-icon icon="solar:widget-4-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                      </div>
                       <div class="py-6 px-7 mb-1">
                         <button class="btn btn-primary w-100">See All Notifications</button>
                       </div>
-
                     </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end notification Dropdown -->
-                  <!-- ------------------------------- -->
-
-                  <!-- ------------------------------- -->
-                  <!-- start profile Dropdown -->
-                  <!-- ------------------------------- -->
-
-
-
-
-                  <!-- Dropdown menu -->
+                  <!-- Mini Profile -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
+                        <!-- Placeholder image; update dynamically if image data becomes available -->
                         <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
                           alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
@@ -350,13 +273,16 @@
                       aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
+                          <!-- Placeholder image; update dynamically if image data becomes available -->
                           <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
                             alt="user-img" />
                           <div>
-                            <h5 class="mb-0 fs-12"><?php echo htmlspecialchars($dbUsername); ?> <span
-                                class="text-success fs-11">Pro</span></h5>
+                            <h5 class="mb-0 fs-12">
+                              <?php echo $username; ?>
+                              <span class="text-success fs-11"><?php echo $role; ?></span>
+                            </h5>
                             <p class="mb-0 text-dark">
-                              <?php echo htmlspecialchars($dbEmail); ?>
+                              <?php echo $email; ?>
                             </p>
                           </div>
                         </div>
@@ -364,154 +290,20 @@
                           <a href="../super-admin/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
+
                         </div>
                       </div>
                     </div>
                   </li>
 
-
-                  <!-- ------------------------------- -->
-                  <!-- end profile Dropdown -->
-                  <!-- ------------------------------- -->
                 </ul>
               </div>
             </div>
           </nav>
-          <!-- ---------------------------------- -->
           <!-- End Vertical Layout Header -->
-          <!-- ---------------------------------- -->
-
-          <!-- ------------------------------- -->
-          <!-- apps Dropdown in Small screen -->
-          <!-- ------------------------------- -->
-          <!--  Mobilenavbar -->
-          <div class="offcanvas offcanvas-start pt-0" data-bs-scroll="true" tabindex="-1" id="mobilenavbar"
-            aria-labelledby="offcanvasWithBothOptionsLabel">
-            <nav class="sidebar-nav scroll-sidebar">
-              <div class="offcanvas-header justify-content-between">
-                <a href="../super-admin/home.php" class="text-nowrap logo-img">
-                  <img src="../assets/images/logos/logo-icon.svg" alt="Logo" />
-                </a>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-              </div>
-              <div class="offcanvas-body pt-0" data-simplebar style="height: calc(100vh - 80px)">
-                <ul id="sidebarnav">
-                  <li class="sidebar-item">
-                    <a class="sidebar-link has-arrow ms-0" href="javascript:void(0)" aria-expanded="false">
-                      <span>
-                        <iconify-icon icon="solar:slider-vertical-line-duotone" class="fs-7"></iconify-icon>
-                      </span>
-                      <span class="hide-menu">Apps</span>
-                    </a>
-                    <ul aria-expanded="false" class="collapse first-level my-3 ps-3">
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/app-chat.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:chat-line-bold-duotone" class="fs-7 text-primary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Chat Application</h6>
-                            <span class="fs-11 d-block text-body-color">New messages arrived</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/invoice.php" class="d-flex align-items-center">
-                          <div
-                            class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:bill-list-bold-duotone"
-                              class="fs-7 text-secondary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Invoice App</h6>
-                            <span class="fs-11 d-block text-body-color">Get latest invoice</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/activity-logs.php" class="d-flex align-items-center">
-                          <div
-                            class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:phone-calling-rounded-bold-duotone"
-                              class="fs-7 text-warning"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Contact Application</h6>
-                            <span class="fs-11 d-block text-body-color">2 Unsaved Contacts</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/app-email.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:letter-bold-duotone" class="fs-7 text-danger"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Email App</h6>
-                            <span class="fs-11 d-block text-body-color">Get new emails</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/page-user-profile.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:user-bold-duotone" class="fs-7 text-success"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">User Profile</h6>
-                            <span class="fs-11 d-block text-body-color">learn more information</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/app-calendar.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:calendar-minimalistic-bold-duotone"
-                              class="fs-7 text-primary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Calendar App</h6>
-                            <span class="fs-11 d-block text-body-color">Get dates</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/app-contact.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:smartphone-2-bold-duotone"
-                              class="fs-7 text-secondary"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Contact List Table</h6>
-                            <span class="fs-11 d-block text-body-color">Add new contact</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="sidebar-item py-2">
-                        <a href="../super-admin/app-notes.html" class="d-flex align-items-center">
-                          <div
-                            class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                            <iconify-icon icon="solar:notes-bold-duotone" class="fs-7 text-warning"></iconify-icon>
-                          </div>
-                          <div class="d-inline-block">
-                            <h6 class="mb-0 bg-hover-primary">Notes Application</h6>
-                            <span class="fs-11 d-block text-body-color">To-do and Daily tasks</span>
-                          </div>
-                        </a>
-                      </li>
-                  </li>
-                </ul>
-              </div>
-            </nav>
-          </div>
 
         </div>
         <div class="app-header with-horizontal">
@@ -538,128 +330,6 @@
                   <a class="nav-link" id="drop2" href="javascript:void(0)" aria-haspopup="true" aria-expanded="false">
                     <iconify-icon icon="solar:widget-3-line-duotone" class="fs-6"></iconify-icon>
                   </a>
-                  <div class="dropdown-menu dropdown-menu-nav dropdown-menu-animate-up py-0 overflow-hidden"
-                    aria-labelledby="drop2">
-                    <div class="position-relative">
-                      <div class="row">
-                        <div class="col-8">
-                          <div class="p-4 pb-3">
-
-                            <div class="row">
-                              <div class="col-6">
-                                <div class="position-relative">
-                                  <a href="../super-admin/app-chat.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:chat-line-bold-duotone"
-                                        class="fs-7 text-primary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Chat Application</h6>
-                                      <span class="fs-11 d-block text-body-color">New messages arrived</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/invoice.php"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:bill-list-bold-duotone"
-                                        class="fs-7 text-secondary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Invoice App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get latest invoice</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/activity-logs.php"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:phone-calling-rounded-bold-duotone"
-                                        class="fs-7 text-warning"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Contact Application</h6>
-                                      <span class="fs-11 d-block text-body-color">2 Unsaved Contacts</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/app-email.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-danger-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:letter-bold-duotone"
-                                        class="fs-7 text-danger"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Email App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get new emails</span>
-                                    </div>
-                                  </a>
-                                </div>
-                              </div>
-                              <div class="col-6">
-                                <div class="position-relative">
-                                  <a href="../super-admin/page-user-profile.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-success-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:user-bold-duotone"
-                                        class="fs-7 text-success"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">User Profile</h6>
-                                      <span class="fs-11 d-block text-body-color">learn more information</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/app-calendar.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-primary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:calendar-minimalistic-bold-duotone"
-                                        class="fs-7 text-primary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Calendar App</h6>
-                                      <span class="fs-11 d-block text-body-color">Get dates</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/app-contact.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-secondary-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:smartphone-2-bold-duotone"
-                                        class="fs-7 text-secondary"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Contact List Table</h6>
-                                      <span class="fs-11 d-block text-body-color">Add new contact</span>
-                                    </div>
-                                  </a>
-                                  <a href="../super-admin/app-notes.html"
-                                    class="d-flex align-items-center pb-9 position-relative">
-                                    <div
-                                      class="bg-warning-subtle rounded round-48 me-3 d-flex align-items-center justify-content-center">
-                                      <iconify-icon icon="solar:notes-bold-duotone"
-                                        class="fs-7 text-warning"></iconify-icon>
-                                    </div>
-                                    <div class="d-inline-block">
-                                      <h6 class="mb-0">Notes Application</h6>
-                                      <span class="fs-11 d-block text-body-color">To-do and Daily tasks</span>
-                                    </div>
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-4">
-                          <img src="../assets/images/backgrounds/mega-dd-bg.jpg" alt="mega-dd"
-                            class="img-fluid mega-dd-bg" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </li>
             </ul>
@@ -715,102 +385,13 @@
                         <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
                         <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">5 new</span>
                       </div>
-                      <div class="message-body" data-simplebar>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-danger-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-danger">
-                            <iconify-icon icon="solar:widget-3-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-warning-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-warning">
-                            <iconify-icon icon="solar:widget-4-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Launch Admin</h6>
-                              <span class="d-block fs-2">9:30 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just see the my new admin!</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                            <iconify-icon icon="solar:calendar-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Event today</h6>
-                              <span class="d-block fs-2">9:15 AM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">Just a reminder that you have
-                              event</span>
-                          </div>
-                        </a>
-                        <a href="javascript:void(0)" class="py-6 px-7 d-flex align-items-center dropdown-item gap-3">
-                          <span
-                            class="flex-shrink-0 bg-secondary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-secondary">
-                            <iconify-icon icon="solar:settings-line-duotone"></iconify-icon>
-                          </span>
-                          <div class="w-75 d-inline-block ">
-                            <div class="d-flex align-items-center justify-content-between">
-                              <h6 class="mb-1 fw-semibold">Settings</h6>
-                              <span class="d-block fs-2">4:36 PM</span>
-                            </div>
-                            <span class="d-block text-truncate text-truncate fs-11">You can customize this template as
-                              you want</span>
-                          </div>
-                        </a>
-                      </div>
                       <div class="py-6 px-7 mb-1">
                         <button class="btn btn-primary w-100">See All Notifications</button>
                       </div>
-
                     </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end notification Dropdown -->
-                  <!-- ------------------------------- -->
-                  <!-- ------------------------------- -->
+
                   <!-- start profile Dropdown -->
-                  <!-- ------------------------------- -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
@@ -819,47 +400,10 @@
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1">
-                      <div class="position-relative px-4 pt-3 pb-2">
-                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
-                            alt="matdash-img" />
-                          <div>
-                            <h5 class="mb-0 fs-12">David McMichael <span class="text-success fs-11">Pro</span>
-                            </h5>
-                            <p class="mb-0 text-dark">
-                              david@wrappixel.com
-                            </p>
-                          </div>
-                        </div>
-                        <div class="message-body">
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Profile
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Subscription
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Statements <span class="badge bg-danger-subtle text-danger rounded ms-8">4</span>
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            Account Settings
-                          </a>
-                          <a href="../super-admin/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
-                            Sign Out
-                          </a>
-                        </div>
-                      </div>
-                    </div>
                   </li>
-                  <!-- ------------------------------- -->
-                  <!-- end profile Dropdown -->
-                  <!-- ------------------------------- -->
                 </ul>
               </div>
             </div>
           </nav>
-
         </div>
       </header>
