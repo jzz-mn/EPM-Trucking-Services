@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $currentUserID = $_SESSION['UserID'];
 
         // Define the action description
-        $action = "Saved Transaction Group ID: " . $transaction_group_id;
+        $action = "Added Transaction Group: " . $transaction_group_id;
 
         // Get the current timestamp
         $currentTimestamp = date("Y-m-d H:i:s");

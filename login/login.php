@@ -1,6 +1,28 @@
 <?php
-// Start session
 session_start();
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+// If user is already logged in, redirect them
+if (isset($_SESSION['UserID'])) {
+  switch ($_SESSION['Role']) {
+    case 'SuperAdmin':
+    case 'Officer':
+      header("Location: ../officer/home.php");
+      break;
+    case 'Employee':
+      header("Location: ../employee/home.php");
+      break;
+    default:
+      // Optional: Handle unknown roles
+      header("Location: ../login.php");
+      break;
+  }
+  exit();
+}
 include '../includes/db_connection.php';
 
 // Initialize messages
@@ -61,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Redirect to the appropriate home page based on role
             if ($row['Role'] === 'SuperAdmin') {
-              header("Location: ../super-admin/home.php");
+              header("Location: ../officer/home.php");
             } elseif ($row['Role'] === 'Officer') {
               header("Location: ../officer/home.php");
             } elseif ($row['Role'] === 'Employee') {

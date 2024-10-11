@@ -2,159 +2,211 @@
 session_start();
 include '../includes/db_connection.php';
 
+// Ensure the user is logged in
+if (!isset($_SESSION['UserID'])) {
+    // Redirect to login page if not authenticated
+    header("Location: ../login/login.php");
+    exit();
+}
+
+// Function to insert activity logs
+function insert_activity_log($conn, $userID, $action) {
+    $current_timestamp = date("Y-m-d H:i:s"); // Current date and time
+
+    // Prepare the INSERT statement
+    $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+    if ($insert_stmt = $conn->prepare($insert_sql)) {
+        $insert_stmt->bind_param("iss", $userID, $action, $current_timestamp);
+        if (!$insert_stmt->execute()) {
+            // Handle insertion error (optional)
+            error_log("Failed to insert activity log: " . $insert_stmt->error);
+        }
+        $insert_stmt->close();
+    } else {
+        // Handle preparation error (optional)
+        error_log("Failed to prepare activity log insertion: " . $conn->error);
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  // Check if it's an AJAX request
-  if (isset($_POST['action']) && $_POST['action'] == 'fetch_records') {
-    // Fetch selected records
-    $billingStartDate = $_POST['billingStartDate'];
-    $billingEndDate = $_POST['billingEndDate'];
+    // Check if it's an AJAX request
+    if (isset($_POST['action'])) {
+        $userID = $_SESSION['UserID']; // Get the UserID from the session
 
-    // Validate dates
-    if (empty($billingStartDate) || empty($billingEndDate)) {
-      echo json_encode(['success' => false, 'message' => 'Please provide both start and end dates.']);
-      exit;
-    } elseif ($billingStartDate > $billingEndDate) {
-      echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
-      exit;
-    }
+        if ($_POST['action'] == 'fetch_records') {
+            // Fetch selected records
+            $billingStartDate = $_POST['billingStartDate'] ?? '';
+            $billingEndDate = $_POST['billingEndDate'] ?? '';
 
-    // Query to fetch transactiongroup records
-    $query = "
-            SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, e.TotalExpense
-            FROM transactiongroup tg
-            JOIN expenses e ON tg.ExpenseID = e.ExpenseID
-            WHERE tg.Date BETWEEN ? AND ?
-        ";
+            // Validate dates
+            if (empty($billingStartDate) || empty($billingEndDate)) {
+                echo json_encode(['success' => false, 'message' => 'Please provide both start and end dates.']);
+                exit;
+            } elseif ($billingStartDate > $billingEndDate) {
+                echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
+                exit;
+            }
 
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Check if records are found
-    if ($result->num_rows > 0) {
-      $html = '';
-      while ($row = $result->fetch_assoc()) {
-        $html .= '<tr>';
-        $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
-        $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
-        $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
-        $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
-        $html .= '<td>' . number_format($row['TotalExpense'], 2) . '</td>';
-        $html .= '</tr>';
-      }
-      echo json_encode(['success' => true, 'html' => $html]);
-    } else {
-      echo json_encode(['success' => false, 'message' => 'No transactions found for the selected date range.']);
-    }
-    exit;
-  } elseif (isset($_POST['action']) && $_POST['action'] == 'generate_invoice') {
-    // Generate invoice
-    $billingStartDate = $_POST['billingStartDate'];
-    $billingEndDate = $_POST['billingEndDate'];
-    $billedTo = $_POST['billedTo'];
-
-    // Validate input data
-    if (empty($billingStartDate) || empty($billingEndDate) || empty($billedTo)) {
-      echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
-      exit;
-    } elseif ($billingStartDate > $billingEndDate) {
-      echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
-      exit;
-    }
-
-    // Proceed with generating the invoice
-    // Wrap in a transaction
-    $conn->begin_transaction();
-    try {
-      // Query to select transactiongroup records
-      $query = "
-                SELECT tg.TransactionGroupID, tg.RateAmount, e.TotalExpense
+            // Query to fetch transactiongroup records
+            $query = "
+                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, e.TotalExpense
                 FROM transactiongroup tg
                 JOIN expenses e ON tg.ExpenseID = e.ExpenseID
                 WHERE tg.Date BETWEEN ? AND ?
             ";
 
-      $stmt = $conn->prepare($query);
-      $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
-      $stmt->execute();
-      $result = $stmt->get_result();
+            $stmt = $conn->prepare($query);
+            if ($stmt) {
+                $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
-      // Initialize totals
-      $grossAmount = 0;
-      $totalExpenses = 0;
-      $transactionGroupIDs = array();
+                // Check if records are found
+                if ($result->num_rows > 0) {
+                    $html = '';
+                    while ($row = $result->fetch_assoc()) {
+                        $html .= '<tr>';
+                        $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
+                        $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
+                        $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
+                        $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
+                        $html .= '<td>' . number_format($row['TotalExpense'], 2) . '</td>';
+                        $html .= '</tr>';
+                    }
+                    echo json_encode(['success' => true, 'html' => $html]);
 
-      while ($row = $result->fetch_assoc()) {
-        $grossAmount += $row['RateAmount'];
-        $totalExpenses += $row['TotalExpense'];
-        $transactionGroupIDs[] = $row['TransactionGroupID'];
-      }
+                    // Insert activity log for fetching records
+                    insert_activity_log($conn, $userID, 'Fetch Records');
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'No transactions found for the selected date range.']);
+                }
+                $stmt->close();
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to prepare the records fetch statement.']);
+                error_log("Failed to prepare fetch_records statement: " . $conn->error);
+            }
+            exit;
+        } elseif ($_POST['action'] == 'generate_invoice') {
+            // Generate invoice
+            $billingStartDate = $_POST['billingStartDate'] ?? '';
+            $billingEndDate = $_POST['billingEndDate'] ?? '';
+            $billedTo = $_POST['billedTo'] ?? '';
 
-      if (empty($transactionGroupIDs)) {
-        throw new Exception('No transactions found for the selected date range.');
-      }
+            // Validate input data
+            if (empty($billingStartDate) || empty($billingEndDate) || empty($billedTo)) {
+                echo json_encode(['success' => false, 'message' => 'Please fill in all required fields.']);
+                exit;
+            } elseif ($billingStartDate > $billingEndDate) {
+                echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
+                exit;
+            }
 
-      // Calculate amounts
-      $vat = $grossAmount * 0.12;
-      $totalAmount = $grossAmount + $vat;
-      $ewt = $totalAmount * 0.02;
-      $amountNetOfTax = $totalAmount - $ewt;
-      $addTollCharges = $totalExpenses;
-      $netAmount = $amountNetOfTax + $addTollCharges;
+            // Proceed with generating the invoice
+            // Wrap in a transaction
+            $conn->begin_transaction();
+            try {
+                // Query to select transactiongroup records
+                $query = "
+                    SELECT tg.TransactionGroupID, tg.RateAmount, e.TotalExpense
+                    FROM transactiongroup tg
+                    JOIN expenses e ON tg.ExpenseID = e.ExpenseID
+                    WHERE tg.Date BETWEEN ? AND ?
+                ";
 
-      // Insert into 'invoices' table
-      $invoiceQuery = "
-                INSERT INTO invoices (BillingStartDate, BillingEndDate, BilledTo, GrossAmount, TotalAmount, VAT, EWT, AddTollCharges, AmountNetOfTax, NetAmount)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ";
-      $stmt = $conn->prepare($invoiceQuery);
-      $stmt->bind_param(
-        'sssddddddd',
-        $billingStartDate,
-        $billingEndDate,
-        $billedTo,
-        $grossAmount,
-        $totalAmount,
-        $vat,
-        $ewt,
-        $addTollCharges,
-        $amountNetOfTax,
-        $netAmount
-      );
-      $stmt->execute();
+                $stmt = $conn->prepare($query);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare transaction selection statement.');
+                }
 
-      // Get the BillingInvoiceNo of the inserted invoice
-      $billingInvoiceNo = $stmt->insert_id;
+                $stmt->bind_param('ss', $billingStartDate, $billingEndDate);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
-      // Update 'transactiongroup' records to set 'BillingInvoiceNo' to the new 'BillingInvoiceNo'
-      if (!empty($transactionGroupIDs)) {
-        // Sanitize IDs and prepare the IN clause
-        $ids = implode(',', array_map('intval', $transactionGroupIDs));
-        $updateQuery = "UPDATE transactiongroup SET BillingInvoiceNo = ? WHERE TransactionGroupID IN ($ids)";
-        $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param('i', $billingInvoiceNo);
-        $stmt->execute();
-      }
+                // Initialize totals
+                $grossAmount = 0;
+                $totalExpenses = 0;
+                $transactionGroupIDs = array();
 
-      // Commit the transaction
-      $conn->commit();
+                while ($row = $result->fetch_assoc()) {
+                    $grossAmount += $row['RateAmount'];
+                    $totalExpenses += $row['TotalExpense'];
+                    $transactionGroupIDs[] = $row['TransactionGroupID'];
+                }
 
-      echo json_encode(['success' => true]);
-    } catch (Exception $e) {
-      // Rollback the transaction
-      $conn->rollback();
-      echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                if (empty($transactionGroupIDs)) {
+                    throw new Exception('No transactions found for the selected date range.');
+                }
+
+                // Calculate amounts
+                $vat = $grossAmount * 0.12;
+                $totalAmount = $grossAmount + $vat;
+                $ewt = $totalAmount * 0.02;
+                $amountNetOfTax = $totalAmount - $ewt;
+                $addTollCharges = $totalExpenses;
+                $netAmount = $amountNetOfTax + $addTollCharges;
+
+                // Insert into 'invoices' table
+                $invoiceQuery = "
+                    INSERT INTO invoices (BillingStartDate, BillingEndDate, BilledTo, GrossAmount, TotalAmount, VAT, EWT, AddTollCharges, AmountNetOfTax, NetAmount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ";
+                $stmt = $conn->prepare($invoiceQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare invoice insertion statement.');
+                }
+
+                $stmt->bind_param(
+                    'sssddddddd',
+                    $billingStartDate,
+                    $billingEndDate,
+                    $billedTo,
+                    $grossAmount,
+                    $totalAmount,
+                    $vat,
+                    $ewt,
+                    $addTollCharges,
+                    $amountNetOfTax,
+                    $netAmount
+                );
+                $stmt->execute();
+
+                // Get the BillingInvoiceNo of the inserted invoice
+                $billingInvoiceNo = $stmt->insert_id;
+
+                // Update 'transactiongroup' records to set 'BillingInvoiceNo' to the new 'BillingInvoiceNo'
+                if (!empty($transactionGroupIDs)) {
+                    // Sanitize IDs and prepare the IN clause
+                    $ids = implode(',', array_map('intval', $transactionGroupIDs));
+                    $updateQuery = "UPDATE transactiongroup SET BillingInvoiceNo = ? WHERE TransactionGroupID IN ($ids)";
+                    $updateStmt = $conn->prepare($updateQuery);
+                    if (!$updateStmt) {
+                        throw new Exception('Failed to prepare transactiongroup update statement.');
+                    }
+                    $updateStmt->bind_param('i', $billingInvoiceNo);
+                    $updateStmt->execute();
+                    $updateStmt->close();
+                }
+
+                // Commit the transaction
+                $conn->commit();
+
+                echo json_encode(['success' => true]);
+
+                // Insert activity log for generating invoice
+                insert_activity_log($conn, $userID, 'Generate Invoice');
+            } catch (Exception $e) {
+                // Rollback the transaction
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
     }
-    exit;
-  }
 }
 
 // Rest of your PHP code to display the page
 include '../officer/header.php';
 ?>
-
 
 <div class="body-wrapper">
   <div class="container-fluid">
@@ -354,6 +406,7 @@ include '../officer/header.php';
 include '../officer/footer.php';
 $conn->close();
 ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   $(document).ready(function () {
     $('#btn-add-invoice').click(function () {

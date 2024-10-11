@@ -145,18 +145,34 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                 </li>
               </ul>
             </li>
-
             <li class="sidebar-item">
               <a class="sidebar-link" href="../officer/invoice.php">
                 <iconify-icon icon="mdi:receipt"></iconify-icon>
                 <span class="hide-menu">Invoice</span>
               </a>
             </li>
+            <?php
+            // Start the session if not already started
+            if (session_status() == PHP_SESSION_NONE) {
+              session_start();
+            }
 
-
+            // Function to check if the user is logged in and has a specific role
+            function isUserRole($role)
+            {
+              return isset($_SESSION['Role']) && $_SESSION['Role'] === $role;
+            }
+            ?>
+            <?php if (isUserRole('SuperAdmin')): ?>
+              <li class="sidebar-item">
+                <a class="sidebar-link" href="../officer/activity-logs.php">
+                  <iconify-icon icon="mdi:history"></iconify-icon>
+                  <span class="hide-menu">Activity Logs</span>
+                </a>
+              </li>
+            <?php endif; ?>
           </ul>
         </nav>
-
       </div>
     </aside>
     <!--  Sidebar End -->

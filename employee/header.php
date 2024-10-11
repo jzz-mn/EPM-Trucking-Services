@@ -1,3 +1,21 @@
+<?php
+// Start the session if it's not already started
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
+
+// Check if the user is logged in
+if (!isset($_SESSION['Username'])) {
+  // Redirect to login page if not logged in
+  header("Location: ../login/login.php");
+  exit();
+}
+
+// Retrieve and sanitize user data from session
+$username = htmlspecialchars($_SESSION['Username'], ENT_QUOTES, 'UTF-8');
+$role = htmlspecialchars($_SESSION['Role'], ENT_QUOTES, 'UTF-8');
+$email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
+?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Orange_Theme" data-layout="vertical">
 
@@ -298,14 +316,17 @@
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
-                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35" alt="user-img" />
+                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
+                          alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop1">
+                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
+                      aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56" alt="user-img" />
+                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
+                            alt="user-img" />
                           <div>
                             <h5 class="mb-0 fs-12">
                               <?php echo htmlspecialchars($dbUsername); ?> <span class="text-success fs-11">Pro</span>

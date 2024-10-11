@@ -38765,3 +38765,14 @@ h6 {
 .auth-card {
   max-width: 460px !important;
 }
+.sortable {
+  cursor: pointer;
+}
+
+.ascending::after {
+  content: ' ↑';
+}
+
+.descending::after {
+  content: ' ↓';
+}
