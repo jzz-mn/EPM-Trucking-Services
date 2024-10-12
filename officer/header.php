@@ -99,12 +99,26 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                     <span class="hide-menu">Employees</span>
                   </a>
                 </li>
-                <li class="sidebar-item">
-                  <a class="sidebar-link" href="../officer/officers.php">
-                    <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>
-                    <span class="hide-menu">Officers</span>
-                  </a>
-                </li>
+                <?php
+                // Start the session if not already started
+                if (session_status() == PHP_SESSION_NONE) {
+                  session_start();
+                }
+
+                // Function to check if the user is logged in and has a specific role
+                function isUserRole($role)
+                {
+                  return isset($_SESSION['Role']) && $_SESSION['Role'] === $role;
+                }
+                ?>
+                <?php if (isUserRole('SuperAdmin')): ?>
+                  <li class="sidebar-item">
+                    <a class="sidebar-link" href="../officer/officers.php">
+                      <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>
+                      <span class="hide-menu">Officers</span>
+                    </a>
+                  </li>
+                <?php endif; ?>
                 <li class="sidebar-item">
                   <a class="sidebar-link" href="../officer/finance.php">
                     <iconify-icon icon="mdi:finance"></iconify-icon>
@@ -158,10 +172,6 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
             }
 
             // Function to check if the user is logged in and has a specific role
-            function isUserRole($role)
-            {
-              return isset($_SESSION['Role']) && $_SESSION['Role'] === $role;
-            }
             ?>
             <?php if (isUserRole('SuperAdmin')): ?>
               <li class="sidebar-item">

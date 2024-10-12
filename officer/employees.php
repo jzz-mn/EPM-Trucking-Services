@@ -411,9 +411,9 @@ include '../officer/header.php';
 
                 // Handle ActivationStatus like in officers.php
                 $activationStatus = '';
-                if ($row['ActivationStatus'] === 'Activated') {
+                if ($row['ActivationStatus'] === 'Activated' || 'activated') {
                   $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
-                } elseif ($row['ActivationStatus'] === 'Deactivated') {
+                } elseif ($row['ActivationStatus'] === 'Deactivated'|| 'deactivated') {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 } else {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
