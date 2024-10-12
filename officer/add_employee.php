@@ -8,7 +8,15 @@ if (!isset($_SESSION['UserID'])) {
     exit();
 }
 
-include '../includes/db_connection.php';
+require '../includes/db_connection.php';
+require '../vendor/autoload.php'; // For PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
+
+// Load environment variables
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Collect Employee Data from POST
@@ -24,8 +32,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $position = $_POST['position'];
 
     // Collect User Account Data from POST
-    $username = $_POST['username'];
-    $password = $_POST['password']; // No encryption here
+    $username = ucfirst($_POST['username']); // Automatically set the first letter to uppercase
+    $passwordOption = $_POST['passwordOption'];
+
+    // Handle password setting
+    if ($passwordOption === 'manual') {
+        // Admin sets the password manually
+        $password = $_POST['password'];
+        $confirmPassword = $_POST['confirmPassword'];
+
+        // Validate passwords match
+        if ($password !== $confirmPassword) {
+            echo "Passwords do not match.";
+            exit();
+        }
+
+        // Enforce strong password (you can adjust the pattern as needed)
+        if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+            echo "Password must be at least 8 characters long and include at least one letter and one number.";
+            exit();
+        }
+    } else {
+        // Automatically generate a random password
+        $password = bin2hex(random_bytes(4)); // Generates an 8-character random password
+    }
+
+    // Hash the password
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // Generate Activation Token
+    $activationToken = bin2hex(random_bytes(16));
+
+    // Set Activation Status to 'deactivated'
+    $activationStatus = 'deactivated';
 
     // Insert employee data into `employees` table
     $sqlInsertEmployee = "INSERT INTO employees (FirstName, MiddleInitial, LastName, Gender, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate, Position)
@@ -43,19 +82,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $employeeID = $conn->insert_id;
 
         // Insert into `useraccounts` table
-        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus)
-                          VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, 'Activated')";
+        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken)
+                          VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, ?, ?)";
 
         $stmtUser = $conn->prepare($sqlInsertUser);
         if (!$stmtUser) {
             echo "Error: " . $conn->error;
             exit();
         }
-        $stmtUser->bind_param('sssi', $username, $password, $emailAddress, $employeeID);
+        $stmtUser->bind_param('sssiss', $username, $hashedPassword, $emailAddress, $employeeID, $activationStatus, $activationToken);
 
         if ($stmtUser->execute()) {
-            // Get the last inserted UserID
-            $newUserID = $conn->insert_id;
+            // Send activation email
+            $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
+
+            // Configure PHPMailer
+            $mail = new PHPMailer(true);
+            try {
+                // Server settings
+                // $mail->SMTPDebug = 2; // Enable verbose debug output (disable in production)
+                $mail->isSMTP();
+                $mail->Host       = $_ENV['SMTP_HOST'];
+                $mail->SMTPAuth   = true;
+                $mail->Username   = $_ENV['SMTP_USERNAME'];
+                $mail->Password   = $_ENV['SMTP_PASSWORD'];
+                $mail->SMTPSecure = $_ENV['SMTP_ENCRYPTION'];
+                $mail->Port       = $_ENV['SMTP_PORT'];
+
+                // Recipients
+                $mail->setFrom($_ENV['FROM_EMAIL'], $_ENV['FROM_NAME']);
+                $mail->addAddress($emailAddress, $firstName . ' ' . $lastName);
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Activate Your Account';
+                $mail->Body    = "Dear $firstName,<br><br>
+                                  Your account has been created. Please click the link below to activate your account and set your password:<br><br>
+                                  <a href='$activationLink'>Activate Account</a><br><br>
+                                  If you did not request this, please ignore this email.<br><br>
+                                  Best regards,<br>
+                                  EPM Trucking Services";
+
+                $mail->send();
+                // Email sent successfully
+            } catch (Exception $e) {
+                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                exit();
+            }
 
             // ---- Insert Activity Log ----
             // Retrieve the logged-in user's UserID from the session

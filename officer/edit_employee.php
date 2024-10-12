@@ -12,10 +12,15 @@ if (!isset($_SESSION['UserID'])) {
 // Include the database connection file
 include('../includes/db_connection.php');
 
-// Enable error reporting for debugging (disable in production)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Include PHPMailer and Dotenv
+require '../vendor/autoload.php'; // Make sure this path is correct
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
+
+// Load environment variables
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,31 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailAddress = isset($_POST['emailAddress']) ? trim($_POST['emailAddress']) : '';
     $activationStatus = isset($_POST['activationStatus']) ? trim($_POST['activationStatus']) : '';
 
-    // Password-related fields
-    $currentPassword = isset($_POST['currentPassword']) ? trim($_POST['currentPassword']) : '';
-    $newPassword = isset($_POST['newPassword']) ? trim($_POST['newPassword']) : '';
-    $confirmNewPassword = isset($_POST['confirmNewPassword']) ? trim($_POST['confirmNewPassword']) : '';
-
-    // Fetch the current password from the database
-    $sql_fetch_password = "SELECT Password FROM useraccounts WHERE EmployeeID = ?";
-    $stmt_fetch = $conn->prepare($sql_fetch_password);
-    if ($stmt_fetch === false) {
-        echo json_encode(['success' => false, 'message' => 'Error preparing password fetch statement: ' . $conn->error]);
-        exit;
-    }
-    $stmt_fetch->bind_param('i', $employeeID);
-    $stmt_fetch->execute();
-    $stmt_fetch->bind_result($dbPassword);
-    $stmt_fetch->fetch();
-    $stmt_fetch->close();
-
-    // Verify the current password
-    // If passwords are hashed, use password_verify()
-    // Assuming passwords are stored in plain text as per your current implementation
-    if ($currentPassword !== $dbPassword) {
-        echo json_encode(['success' => false, 'message' => 'Current password is incorrect.']);
-        exit;
-    }
+    // Check if reset password is requested
+    $resetPassword = isset($_POST['resetPassword']) ? $_POST['resetPassword'] === 'true' : false;
 
     // Begin a transaction to ensure data integrity
     $conn->begin_transaction();
@@ -92,24 +74,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt_user->close();
 
-        // If the new password is provided, update the password
-        if (!empty($newPassword)) {
-            if ($newPassword === $confirmNewPassword) {
-                // Optional: Hash the new password for security
-                // $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-                // For now, updating in plain text as per current implementation
-                $sql_password = "UPDATE useraccounts SET Password = ? WHERE EmployeeID = ?";
-                $stmt_password = $conn->prepare($sql_password);
-                if ($stmt_password === false) {
-                    throw new Exception('Error preparing password update statement: ' . $conn->error);
-                }
-                $stmt_password->bind_param('si', $newPassword, $employeeID);
-                if (!$stmt_password->execute()) {
-                    throw new Exception('Error updating password: ' . $stmt_password->error);
-                }
-                $stmt_password->close();
-            } else {
-                throw new Exception('New password and confirmation do not match.');
+        // Handle password reset if requested
+        if ($resetPassword) {
+            // Generate a new activation token
+            $activationToken = bin2hex(random_bytes(16));
+
+            // Set ActivationStatus to 'deactivated'
+            $activationStatus = 'deactivated';
+
+            // Update the useraccounts table with new activation token and status
+            $sql_reset = "UPDATE useraccounts SET ActivationToken = ?, ActivationStatus = ? WHERE EmployeeID = ?";
+            $stmt_reset = $conn->prepare($sql_reset);
+            if ($stmt_reset === false) {
+                throw new Exception('Error preparing password reset statement: ' . $conn->error);
+            }
+            $stmt_reset->bind_param('ssi', $activationToken, $activationStatus, $employeeID);
+            if (!$stmt_reset->execute()) {
+                throw new Exception('Error updating user account for password reset: ' . $stmt_reset->error);
+            }
+            $stmt_reset->close();
+
+            // Send activation email
+            $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
+
+            // Configure PHPMailer
+            $mail = new PHPMailer(true);
+            try {
+                // Server settings
+                // $mail->SMTPDebug = 2; // Enable verbose debug output (disable in production)
+                $mail->isSMTP();
+                $mail->Host       = $_ENV['SMTP_HOST'];
+                $mail->SMTPAuth   = true;
+                $mail->Username   = $_ENV['SMTP_USERNAME'];
+                $mail->Password   = $_ENV['SMTP_PASSWORD'];
+                $mail->SMTPSecure = $_ENV['SMTP_ENCRYPTION'];
+                $mail->Port       = $_ENV['SMTP_PORT'];
+
+                // Recipients
+                $mail->setFrom($_ENV['FROM_EMAIL'], $_ENV['FROM_NAME']);
+                $mail->addAddress($emailAddress, $firstName . ' ' . $lastName);
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Reset Your Password';
+                $mail->Body    = "Dear $firstName,<br><br>
+                                  Your password has been reset. Please click the link below to activate your account and set your new password:<br><br>
+                                  <a href='$activationLink'>Reset Password</a><br><br>
+                                  If you did not request this, please contact support immediately.<br><br>
+                                  Best regards,<br>
+                                  EPM Trucking Services";
+
+                $mail->send();
+                // Email sent successfully
+            } catch (Exception $e) {
+                throw new Exception("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
             }
         }
 
@@ -119,6 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Define the action description
         $action = "Updated Employee: " . $firstName . " " . $lastName;
+        if ($resetPassword) {
+            $action .= " and reset password";
+        }
 
         // Get the current timestamp
         $currentTimestamp = date("Y-m-d H:i:s");
@@ -133,8 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$stmtLog->execute()) {
             // Log the error without halting the transaction
             error_log("Failed to insert activity log: " . $stmtLog->error);
-            // Optionally, you can choose to throw an exception here to rollback the entire transaction
-            // throw new Exception('Failed to insert activity log.');
         }
         $stmtLog->close();
         // ---- End of Activity Log Insertion ----

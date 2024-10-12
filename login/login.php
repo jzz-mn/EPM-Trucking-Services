@@ -3,7 +3,6 @@ session_start();
 
 // Prevent caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 // If user is already logged in, redirect them
@@ -23,6 +22,7 @@ if (isset($_SESSION['UserID'])) {
   }
   exit();
 }
+
 include '../includes/db_connection.php';
 
 // Initialize messages
@@ -52,48 +52,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows > 0) {
           $row = $result->fetch_assoc();
 
-          // Check if the password matches (simple string comparison for now, since passwords are not hashed)
-          if ($password === $row['Password']) {
-            // Regenerate session ID to prevent session fixation
-            session_regenerate_id(true);
-
-            // Login successful, set session variables
-            $_SESSION['UserID'] = $row['UserID'];
-            $_SESSION['Username'] = $row['Username'];
-            $_SESSION['Role'] = $row['Role'];
-            $_SESSION['EmailAddress'] = $row['EmailAddress'];
-
-            // Insert activity log
-            $action = "Logged In";
-            $current_timestamp = date("Y-m-d H:i:s"); // Current date and time
-
-            // Prepare the INSERT statement
-            $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
-            if ($insert_stmt = $conn->prepare($insert_sql)) {
-              $insert_stmt->bind_param("iss", $row['UserID'], $action, $current_timestamp);
-              if (!$insert_stmt->execute()) {
-                // Handle insertion error (optional)
-                error_log("Failed to insert activity log: " . $insert_stmt->error);
-              }
-              $insert_stmt->close();
-            } else {
-              // Handle preparation error (optional)
-              error_log("Failed to prepare activity log insertion: " . $conn->error);
-            }
-
-            // Redirect to the appropriate home page based on role
-            if ($row['Role'] === 'SuperAdmin') {
-              header("Location: ../officer/home.php");
-            } elseif ($row['Role'] === 'Officer') {
-              header("Location: ../officer/home.php");
-            } elseif ($row['Role'] === 'Employee') {
-              header("Location: ../employee/home.php");
-            } else {
-              $error_message = "User role not recognized!";
-            }
-            exit();
+          // Check if the account is activated
+          if ($row['ActivationStatus'] !== 'Activated') {
+            $error_message = "Your account is not activated. Please check your email for the activation link.";
           } else {
-            $error_message = "Invalid email or password!";
+            $storedPassword = $row['Password'];
+
+            // Check if the stored password is hashed
+            if (password_get_info($storedPassword)['algo'] !== 0) {
+              // Password is hashed, use password_verify()
+              if (password_verify($password, $storedPassword)) {
+                // Successful login
+                loginUser($row, $conn);
+              } else {
+                $error_message = "Invalid email or password!";
+              }
+            } else {
+              // Password is not hashed, compare plaintext
+              if ($password === $storedPassword) {
+                // Successful login
+
+                // Hash the plaintext password and update the database
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $update_sql = "UPDATE useraccounts SET Password = ? WHERE UserID = ?";
+                if ($update_stmt = $conn->prepare($update_sql)) {
+                  $update_stmt->bind_param("si", $hashedPassword, $row['UserID']);
+                  $update_stmt->execute();
+                  $update_stmt->close();
+                }
+
+                // Update the $row['Password'] to the hashed password for future use
+                $row['Password'] = $hashedPassword;
+
+                loginUser($row, $conn);
+              } else {
+                $error_message = "Invalid email or password!";
+              }
+            }
           }
         } else {
           $error_message = "Invalid email or password!";
@@ -113,8 +108,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 $conn->close();
-?>
 
+// Function to handle successful login
+function loginUser($userData, $conn)
+{
+  // Regenerate session ID to prevent session fixation
+  session_regenerate_id(true);
+
+  // Set session variables
+  $_SESSION['UserID'] = $userData['UserID'];
+  $_SESSION['Username'] = $userData['Username'];
+  $_SESSION['Role'] = $userData['Role'];
+  $_SESSION['EmailAddress'] = $userData['EmailAddress'];
+
+  // Update LastLogin timestamp
+  $current_timestamp = date("Y-m-d H:i:s");
+  $update_sql = "UPDATE useraccounts SET LastLogin = ? WHERE UserID = ?";
+  if ($update_stmt = $conn->prepare($update_sql)) {
+    $update_stmt->bind_param("si", $current_timestamp, $userData['UserID']);
+    $update_stmt->execute();
+    $update_stmt->close();
+  }
+
+  // Insert activity log
+  $action = "Logged In";
+
+  // Prepare the INSERT statement
+  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+  if ($insert_stmt = $conn->prepare($insert_sql)) {
+    $insert_stmt->bind_param("iss", $userData['UserID'], $action, $current_timestamp);
+    if (!$insert_stmt->execute()) {
+      // Handle insertion error (optional)
+      error_log("Failed to insert activity log: " . $insert_stmt->error);
+    }
+    $insert_stmt->close();
+  } else {
+    // Handle preparation error (optional)
+    error_log("Failed to prepare activity log insertion: " . $conn->error);
+  }
+
+  // Redirect to the appropriate home page based on role
+  if ($userData['Role'] === 'SuperAdmin' || $userData['Role'] === 'Officer') {
+    header("Location: ../officer/home.php");
+  } elseif ($userData['Role'] === 'Employee') {
+    header("Location: ../employee/home.php");
+  } else {
+    // Handle unknown role
+    global $error_message;
+    $error_message = "User role not recognized!";
+  }
+  exit();
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en" dir="ltr" data-bs-theme="light" data-color-theme="Blue_Theme" data-layout="vertical">

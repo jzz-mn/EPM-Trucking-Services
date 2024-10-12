@@ -342,7 +342,7 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                             onmouseout="this.style.color='';">
                             My Profile
                           </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1"
+                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1"
                             style="transition: color 0.3s;" onmouseover="this.style.color='#FA896B';"
                             onmouseout="this.style.color='';">
                             Sign Out
