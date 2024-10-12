@@ -1,6 +1,16 @@
 <?php
 session_start();
 include '../officer/header.php';
+// Display success message if set
+if (isset($_SESSION['success_message'])) {
+  echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+          {$_SESSION['success_message']}
+          <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+        </div>";
+  // Unset the success message after displaying
+  unset($_SESSION['success_message']);
+}
+
 ?>
 
 <div class="body-wrapper">
@@ -262,8 +272,8 @@ include '../officer/header.php';
                             <div class="mb-3">
                               <label class="form-label">Reset Password</label>
                               <div>
-                                <button type="button" class="btn bg-danger-subtle text-danger"
-                                  id="resetPasswordButton">Reset Password</button>
+                                <button type="button" id="resetPasswordButton" class="btn bg-danger-subtle text-danger">Reset Password</button>
+
                               </div>
                             </div>
                           </div>
@@ -443,11 +453,130 @@ include '../officer/header.php';
   </div>
 </div>
 
+<!-- Modal for Submission and Success Message -->
+<div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-body p-5" id="modalBodyContent">
+        <!-- The message displayed in the modal -->
+        <div id="modalMessage" class="mt-3" style="font-size: 1.5rem;">
+          Submitting your request, please wait...
+        </div>
+        <!-- Loading spinner, placed below the message and centered -->
+        <div id="loadingSpinner" class="d-flex justify-content-center mt-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <!-- Success Icon, hidden by default, will be shown on success -->
+        <div id="successIcon" class="mt-4" style="display: none;">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get the form reference
+    const addEmployeeForm = document.getElementById('addEmployeeForm');
+
+    // Get the modal elements
+    const submissionModal = new bootstrap.Modal(document.getElementById('submissionModal'), {
+      keyboard: false,
+      backdrop: 'static'
+    });
+    const addEmployeeModal = new bootstrap.Modal(document.getElementById('addContactModal')); // Reference to Add Employee modal
+    const modalMessage = document.getElementById('modalMessage');
+    const loadingSpinner = document.getElementById('loadingSpinner'); // Only use this as the success icon
+
+    // Function to change spinner to check icon
+    function changeSpinnerToCheck() {
+      loadingSpinner.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>'; // Replace spinner with checkmark
+    }
+
+    // When the form is submitted
+    addEmployeeForm.addEventListener('submit', function(e) {
+      e.preventDefault(); // Prevent the default form submission
+
+      // Close the Add Employee modal
+      addEmployeeModal.hide();
+
+      // Reset the modal state for loading
+      loadingSpinner.style.display = 'block'; // Ensure spinner is shown on submission
+      modalMessage.textContent = 'Submitting your request, please wait...';
+      modalMessage.style.fontSize = '1.5rem'; // Enlarging the font size
+
+      // Show modal and display "Submitting..." message
+      submissionModal.show();
+
+      // Use Fetch API to submit the form via POST request
+      const formData = new FormData(addEmployeeForm);
+
+      fetch('add_employee.php', {
+          method: 'POST',
+          body: formData,
+        })
+        .then(response => response.json()) // Parse the response as JSON
+        .then(data => {
+          if (data.success) {
+            // Change the spinner to a checkmark on success
+            changeSpinnerToCheck();
+
+            // Update the message text
+            modalMessage.textContent = data.message;
+            modalMessage.style.fontSize = '1.5rem'; // Keep the text large
+
+            // Redirect to employees.php after 2 seconds
+            setTimeout(() => {
+              window.location.href = 'employees.php';
+            }, 2000);
+          } else {
+            // If there's an error, hide the loading spinner and show the error message
+            loadingSpinner.style.display = 'none'; // Hide loading spinner
+            modalMessage.textContent = data.message;
+          }
+        })
+        .catch(error => {
+          // Handle any unexpected errors
+          loadingSpinner.style.display = 'none'; // Hide loading spinner
+          modalMessage.textContent = 'An error occurred while submitting the form. Please try again.';
+          console.error('Error:', error);
+        });
+    });
+  });
+</script>
+
+<!-- Modal for Edit Submission and Success Message -->
+<div class="modal fade" id="editSubmissionModal" tabindex="-1" aria-labelledby="editSubmissionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-body p-5" id="editModalBodyContent">
+        <!-- The message displayed in the modal -->
+        <div id="editModalMessage" class="mt-3" style="font-size: 1.5rem;">
+          Submitting your changes, please wait...
+        </div>
+        <!-- Loading spinner, placed below the message and centered -->
+        <div id="editLoadingSpinner" class="d-flex justify-content-center mt-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <!-- Success Icon, hidden by default, will be shown on success -->
+        <div id="editSuccessIcon" class="mt-4" style="display: none;">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const employeeID = this.getAttribute('data-id');
         fetch(`../officer/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -486,66 +615,100 @@ include '../officer/header.php';
 
     // Handle form submission to edit employee details
     const editForm = document.getElementById('editEmployeeForm');
-    editForm.addEventListener('submit', function (e) {
+
+    // Get the modal elements for showing progress and success
+    const editSubmissionModal = new bootstrap.Modal(document.getElementById('editSubmissionModal'), {
+      keyboard: false,
+      backdrop: 'static'
+    });
+    const editModalMessage = document.getElementById('editModalMessage');
+    const editLoadingSpinner = document.getElementById('editLoadingSpinner');
+    const editSuccessIcon = document.getElementById('editSuccessIcon');
+
+    function changeSpinnerToCheck() {
+      editLoadingSpinner.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>'; // Replace spinner with checkmark
+    }
+
+    editForm.addEventListener('submit', function(e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
+
+      // Close the Edit Employee Modal (editContactModal) before showing submission modal
+      const editModal = bootstrap.Modal.getInstance(document.getElementById('editContactModal'));
+      if (editModal) {
+        editModal.hide(); // Close the edit modal
+      }
+
+      // Reset modal state for loading and message
+      editLoadingSpinner.style.display = 'block'; // Show spinner initially
+      editSuccessIcon.style.display = 'none'; // Ensure success icon is hidden
+      editModalMessage.textContent = 'Submitting your changes, please wait...'; // Update message
+
+      // Show the submission modal with "Submitting..." message
+      editSubmissionModal.show();
 
       const formData = new FormData(editForm);
 
       fetch('../officer/edit_employee.php', {
-        method: 'POST',
-        body: formData
-      })
+          method: 'POST',
+          body: formData
+        })
         .then(response => response.json())
         .then(data => {
-          // Log the entire response to check its structure
           console.log('Server response:', data);
 
           if (data.success) {
-            // Success block - Reset the form fields and display the success message
-            alert('Employee details updated successfully!');
-            editForm.reset(); // Resets the form fields
+            // Success block - show the success message in the modal
+            changeSpinnerToCheck();
 
-            // Close the modal after form submission
-            const editModal = bootstrap.Modal.getInstance(document.getElementById('editContactModal'));
-            if (editModal) {
-              editModal.hide();
-            }
+            // Update the message text to show success
+            editModalMessage.textContent = 'Employee details updated successfully!';
+            editModalMessage.style.fontSize = '1.5rem'; // Keep text large
 
-            // Reload the page to reflect updated data
-            location.reload();
+            // Close the submission modal and reload page after a delay
+            setTimeout(() => {
+              editSubmissionModal.hide(); // Hide submission modal after success
+              location.reload(); // Reload the page to reflect updated data
+            }, 2000); // Wait for 2 seconds before redirect
           } else {
             // If there is an error message from the server
-            alert('Error updating employee: ' + data.message);
+            editLoadingSpinner.style.display = 'none'; // Hide loading spinner
+            editModalMessage.textContent = 'Error updating employee: ' + data.message;
           }
         })
         .catch(error => {
           console.error('Error updating employee:', error);
+          editLoadingSpinner.style.display = 'none'; // Hide spinner in case of error
+          editModalMessage.textContent = 'An error occurred while submitting the form. Please try again.';
         });
     });
 
-    // Handle Reset Password Button Click
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
     const resetPasswordButton = document.getElementById('resetPasswordButton');
-    resetPasswordButton.addEventListener('click', function () {
+
+    resetPasswordButton.addEventListener('click', function() {
       if (confirm('Are you sure you want to reset the password for this employee?')) {
         const employeeID = document.getElementById('editEmployeeID').value;
-        // Send AJAX request to reset password
+
+        // Prepare form data with employeeID
         const formData = new FormData();
         formData.append('employeeID', employeeID);
 
-        fetch('../officer/resetEmp_password.php', { // Updated path
-          method: 'POST',
-          body: formData
-        })
+        fetch('../officer/resetEmp_password.php', {
+            method: 'POST',
+            body: formData
+          })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
               alert('Password reset successfully!');
-              // Change button color to success
               resetPasswordButton.classList.remove('bg-danger-subtle', 'text-danger');
               resetPasswordButton.classList.add('btn-success', 'text-white');
               resetPasswordButton.textContent = 'Password Reset';
-              // Optionally disable the button to prevent multiple resets
-              resetPasswordButton.disabled = true;
+              resetPasswordButton.disabled = true; // Disable button after reset
             } else {
               alert('Error resetting password: ' + data.message);
             }
@@ -560,8 +723,9 @@ include '../officer/header.php';
 
 
 
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const currentPasswordInput = document.getElementById('editCurrentPasswordInput');
     const newPasswordInput = document.getElementById('editNewPasswordInput');
     const confirmNewPasswordInput = document.getElementById('editConfirmNewPasswordInput');
@@ -617,7 +781,7 @@ include '../officer/header.php';
     addEmployeeForm.reset(); // This will reset the form fields
     // Remove validation classes
     const formControls = addEmployeeForm.querySelectorAll('.form-control');
-    formControls.forEach(function (control) {
+    formControls.forEach(function(control) {
       control.classList.remove('is-valid', 'is-invalid');
     });
   }
@@ -634,9 +798,9 @@ include '../officer/header.php';
 
     // AJAX request to check username
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -658,9 +822,9 @@ include '../officer/header.php';
 
     // AJAX request to check email
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -687,11 +851,11 @@ include '../officer/header.php';
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
 
-    searchInput.addEventListener('input', function () {
+    searchInput.addEventListener('input', function() {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {
@@ -711,7 +875,7 @@ include '../officer/header.php';
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
     const table = document.getElementById('employeeTableBody');
@@ -740,7 +904,7 @@ include '../officer/header.php';
 
     // Add click event listener to each sortable header
     headers.forEach(header => {
-      header.addEventListener('click', function () {
+      header.addEventListener('click', function() {
         const column = this.getAttribute('data-sort');
 
         // Toggle sorting order if clicking on the same column
@@ -761,7 +925,7 @@ include '../officer/header.php';
     });
 
     // Search functionality
-    searchInput.addEventListener('input', function () {
+    searchInput.addEventListener('input', function() {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {
@@ -779,6 +943,13 @@ include '../officer/header.php';
     });
   });
 </script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+
+
+
 
 <style>
   .sortable {

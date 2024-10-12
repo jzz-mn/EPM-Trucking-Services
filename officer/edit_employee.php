@@ -159,18 +159,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ---- End of Activity Log Insertion ----
 
         // Commit the transaction
-        $conn->commit();
-
-        // Success message
-        echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
+        if ($conn->commit()) {
+            // If everything is successful, return success message
+            echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
+        } else {
+            // If commit fails, return error message
+            echo json_encode(['success' => false, 'message' => 'Transaction failed.']);
+        }
     } catch (Exception $e) {
-        // Rollback the transaction on error
+        // Rollback the transaction if something goes wrong
         $conn->rollback();
-        // Return error message
         echo json_encode(['success' => false, 'message' => 'Transaction failed: ' . $e->getMessage()]);
     }
 
     // Close the database connection
     $conn->close();
 }
-?>

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($employeeID <= 0) {
         echo json_encode(['success' => false, 'message' => 'Invalid employee ID.']);
-        exit;
+        exit();
     }
 
     // Begin a transaction to ensure data integrity

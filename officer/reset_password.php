@@ -24,42 +24,32 @@ $dotenv->load();
 // Check if the request is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve and sanitize form data
-    $userID = isset($_POST['userID']) ? intval($_POST['userID']) : 0;
-    $role = isset($_POST['role']) ? $_POST['role'] : '';
+    $employeeID = isset($_POST['employeeID']) ? intval($_POST['employeeID']) : 0;
 
-    if ($userID <= 0 || empty($role)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid user ID or role.']);
-        exit;
+    if ($employeeID <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid employee ID.']);
+        exit();
     }
 
     // Begin a transaction to ensure data integrity
     $conn->begin_transaction();
 
     try {
-        // Fetch user details based on role
-        if ($role === 'Employee') {
-            $sql_fetch_user = "SELECT e.FirstName, e.LastName, u.EmailAddress, u.Username
-                               FROM employees e
-                               JOIN useraccounts u ON e.EmployeeID = u.employeeID
-                               WHERE u.UserID = ?";
-        } elseif ($role === 'Officer') {
-            $sql_fetch_user = "SELECT o.FirstName, o.LastName, u.EmailAddress, u.Username
-                               FROM officers o
-                               JOIN useraccounts u ON o.OfficerID = u.officerID
-                               WHERE u.UserID = ?";
-        } else {
-            throw new Exception('Invalid role specified.');
-        }
-
+        // Fetch user details based on employee ID
+        $sql_fetch_user = "SELECT e.FirstName, e.LastName, u.EmailAddress, u.Username
+                           FROM employees e
+                           JOIN useraccounts u ON e.EmployeeID = u.employeeID
+                           WHERE e.EmployeeID = ?";
+        
         $stmt_fetch = $conn->prepare($sql_fetch_user);
         if ($stmt_fetch === false) {
             throw new Exception('Error preparing fetch statement: ' . $conn->error);
         }
-        $stmt_fetch->bind_param('i', $userID);
+        $stmt_fetch->bind_param('i', $employeeID);
         $stmt_fetch->execute();
         $stmt_fetch->bind_result($firstName, $lastName, $emailAddress, $username);
         if (!$stmt_fetch->fetch()) {
-            throw new Exception('User not found.');
+            throw new Exception('Employee not found.');
         }
         $stmt_fetch->close();
 
@@ -70,12 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $activationStatus = 'deactivated';
 
         // Update the useraccounts table with new activation token and status
-        $sql_reset = "UPDATE useraccounts SET ActivationToken = ?, ActivationStatus = ? WHERE UserID = ?";
+        $sql_reset = "UPDATE useraccounts SET ActivationToken = ?, ActivationStatus = ? WHERE employeeID = ?";
         $stmt_reset = $conn->prepare($sql_reset);
         if ($stmt_reset === false) {
             throw new Exception('Error preparing password reset statement: ' . $conn->error);
         }
-        $stmt_reset->bind_param('ssi', $activationToken, $activationStatus, $userID);
+        $stmt_reset->bind_param('ssi', $activationToken, $activationStatus, $employeeID);
         if (!$stmt_reset->execute()) {
             throw new Exception('Error updating user account for password reset: ' . $stmt_reset->error);
         }

@@ -1,18 +1,13 @@
 <?php
 session_start();
 
-// Check if the user is logged in
-if (!isset($_SESSION['UserID'])) {
-    // Redirect to login page if not logged in
-    header("Location: ../login/login.php");
-    exit();
-}
-
 require '../includes/db_connection.php';
 require '../vendor/autoload.php'; // For PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Dotenv\Dotenv;
+
+header('Content-Type: application/json'); // Return JSON response
 
 // Load environment variables
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
@@ -32,28 +27,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $position = $_POST['position'];
 
     // Collect User Account Data from POST
-    $username = ucfirst($_POST['username']); // Automatically set the first letter to uppercase
+    $username = ucfirst($_POST['username']);
     $passwordOption = $_POST['passwordOption'];
 
     // Handle password setting
     if ($passwordOption === 'manual') {
-        // Admin sets the password manually
         $password = $_POST['password'];
         $confirmPassword = $_POST['confirmPassword'];
 
         // Validate passwords match
         if ($password !== $confirmPassword) {
-            echo "Passwords do not match.";
+            echo json_encode(['success' => false, 'message' => 'Passwords do not match.']);
             exit();
         }
 
-        // Enforce strong password (you can adjust the pattern as needed)
+        // Enforce strong password
         if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
-            echo "Password must be at least 8 characters long and include at least one letter and one number.";
+            echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters long and include at least one letter and one number.']);
             exit();
         }
     } else {
-        // Automatically generate a random password
         $password = bin2hex(random_bytes(4)); // Generates an 8-character random password
     }
 
@@ -72,9 +65,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmtEmployee = $conn->prepare($sqlInsertEmployee);
     if (!$stmtEmployee) {
-        echo "Error: " . $conn->error;
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
         exit();
     }
+
     $stmtEmployee->bind_param('ssssssssss', $firstName, $middleInitial, $lastName, $gender, $dob, $address, $mobileNo, $emailAddress, $employmentDate, $position);
 
     if ($stmtEmployee->execute()) {
@@ -87,11 +81,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmtUser = $conn->prepare($sqlInsertUser);
         if (!$stmtUser) {
-            echo "Error: " . $conn->error;
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
             exit();
         }
+
+        // Bind parameters and execute
         $stmtUser->bind_param('sssiss', $username, $hashedPassword, $emailAddress, $employeeID, $activationStatus, $activationToken);
 
+        // Place your if ($stmtUser->execute()) block here
         if ($stmtUser->execute()) {
             // Send activation email
             $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
@@ -99,8 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Configure PHPMailer
             $mail = new PHPMailer(true);
             try {
-                // Server settings
-                // $mail->SMTPDebug = 2; // Enable verbose debug output (disable in production)
                 $mail->isSMTP();
                 $mail->Host       = $_ENV['SMTP_HOST'];
                 $mail->SMTPAuth   = true;
@@ -109,11 +104,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->SMTPSecure = $_ENV['SMTP_ENCRYPTION'];
                 $mail->Port       = $_ENV['SMTP_PORT'];
 
-                // Recipients
                 $mail->setFrom($_ENV['FROM_EMAIL'], $_ENV['FROM_NAME']);
                 $mail->addAddress($emailAddress, $firstName . ' ' . $lastName);
 
-                // Content
                 $mail->isHTML(true);
                 $mail->Subject = 'Activate Your Account';
                 $mail->Body    = "Dear $firstName,<br><br>
@@ -124,46 +117,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                   EPM Trucking Services";
 
                 $mail->send();
-                // Email sent successfully
             } catch (Exception $e) {
-                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                echo json_encode(['success' => false, 'message' => 'Mailer Error: ' . $mail->ErrorInfo]);
                 exit();
             }
 
             // ---- Insert Activity Log ----
-            // Retrieve the logged-in user's UserID from the session
             $currentUserID = $_SESSION['UserID'];
-
-            // Define the action description
             $action = "Added Employee: " . $username;
-
-            // Get the current timestamp
             $currentTimestamp = date("Y-m-d H:i:s");
 
-            // Prepare the INSERT statement for activitylogs
             $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
             $stmtLog = $conn->prepare($sqlInsertLog);
             if ($stmtLog) {
                 $stmtLog->bind_param('iss', $currentUserID, $action, $currentTimestamp);
                 if (!$stmtLog->execute()) {
-                    // Handle insertion error (optional)
                     error_log("Failed to insert activity log: " . $stmtLog->error);
                 }
                 $stmtLog->close();
             } else {
-                // Handle preparation error (optional)
                 error_log("Failed to prepare activity log insertion: " . $conn->error);
             }
-            // ---- End of Activity Log Insertion ----
 
-            // Redirect to employees.php after successful insertion
-            header("Location: employees.php");
-            exit(); // Always exit after a header redirect to prevent further script execution
+            // Return success message as JSON
+            echo json_encode(['success' => true, 'message' => "Employee '$firstName $lastName' added successfully!"]);
+            exit();
         } else {
-            echo "Error: " . $stmtUser->error;
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $stmtUser->error]);
+            exit();
         }
     } else {
-        echo "Error: " . $stmtEmployee->error;
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $stmtEmployee->error]);
+        exit();
     }
 
     // Close the statements
