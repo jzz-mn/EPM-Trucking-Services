@@ -24,7 +24,7 @@ $truck_result = $conn->query($truck_query);
                                 </li>
                                 <li class="breadcrumb-item" aria-current="page">
                                     <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                                        Add Data
+                                        Select Truck
                                     </span>
                                 </li>
                             </ol>

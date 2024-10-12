@@ -413,7 +413,7 @@ include '../officer/header.php';
                 $activationStatus = '';
                 if ($row['ActivationStatus'] === 'Activated' || 'activated') {
                   $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
-                } elseif ($row['ActivationStatus'] === 'Deactivated'|| 'deactivated') {
+                } elseif ($row['ActivationStatus'] === 'Deactivated' || 'deactivated') {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 } else {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
@@ -532,7 +532,7 @@ include '../officer/header.php';
         const formData = new FormData();
         formData.append('employeeID', employeeID);
 
-        fetch('../officer/reset_password.php', {
+        fetch('../officer/resetEmp_password.php', { // Updated path
           method: 'POST',
           body: formData
         })
