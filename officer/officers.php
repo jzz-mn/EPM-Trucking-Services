@@ -63,7 +63,7 @@ include '../officer/header.php';
                         </div>
                       </div>
                       <!-- Create Account Section -->
-                      <div class="col-lg-6">
+                      <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
                           <div class="card-body p-4">
                             <h4 class="card-title">Create Account</h4>
@@ -81,15 +81,26 @@ include '../officer/header.php';
                               <div class="invalid-feedback">Email is already taken.</div>
                             </div>
                             <div class="mb-3">
-                              <label for="passwordInput" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="passwordInput" name="password"
-                                placeholder="Enter new password">
+                              <label class="form-label">Set Password</label><br>
+                              <input type="radio" id="autoPassword" name="passwordOption" value="auto" checked
+                                onclick="togglePasswordFields()">
+                              <label for="autoPassword">Automatically Generate Password</label><br>
+                              <input type="radio" id="manualPassword" name="passwordOption" value="manual"
+                                onclick="togglePasswordFields()">
+                              <label for="manualPassword">Set Password Manually</label>
                             </div>
-                            <div class="mb-3">
-                              <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
-                              <input type="password" class="form-control" id="confirmPasswordInput"
-                                name="confirmPassword" placeholder="Confirm password" required>
-                              <div class="invalid-feedback">Passwords do not match.</div>
+                            <div id="passwordFields" style="display: none;">
+                              <div class="mb-3">
+                                <label for="passwordInput" class="form-label">Temporary Password</label>
+                                <input type="password" class="form-control" id="passwordInput" name="password"
+                                  placeholder="Enter temporary password">
+                              </div>
+                              <div class="mb-3">
+                                <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPasswordInput"
+                                  name="confirmPassword" placeholder="Confirm password">
+                                <div class="invalid-feedback">Passwords do not match.</div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -187,13 +198,33 @@ include '../officer/header.php';
                       </div>
                     </div>
                   </form>
-
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <!-- Add this script in your officers.php to handle the password option -->
+      <script>
+        function togglePasswordFields() {
+          var passwordOption = document.querySelector('input[name="passwordOption"]:checked').value;
+          if (passwordOption === 'manual') {
+            document.getElementById('passwordFields').style.display = 'block';
+            document.getElementById('passwordInput').required = true;
+            document.getElementById('confirmPasswordInput').required = true;
+          } else {
+            document.getElementById('passwordFields').style.display = 'none';
+            document.getElementById('passwordInput').required = false;
+            document.getElementById('confirmPasswordInput').required = false;
+          }
+        }
+
+        // Call the function on page load to set the initial state
+        document.addEventListener('DOMContentLoaded', function () {
+          togglePasswordFields();
+        });
+      </script>
+
       <!-- Edit Officer Modal -->
       <div class="modal fade" id="editContactModal" tabindex="-1" role="dialog" aria-labelledby="editContactModalTitle"
         aria-hidden="true">
@@ -208,6 +239,8 @@ include '../officer/header.php';
                 <div class="edit-contact-content">
                   <form id="editOfficerForm" method="POST" action="edit_officer.php">
                     <input type="hidden" name="officerID" value="">
+                    <!-- Hidden field for UserID -->
+                    <input type="hidden" name="userID" value="" id="userID">
                     <div class="row">
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -229,7 +262,7 @@ include '../officer/header.php';
                       </div>
 
                       <!-- Edit Account Section -->
-                      <div class="col-lg-6">
+                      <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
                           <div class="card-body p-4">
                             <h4 class="card-title">Edit Account</h4>
@@ -240,21 +273,21 @@ include '../officer/header.php';
                                 placeholder="Enter username" required>
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputEmail" class="form-label">Email Address</label>
-                              <input type="text" class="form-control" id="userEmailAddress" name="userEmailAddress"
-                                placeholder="Enter Email Address">
+                              <label for="userEmailAddress" class="form-label">Email Address</label>
+                              <input type="email" class="form-control" id="userEmailAddress" name="userEmailAddress"
+                                placeholder="Enter Email Address" required>
                             </div>
                             <div class="mb-3">
-                              <label for="exampleInputPassword" class="form-label">New Password</label>
-                              <input type="password" class="form-control" id="exampleInputPassword" name="password"
-                                placeholder="Enter password" required>
-                            </div>
-                            <div class="mb-3">
-                              <label for="exampleActivationStatus" class="form-label">Status</label>
+                              <label for="activationStatus" class="form-label">Activation Status</label>
                               <select class="form-control" id="activationStatus" name="activationStatus">
-                                <option value="Activated">Activated</option>
-                                <option value="Deactivated">Deactivated</option>
+                                <option value="activated">Activated</option>
+                                <option value="deactivated">Deactivated</option>
                               </select>
+                            </div>
+                            <!-- Reset Password Button -->
+                            <div class="mb-3">
+                              <button type="button" class="btn btn-warning" id="resetPasswordButton">Reset
+                                Password</button>
                             </div>
                           </div>
                         </div>
@@ -426,11 +459,12 @@ include '../officer/header.php';
 
               // Handle ActivationStatus display
               $activationStatus = '';
-              if ($row['ActivationStatus'] === 'Activated') {
+              if ($row['ActivationStatus'] === 'Activated' || $row['ActivationStatus'] === 'activated') {
                 $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
-              } elseif ($row['ActivationStatus'] === 'Deactivated') {
+              } elseif ($row['ActivationStatus'] === 'Deactivated' || $row['ActivationStatus'] === 'deactivated') {
                 $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
               }
+
 
               // Output table rows
               echo "<tr>";
@@ -461,8 +495,8 @@ include '../officer/header.php';
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('.edit-button').on('click', function() {
+  $(document).ready(function () {
+    $('.edit-button').on('click', function () {
       var officerID = $(this).data('officerid');
 
       $.ajax({
@@ -472,45 +506,70 @@ include '../officer/header.php';
           officerID: officerID
         },
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
           if (data.success) {
             // Populate the modal fields
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
             $('#editOfficerForm input[name="firstName"]').val(data.officer.FirstName);
             $('#editOfficerForm input[name="middleInitial"]').val(data.officer.MiddleInitial);
             $('#editOfficerForm input[name="lastName"]').val(data.officer.LastName);
-            $('#editOfficerForm input[name="gender"]').val(data.officer.Gender);
+            $('#editOfficerForm select[name="gender"]').val(data.officer.Gender);
             $('#editOfficerForm input[name="college"]').val(data.officer.College);
             $('#editOfficerForm input[name="program"]').val(data.officer.Program);
             $('#editOfficerForm input[name="yearGraduated"]').val(data.officer.YearGraduated);
             $('#editOfficerForm input[name="mobileNo"]').val(data.officer.MobileNo);
-            $('#editOfficerForm input[name="position"]').val(data.officer.Position);
+            $('#editOfficerForm select[name="position"]').val(data.officer.Position);
             $('#editOfficerForm input[name="address"]').val(data.officer.CityAddress);
             $('#editOfficerForm input[name="emailAddress"]').val(data.officer.EmailAddress);
             $('#editOfficerForm input[name="username"]').val(data.officer.Username);
             $('#editOfficerForm input[name="userEmailAddress"]').val(data.officer.UserEmail);
-            $('#editOfficerForm input[name="password"]').val(data.officer.Password);
-            $('#editOfficerForm input[name="activationStatus"]').val(data.officer.ActivationStatus);
-            $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
-
-
-
+            $('#editOfficerForm select[name="activationStatus"]').val(data.officer.ActivationStatus.toLowerCase());
+            $('#editOfficerForm input[name="userID"]').val(data.officer.UserID); // Added UserID
 
           } else {
             alert('Failed to fetch officer data.');
           }
         },
-        error: function() {
+        error: function () {
           alert('Error in AJAX request.');
         }
       });
     });
+
+    // Handle "Reset Password" button click
+    $('#resetPasswordButton').on('click', function () {
+      var userID = $('#editOfficerForm input[name="userID"]').val();
+
+      if (confirm('Are you sure you want to reset the password for this officer?')) {
+        // Send AJAX request to reset password
+        $.ajax({
+          url: 'reset_password.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            userID: userID,
+            role: 'Officer' // Indicate that this is an officer account
+          },
+          success: function (data) {
+            if (data.success) {
+              alert('Password reset successfully. An email has been sent to the officer.');
+            } else {
+              alert('Error resetting password: ' + data.message);
+            }
+          },
+          error: function () {
+            alert('An error occurred while resetting the password.');
+          }
+        });
+      }
+    });
   });
 </script>
 
+
 <script>
-  $(document).ready(function() {
-    $('#editOfficerForm').submit(function(event) {
+  $(document).ready(function () {
+    $('#editOfficerForm').submit(function (event) {
       event.preventDefault(); // Prevent the form from submitting via the browser.
       var formData = $(this).serialize(); // Get form data.
 
@@ -519,7 +578,7 @@ include '../officer/header.php';
         url: "edit_officer.php",
         data: formData,
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
           if (response.user_message) {
             $('#editContactModal').modal('hide'); // Hide the modal if success
             window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
@@ -527,79 +586,13 @@ include '../officer/header.php';
             alert('Failed to update: ' + response.error);
           }
         },
-        error: function() {
+        error: function () {
           alert('Error updating officer.');
         }
       });
     });
   });
 </script>
-
-<!-- Add Officer Modal -->
-<div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addOfficerModalTitle"
-  aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header d-flex align-items-center bg-primary">
-        <h5 class="modal-title text-white fs-4">Add Officer Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="add-contact-box">
-          <div class="add-contact-content">
-            <form id="addOfficerForm" method="POST" action="add_officer.php">
-              <div class="row">
-                <!-- Profile Picture Section (Omitted for brevity) -->
-
-                <!-- Create Account Section -->
-                <div class="col-lg-6">
-                  <div class="card w-100 border position-relative overflow-hidden">
-                    <div class="card-body p-4">
-                      <h4 class="card-title">Create Account</h4>
-                      <p class="card-subtitle mb-4">Please enter the officer's login credentials.</p>
-                      <div class="mb-3">
-                        <label for="usernameInput" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="usernameInput" name="username"
-                          placeholder="Enter username" required>
-                        <div class="invalid-feedback">Username is already taken.</div>
-                      </div>
-                      <div class="mb-3">
-                        <label for="emailInput" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="emailInput" name="emailAddress"
-                          placeholder="Enter email" required>
-                        <div class="invalid-feedback">Email is already taken.</div>
-                      </div>
-                      <div class="mb-3">
-                        <label for="passwordInput" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="passwordInput" name="password"
-                          placeholder="Enter new password">
-                      </div>
-                      <div class="mb-3">
-                        <label for="confirmPasswordInput" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPasswordInput"
-                          name="confirmPassword" placeholder="Confirm password" required>
-                        <div class="invalid-feedback">Passwords do not match.</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Personal Details Section (Omitted for brevity) -->
-
-              <div class="col-12 mb-3">
-                <div class="d-flex gap-6 m-0 justify-content-end">
-                  <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Discard</button>
-                  <button id="btn-add" class="btn btn-primary" type="submit">Save</button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- JavaScript for Real-Time Validation -->
 <script>
@@ -610,9 +603,9 @@ include '../officer/header.php';
 
     // AJAX request to check username
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -634,9 +627,9 @@ include '../officer/header.php';
 
     // AJAX request to check email
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
