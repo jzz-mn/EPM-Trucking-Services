@@ -1,6 +1,13 @@
 <?php
 session_start();
 include '../officer/header.php';
+// Check if the user has the SuperAdmin role
+if ($_SESSION['Role'] !== 'SuperAdmin') {
+  // Display an access denied message or redirect to an error page
+  echo "Access denied. This page is only accessible to SuperAdmin.";
+  exit();
+}
+
 ?>
 
 <div class="body-wrapper">

@@ -40,9 +40,7 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
 <body class="link-sidebar">
 
   <!-- Preloader -->
-  <div class="preloader">
-    <img src="../assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
-  </div>
+
 
   <div id="main-wrapper">
     <!-- Sidebar Start -->
