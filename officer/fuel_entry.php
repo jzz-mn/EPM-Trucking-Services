@@ -32,10 +32,9 @@ if ($truck_id) {
     exit();
 }
 ?>
-
 <div class="body-wrapper">
     <div class="container-fluid">
-        <!-- Fuel Entry Card -->
+        <!-- Header Card and Breadcrumb -->
         <div class="card card-body py-3">
             <div class="row align-items-center">
                 <div class="col-12">
@@ -59,24 +58,22 @@ if ($truck_id) {
                 </div>
             </div>
         </div>
+        <h5 class="border-bottom py-2 px-4 mb-4">
+            Transactions for Truck:
+            <?php echo htmlspecialchars($truck['PlateNo'] . ' - ' . $truck['TruckBrand']); ?>
+            Date: <?php echo htmlspecialchars($_SESSION['transaction_date']); ?>
+        </h5>
+        <!-- Fuel Entry Card -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="card-title text-light">Fuel Entry</h4>
-                <p class="card-subtitle text-light">Enter fuel details for the transaction group below.</p>
+            <div class="card-header">
+                <h4 class="card-title ">Fuel Entry</h4>
+                <p class="card-subtitle">Enter fuel details for the transaction group below.</p>
             </div>
             <div class="card-body">
-                <!-- Truck Information and Date -->
-                <div class="mb-4 border-bottom pb-3">
-                    <h5 class="text-primary">Truck Information</h5>
-                    <p><strong>Plate No:</strong> <?php echo htmlspecialchars($truck['PlateNo']); ?></p>
-                    <p><strong>Truck Brand:</strong> <?php echo htmlspecialchars($truck['TruckBrand']); ?></p>
-                    <p><strong>Date:</strong> <?php echo htmlspecialchars($transaction_date); ?></p>
-                </div>
-
                 <!-- Fuel Entry Form -->
                 <form id="fuel-form" method="POST" action="expenses_entry.php">
                     <div class="row g-3">
-                        <!-- Date Field (Read Only) -->
+                        <!-- Hidden Date Field -->
                         <div class="col-md-4 d-none">
                             <label for="fuel-date" class="form-label">Date</label>
                             <input type="hidden" class="form-control" id="fuel-date" name="fuel_date"
@@ -148,7 +145,6 @@ if ($truck_id) {
     document.getElementById('fuel-liters').addEventListener('input', calculateFuelAmount);
     document.getElementById('fuel-unit-price').addEventListener('input', calculateFuelAmount);
 </script>
-
 
 <?php
 include '../officer/footer.php';
