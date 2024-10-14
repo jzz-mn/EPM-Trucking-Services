@@ -16,55 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header("Location: fuel_entry.php");
     exit();
 }
-// Fetch truck details from session
-$transaction_date = isset($_SESSION['transaction_date']) ? $_SESSION['transaction_date'] : '';
-$truck_id = isset($_SESSION['truck_id']) ? $_SESSION['truck_id'] : '';
-
-if ($truck_id) {
-    // Fetch truck details for display
-    $truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
-    $stmt = $conn->prepare($truck_query);
-    $stmt->bind_param("i", $truck_id);
-    $stmt->execute();
-    $truck_result = $stmt->get_result();
-    $truck = $truck_result->fetch_assoc();
-    $stmt->close();
-} else {
-    // Redirect back if truck_id is not set
-    header("Location: add_data.php");
-    exit();
-}
 ?>
 <div class="body-wrapper">
     <div class="container-fluid">
-        <div class="card card-body py-3">
-            <div class="row align-items-center">
-                <div class="col-12">
-                    <div class="d-sm-flex align-items-center justify-space-between">
-                        <h4 class="mb-4 mb-sm-0 card-title">Add Data</h4>
-                        <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item d-flex align-items-center">
-                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
-                                        <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
-                                    </a>
-                                </li>
-                                <li class="breadcrumb-item" aria-current="page">
-                                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                                        Expenses Entry
-                                    </span>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <h5 class="border-bottom py-2 px-4 mb-4">
-            Transactions for Truck:
-            <?php echo htmlspecialchars($truck['PlateNo'] . ' - ' . $truck['TruckBrand']); ?>
-            Date: <?php echo htmlspecialchars($_SESSION['transaction_date']); ?>
-        </h5>
         <!-- Expenses Entry Card -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header">
@@ -72,44 +26,46 @@ if ($truck_id) {
                 <p class="card-subtitle">Enter expense details for the transaction group.</p>
             </div>
             <div class="card-body">
+                <!-- Transaction Information -->
+                <div class="mb-4">
+                    <h5>Transaction Information</h5>
+                    <p><strong>Truck ID:</strong> <?php echo htmlspecialchars($_SESSION['truck_id']); ?></p>
+                    <p><strong>Date:</strong> <?php echo htmlspecialchars($_SESSION['transaction_date']); ?></p>
+                </div>
+
+                <!-- Expenses Entry Form -->
                 <form id="expenses-form" method="POST" action="transaction_summary.php">
                     <!-- Date Field (Hidden) -->
-                    <input type="hidden" name="expenses_date"
-                        value="<?php echo htmlspecialchars($_SESSION['transaction_date']); ?>">
-                    <div class="row g-3">
-                        <div class="col-md-6"">
-                            <label for=" expenses-salary" class="form-label">Salary Amount</label>
-                            <input type="number" class="form-control" id="expenses-salary" name="expenses_salary"
-                                step="0.01" min="0" required>
-                        </div>
+                    <input type="hidden" name="expenses_date" value="<?php echo htmlspecialchars($_SESSION['transaction_date']); ?>">
 
-                        <!-- Mobile Fee Amount -->
-                        <div class="col-md-6"">
-                            <label for=" expenses-mobile-fee" class="form-label">Mobile Fee Amount</label>
-                            <input type="number" class="form-control" id="expenses-mobile-fee"
-                                name="expenses_mobile_fee" step="0.01" min="0" required>
-                        </div>
-
-                        <!-- Other Amount -->
-                        <div class="col-md-6"">
-                            <label for=" expenses-other-amount" class="form-label">Other Amount</label>
-                            <input type="number" class="form-control" id="expenses-other-amount"
-                                name="expenses_other_amount" step="0.01" min="0">
-                        </div>
-
-                        <!-- Total Expense (Calculated) -->
-                        <div class="col-md-6"">
-                            <label for=" expenses-total" class="form-label">Total Expense</label>
-                            <input type="number" class="form-control" id="expenses-total" name="expenses_total"
-                                step="0.01" readonly>
-                        </div>
-                    </div>
                     <!-- Salary Amount -->
+                    <div class="mb-3">
+                        <label for="expenses-salary" class="form-label">Salary Amount</label>
+                        <input type="number" class="form-control" id="expenses-salary" name="expenses_salary" step="0.01" min="0" required>
+                    </div>
+
+                    <!-- Mobile Fee Amount -->
+                    <div class="mb-3">
+                        <label for="expenses-mobile-fee" class="form-label">Mobile Fee Amount</label>
+                        <input type="number" class="form-control" id="expenses-mobile-fee" name="expenses_mobile_fee" step="0.01" min="0" required>
+                    </div>
+
+                    <!-- Other Amount -->
+                    <div class="mb-3">
+                        <label for="expenses-other-amount" class="form-label">Other Amount</label>
+                        <input type="number" class="form-control" id="expenses-other-amount" name="expenses_other_amount" step="0.01" min="0">
+                    </div>
+
+                    <!-- Total Expense (Calculated) -->
+                    <div class="mb-3">
+                        <label for="expenses-total" class="form-label">Total Expense</label>
+                        <input type="number" class="form-control" id="expenses-total" name="expenses_total" step="0.01" readonly>
+                    </div>
 
                     <!-- Buttons Row -->
-                    <div class="d-flex justify-content-end mt-4">
-                        <a href="fuel_entry.php" class="btn btn-secondary me-1">Back</a>
-                        <button type="submit" class="btn btn-primary ms-1" id="next-button" disabled>Next</button>
+                    <div class="d-flex justify-content-between">
+                        <a href="fuel_entry.php" class="btn btn-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary" id="next-button" disabled>Next</button>
                     </div>
                 </form>
             </div>
@@ -141,3 +97,4 @@ if ($truck_id) {
 include '../officer/footer.php';
 $conn->close();
 ?>
+    
