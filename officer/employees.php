@@ -421,13 +421,14 @@ if (isset($_SESSION['success_message'])) {
 
                 // Handle ActivationStatus like in officers.php
                 $activationStatus = '';
-                if ($row['ActivationStatus'] === 'Activated' || 'activated') {
+                if (strtolower($row['ActivationStatus']) === 'activated') {
                   $activationStatus = "<span class='badge text-bg-success'>Activated</span>";
-                } elseif ($row['ActivationStatus'] === 'Deactivated' || 'deactivated') {
+                } elseif (strtolower($row['ActivationStatus']) === 'deactivated') {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 } else {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 }
+
 
                 // Output the table row with the data attribute to enable searching
                 echo "<tr data-name='{$fullName}' data-position='{$row['Position']}' data-status='{$row['ActivationStatus']}'>";

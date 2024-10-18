@@ -179,13 +179,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="position" class="form-label">Position</label>
-                              <select type="text" class="form-control" id="position" name="position"
+                              <input type="text" class="form-control" id="position" name="position"
                                 placeholder="Position" required>
-                                <option value="Proprietor">Proprietor</option>
-                                <option value="Operation Manager/Proprietor">Operation Manager/Proprietor</option>
-                                <option value="Asst. Operation Manager">Asst. Operation Manager</option>
-                                <option value="Secretary">Secretary</option>
-                              </select>
+                              </input>
                             </div>
                           </div>
                           <div class="col-12">
@@ -367,13 +363,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="position" class="form-label">Position</label>
-                              <select type="text" class="form-control" id="position" name="position"
+                              <input type="text" class="form-control" id="position" name="position"
                                 placeholder="Position" required>
-                                <option value="Proprietor">Proprietor</option>
-                                <option value="Operation Manager/Proprietor">Operation Manager/Proprietor</option>
-                                <option value="Asst. Operation Manager">Asst. Operation Manager</option>
-                                <option value="Secretary">Secretary</option>
-                              </select>
+                              </input>
                             </div>
                           </div>
                           <div class="col-12">

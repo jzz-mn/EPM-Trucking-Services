@@ -458,7 +458,7 @@ include '../officer/header.php';
                           echo "</tr>";
                         }
                       } else {
-                        echo "<tr><td colspan='7'>No maintenance records found</td></tr>";
+                        echo "<tr id='noMaintenanceDataRow'><td colspan='7' class='text-center'>No maintenance records found</td></tr>";
                       }
                       ?>
                     </tbody>
@@ -466,8 +466,15 @@ include '../officer/header.php';
                 </div>
                 <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
                   <button id="maintenancePrevBtn" class="btn btn-primary me-2" onclick="prevMaintenancePage()">Previous</button>
-                  <button id="maintenanceNextBtn" class="btn btn-primary me-3" onclick="nextMaintenancePage()">Next</button>
+
+                  <!-- Pagination Numbers -->
+                  <nav>
+                    <ul class="pagination mb-0" id="maintenancePaginationNumbers"></ul>
+                  </nav>
+
+                  <button id="maintenanceNextBtn" class="btn btn-primary ms-2" onclick="nextMaintenancePage()">Next</button>
                 </div>
+
                 <?php $conn->close(); ?>
               </div>
             </div>
@@ -478,7 +485,7 @@ include '../officer/header.php';
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTransactionsTable()">
+                    <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTransactionsTable()" />
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
                     <select id="transactionsRowsPerPage" class="form-select w-auto d-inline" onchange="changeTransactionsRowsPerPage()">
@@ -529,20 +536,30 @@ include '../officer/header.php';
                         echo "</td>";
                         echo "</tr>";
                       }
+                      
                       ?>
                     </tbody>
                   </table>
                 </div>
+
                 <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
                   <button id="transactionsPrevBtn" class="btn btn-primary me-2" onclick="prevTransactionsPage()">Previous</button>
-                  <button id="transactionsNextBtn" class="btn btn-primary me-3" onclick="nextTransactionsPage()">Next</button>
+
+                  <!-- Pagination Numbers -->
+                  <nav>
+                    <ul class="pagination mb-0" id="transactionsPaginationNumbers"></ul>
+                  </nav>
+
+                  <button id="transactionsNextBtn" class="btn btn-primary ms-2" onclick="nextTransactionsPage()">Next</button>
                 </div>
+
               </div>
             </div>
             <div class="tab-pane" id="trucks" role="tabpanel">
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
-
+                  <!-- Search Bar -->
+                  <input type="text" id="trucksSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTrucksTable()" />
                 </div>
               </div>
               <div class="py-3">
@@ -553,38 +570,41 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="trucksTable" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
-                      <t>
+                      <tr>
                         <th>Truck ID</th>
                         <th>Plate Number</th>
                         <th>Truck Brand</th>
                         <th>Actions</th>
-                      </t>
+                      </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="trucksTableBody">
                       <?php
-                      while ($row = $result->fetch_assoc()) {
-                        $transactionData = json_encode($row);  // Prepare the row data as a JSON object
-
-                        echo "<tr>";
-                        echo "<td>" . $row['TruckID'] . "</td>";
-                        echo "<td>" . $row['PlateNo'] . "</td>";
-                        echo "<td>" . $row['TruckBrand'] . "</td>";
-                        echo "<td>";
-                        // Add a data-attribute to store the row data and attach the edit button
-                        echo "<a href='#' class='me-3 text-primary edit-transaction-btn' data-bs-toggle='modal' data-transaction='" . htmlspecialchars($transactionData) . "'>";
-                        echo "<i class='fs-4 ti ti-edit'></i></a>";
-                        echo "</td>";
-                        echo "</tr>";
+                      if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                          $transactionData = json_encode($row);  // Prepare the row data as a JSON object
+                          echo "<tr>";
+                          echo "<td>" . $row['TruckID'] . "</td>";
+                          echo "<td>" . $row['PlateNo'] . "</td>";
+                          echo "<td>" . $row['TruckBrand'] . "</td>";
+                          echo "<td>";
+                          // Add a data-attribute to store the row data and attach the edit button
+                          echo "<a href='#' class='me-3 text-primary edit-transaction-btn' data-bs-toggle='modal' data-transaction='" . htmlspecialchars($transactionData) . "'>";
+                          echo "<i class='fs-4 ti ti-edit'></i></a>";
+                          echo "</td>";
+                          echo "</tr>";
+                        }
+                      } else {
+                        echo "<tr><td colspan='4' class='text-center'>No data available</td></tr>";
                       }
-
                       ?>
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
+
           </div>
 
         </div>
@@ -669,151 +689,113 @@ include '../officer/header.php';
     </script>
   </div>
 </div>
-
+<!-- Maintenance Table -->
 <script>
-  // Maintenance Table Functions
-  let maintenanceCurrentPage = 1;
-  let maintenanceRowsPerPage = 5;
-
-  function changeMaintenanceRowsPerPage() {
-    maintenanceRowsPerPage = parseInt(document.getElementById("maintenanceRowsPerPage").value);
-    maintenanceCurrentPage = 1;
-    updateMaintenanceTable();
-  }
-
-  function filterMaintenanceTable() {
-    let input = document.getElementById("maintenanceSearchBar").value.toLowerCase();
-    let table = document.getElementById("maintenanceTable");
-    let rows = table.getElementsByTagName("tr");
-
-    for (let i = 1; i < rows.length; i++) {
-      let row = rows[i];
-      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
-    }
-  }
+  // Sorting logic for Maintenance Table
+  let maintenanceSortColumn = -1;
+  let maintenanceSortAscending = true;
 
   function sortMaintenanceTable(columnIndex) {
     let table = document.getElementById("maintenanceTable");
     let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    maintenanceSortAscending = maintenanceSortColumn === columnIndex ? !maintenanceSortAscending : true;
+    maintenanceSortColumn = columnIndex;
+
     let sortedRows = rows.sort((a, b) => {
       let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
       let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
-      return aValue.localeCompare(bValue);
+      return maintenanceSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
     let tableBody = document.getElementById("maintenanceTableBody");
     tableBody.innerHTML = "";
     sortedRows.forEach(row => tableBody.appendChild(row));
+
+    updateMaintenanceSortIcons(columnIndex, maintenanceSortAscending);
   }
 
-  function updateMaintenanceTable() {
-    let table = document.getElementById("maintenanceTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    let startIndex = (maintenanceCurrentPage - 1) * maintenanceRowsPerPage;
-    let endIndex = startIndex + maintenanceRowsPerPage;
-
-    rows.forEach((row, index) => {
-      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+  function updateMaintenanceSortIcons(columnIndex, ascending) {
+    const headers = document.querySelectorAll("#maintenanceTable th");
+    headers.forEach((header, index) => {
+      header.classList.remove('ascending', 'descending'); // Remove previous sorting class
+      if (index === columnIndex) {
+        header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
+      }
     });
-
-    document.getElementById("maintenancePrevBtn").disabled = maintenanceCurrentPage === 1;
-    document.getElementById("maintenanceNextBtn").disabled = endIndex >= rows.length;
   }
+</script>
 
-  function nextMaintenancePage() {
-    maintenanceCurrentPage++;
-    updateMaintenanceTable();
-  }
-
-  function prevMaintenancePage() {
-    maintenanceCurrentPage--;
-    updateMaintenanceTable();
-  }
-
-  // Transactions Table Functions
-  let transactionsCurrentPage = 1;
-  let transactionsRowsPerPage = 5;
-
-  function changeTransactionsRowsPerPage() {
-    transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
-    transactionsCurrentPage = 1;
-    updateTransactionsTable();
-  }
-
-  function filterTransactionsTable() {
-    let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
-    let table = document.getElementById("transactionsTable");
-    let rows = table.getElementsByTagName("tr");
-
-    for (let i = 1; i < rows.length; i++) {
-      let row = rows[i];
-      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
-    }
-  }
+<!-- Transactions Table -->
+<script>
+  // Sorting logic for Transactions Table
+  let transactionsSortColumn = -1;
+  let transactionsSortAscending = true;
 
   function sortTransactionsTable(columnIndex) {
     let table = document.getElementById("transactionsTable");
     let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    transactionsSortAscending = transactionsSortColumn === columnIndex ? !transactionsSortAscending : true;
+    transactionsSortColumn = columnIndex;
+
     let sortedRows = rows.sort((a, b) => {
       let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
       let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
-      return aValue.localeCompare(bValue);
+      return transactionsSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
     let tableBody = document.getElementById("transactionsTableBody");
     tableBody.innerHTML = "";
     sortedRows.forEach(row => tableBody.appendChild(row));
+
+    updateTransactionsSortIcons(columnIndex, transactionsSortAscending);
   }
 
-  function updateTransactionsTable() {
-    let table = document.getElementById("transactionsTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
-    let endIndex = startIndex + transactionsRowsPerPage;
+  function updateTransactionsSortIcons(columnIndex, ascending) {
+    const headers = document.querySelectorAll("#transactionsTable th");
+    headers.forEach((header, index) => {
+      header.classList.remove('ascending', 'descending'); // Remove previous sorting class
+      if (index === columnIndex) {
+        header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
+      }
+    });
+  }
+</script>
 
-    rows.forEach((row, index) => {
-      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+<!-- Trucks Table -->
+<script>
+  let trucksSortColumn = -1;
+  let trucksSortAscending = true;
+
+  function sortTrucksTable(columnIndex) {
+    let table = document.getElementById("trucksTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    trucksSortAscending = trucksSortColumn === columnIndex ? !trucksSortAscending : true;
+    trucksSortColumn = columnIndex;
+
+    let sortedRows = rows.sort((a, b) => {
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      return trucksSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
-    document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
-    document.getElementById("transactionsNextBtn").disabled = endIndex >= rows.length;
+    let tableBody = document.getElementById("trucksTableBody");
+    tableBody.innerHTML = "";
+    sortedRows.forEach(row => tableBody.appendChild(row));
+
+    updateTrucksSortIcons(columnIndex, trucksSortAscending);
   }
 
-  function nextTransactionsPage() {
-    transactionsCurrentPage++;
-    updateTransactionsTable();
+  function updateTrucksSortIcons(columnIndex, ascending) {
+    const headers = document.querySelectorAll("#trucksTable th");
+    headers.forEach((header, index) => {
+      header.innerHTML = header.innerText;
+      if (index === columnIndex) {
+        header.innerHTML += ascending ? " &#9650;" : " &#9660;";
+      }
+    });
   }
-
-  function prevTransactionsPage() {
-    transactionsCurrentPage--;
-    updateTransactionsTable();
-  }
-
-  // Modal Population Functions
-  function populateEditMaintenanceForm(maintenance) {
-    document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-    document.getElementById("maintenanceYear").value = maintenance.Year;
-    document.getElementById("maintenanceMonth").value = maintenance.Month;
-    document.getElementById("maintenanceCategory").value = maintenance.Category;
-    document.getElementById("maintenanceDescription").value = maintenance.Description;
-    document.getElementById("maintenanceAmount").value = maintenance.Amount;
-  }
-
-  function populateEditTransactionForm(transaction) {
-    document.getElementById("transactionId").value = transaction.TransactionID;
-    document.getElementById("transactionDate").value = transaction.TransactionDate;
-    document.getElementById("drNo").value = transaction.DRno;
-    document.getElementById("outletName").value = transaction.OutletName;
-    document.getElementById("qty").value = transaction.Qty;
-    document.getElementById("kgs").value = transaction.KGs;
-  }
-
-  // Attach the buttons to open modals
-  document.addEventListener('DOMContentLoaded', function() {
-    attachMaintenanceEditButtons();
-    attachTransactionEditButtons();
-  });
 </script>
+
 
 <script>
   function attachMaintenanceEditButtons() {
@@ -838,6 +820,232 @@ include '../officer/header.php';
     });
   }
 </script>
+
+<script>
+  let maintenanceCurrentPage = 1;
+  let maintenanceRowsPerPage = 5;
+
+  function changeMaintenanceRowsPerPage() {
+    maintenanceRowsPerPage = parseInt(document.getElementById("maintenanceRowsPerPage").value);
+    maintenanceCurrentPage = 1;
+    updateMaintenanceTable();
+  }
+
+  function updateMaintenanceTable() {
+    let table = document.getElementById("maintenanceTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let totalRows = rows.length;
+    let totalPages = Math.ceil(totalRows / maintenanceRowsPerPage);
+
+    let startIndex = (maintenanceCurrentPage - 1) * maintenanceRowsPerPage;
+    let endIndex = startIndex + maintenanceRowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+    });
+
+    // Update pagination buttons
+    document.getElementById("maintenancePrevBtn").disabled = maintenanceCurrentPage === 1;
+    document.getElementById("maintenanceNextBtn").disabled = maintenanceCurrentPage === totalPages;
+
+    // Generate pagination numbers
+    updateMaintenancePaginationNumbers(totalPages);
+  }
+
+  function updateMaintenancePaginationNumbers(totalPages) {
+    const paginationNumbers = document.getElementById("maintenancePaginationNumbers");
+    paginationNumbers.innerHTML = ''; // Clear existing numbers
+
+    for (let i = 1; i <= totalPages; i++) {
+      const pageItem = document.createElement("li");
+      pageItem.classList.add("page-item");
+      if (i === maintenanceCurrentPage) {
+        pageItem.classList.add("active");
+      }
+      const pageLink = document.createElement("a");
+      pageLink.classList.add("page-link");
+      pageLink.textContent = i;
+      pageLink.addEventListener('click', () => {
+        maintenanceCurrentPage = i;
+        updateMaintenanceTable();
+      });
+
+      pageItem.appendChild(pageLink);
+      paginationNumbers.appendChild(pageItem);
+    }
+  }
+
+  function nextMaintenancePage() {
+    maintenanceCurrentPage++;
+    updateMaintenanceTable();
+  }
+
+  function prevMaintenancePage() {
+    maintenanceCurrentPage--;
+    updateMaintenanceTable();
+  }
+
+  // Call this on page load
+  document.addEventListener('DOMContentLoaded', updateMaintenanceTable);
+</script>
+
+<script>
+  let transactionsCurrentPage = 1;
+  let transactionsRowsPerPage = 5;
+
+  function changeTransactionsRowsPerPage() {
+    transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
+    transactionsCurrentPage = 1;
+    updateTransactionsTable();
+  }
+
+  function updateTransactionsTable() {
+    let table = document.getElementById("transactionsTable");
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+    let totalRows = rows.length;
+    let totalPages = Math.ceil(totalRows / transactionsRowsPerPage);
+
+    let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
+    let endIndex = startIndex + transactionsRowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+    });
+
+    // Update pagination buttons
+    document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
+    document.getElementById("transactionsNextBtn").disabled = transactionsCurrentPage === totalPages;
+
+    // Generate pagination numbers
+    updateTransactionsPaginationNumbers(totalPages);
+  }
+
+  function updateTransactionsPaginationNumbers(totalPages) {
+    const paginationNumbers = document.getElementById("transactionsPaginationNumbers");
+    paginationNumbers.innerHTML = ''; // Clear existing numbers
+
+    for (let i = 1; i <= totalPages; i++) {
+      const pageItem = document.createElement("li");
+      pageItem.classList.add("page-item");
+      if (i === transactionsCurrentPage) {
+        pageItem.classList.add("active");
+      }
+      const pageLink = document.createElement("a");
+      pageLink.classList.add("page-link");
+      pageLink.textContent = i;
+      pageLink.addEventListener('click', () => {
+        transactionsCurrentPage = i;
+        updateTransactionsTable();
+      });
+
+      pageItem.appendChild(pageLink);
+      paginationNumbers.appendChild(pageItem);
+    }
+  }
+
+  function nextTransactionsPage() {
+    transactionsCurrentPage++;
+    updateTransactionsTable();
+  }
+
+  function prevTransactionsPage() {
+    transactionsCurrentPage--;
+    updateTransactionsTable();
+  }
+
+  // Call this on page load
+  document.addEventListener('DOMContentLoaded', updateTransactionsTable);
+</script>
+
+
+<script>
+  function filterMaintenanceTable() {
+    let input = document.getElementById("maintenanceSearchBar").value.toLowerCase();
+    let table = document.getElementById("maintenanceTable");
+    let rows = table.getElementsByTagName("tr");
+    let noDataFound = true; // Flag to check if no row matches the search criteria
+
+    for (let i = 1; i < rows.length; i++) { // Start from i=1 to skip the header row
+      let row = rows[i];
+      if (row.id !== "noMaintenanceDataRow") {
+        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+
+        if (row.style.display === "") {
+          noDataFound = false;
+        }
+      }
+    }
+
+    document.getElementById("noMaintenanceDataRow").style.display = noDataFound ? "" : "none";
+    updateMaintenanceFilteredTable(filteredRows);
+  }
+</script>
+
+<script>
+  function filterTransactionsTable() {
+    let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
+    let table = document.getElementById("transactionsTable");
+    let rows = table.getElementsByTagName("tr");
+    let noDataFound = true; // Flag to check if no row matches the search criteria
+
+    for (let i = 1; i < rows.length; i++) { // Start from i=1 to skip the header row
+      let row = rows[i];
+      if (row.id !== "noTransactionsDataRow") {
+        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+
+        if (row.style.display === "") {
+          noDataFound = false;
+        }
+      }
+    }
+
+    document.getElementById("noTransactionsDataRow").style.display = noDataFound ? "" : "none";
+  }
+</script>
+
+<script>
+  function filterTrucksTable() {
+    let input = document.getElementById("trucksSearchBar").value.toLowerCase();
+    let table = document.getElementById("trucksTable");
+    let rows = table.getElementsByTagName("tr");
+    let noDataFound = true; // Flag to check if no row matches the search criteria
+
+    for (let i = 1; i < rows.length; i++) { // Skip the header row (i = 1)
+      let row = rows[i];
+      if (row.id !== "noTrucksDataRow") { // Skip the "No data found" row
+        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+
+        if (row.style.display === "") {
+          noDataFound = false; // A match was found
+        }
+      }
+    }
+
+    // Toggle the visibility of the "No data found" row
+    document.getElementById("noTrucksDataRow").style.display = noDataFound ? "" : "none";
+  }
+</script>
+
+
+<style>
+  th {
+    cursor: pointer;
+  }
+
+  /* Add ascending and descending arrow icons */
+  .ascending::after {
+    content: ' ↑';
+    /* Unicode up arrow */
+  }
+
+  .descending::after {
+    content: ' ↓';
+    /* Unicode down arrow */
+  }
+</style>
+
+
+
 <?php
 $conn->close();
 include '../officer/footer.php';
