@@ -1,20 +1,27 @@
 <?php
 include '../includes/db_connection.php';
 
+header('Content-Type: application/json');
+
+$outlets = [];
+
 if (isset($_GET['query'])) {
     $query = $_GET['query'];
-    $stmt = $conn->prepare("SELECT CustomerName FROM customers WHERE CustomerName LIKE ?");
+    $stmt = $conn->prepare("SELECT CustomerName FROM customers WHERE CustomerName LIKE ? LIMIT 10");
     $likeQuery = "%" . $query . "%";
     $stmt->bind_param("s", $likeQuery);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $outlets = [];
-
-    while ($row = $result->fetch_assoc()) {
-        $outlets[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $outlets[] = $row;
+        }
+    } else {
+        $outlets['error'] = 'Query execution failed.';
     }
-
-    echo json_encode($outlets);
+} else {
+    $outlets['error'] = 'Query parameter not provided.';
 }
+
+echo json_encode($outlets);
 $conn->close();
 ?>

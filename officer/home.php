@@ -174,7 +174,6 @@ include 'dashboard.php';
             </div>
           </div>
         </div>
-        <!-- Additional content such as Revenue Forecast can go here -->
       </div>
       <div class="col-lg-8">
         <div class="card">

@@ -44,14 +44,38 @@ function round_up_kgs($kgs)
     return 4000; // Cap at 4000
 }
 
-// Check if the user confirmed the transaction group
+// Check if the user submitted the form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Validate and sanitize TollFeeAmount
-    if (isset($_POST['toll_fee_amount']) && is_numeric($_POST['toll_fee_amount'])) {
-        $_SESSION['toll_fee_amount'] = floatval($_POST['toll_fee_amount']);
-    } else {
-        // Handle invalid TollFeeAmount
-        header("Location: transaction_summary.php?error=invalid_toll_fee");
+    // Collect data from $_POST
+    $transaction_date = $_POST['transaction_date'] ?? '';
+    $truck_id = $_POST['truck_id'] ?? 0;
+    $transactions_json = $_POST['transactions_json'] ?? '';
+    $fuel_data = [
+        'liters' => $_POST['fuel_liters'] ?? 0,
+        'unit_price' => $_POST['fuel_unit_price'] ?? 0,
+        'fuel_type' => $_POST['fuel_type'] ?? '',
+        'amount' => $_POST['fuel_amount'] ?? 0,
+    ];
+    $expenses_data = [
+        'salary' => $_POST['expenses_salary'] ?? 0,
+        'mobile_fee' => $_POST['expenses_mobile_fee'] ?? 0,
+        'other_amount' => $_POST['expenses_other_amount'] ?? 0,
+        'total' => $_POST['expenses_total'] ?? 0,
+    ];
+    $toll_fee_amount = $_POST['toll_fee_amount'] ?? 0;
+
+    // Validate essential fields
+    if (empty($transaction_date) || empty($truck_id) || empty($transactions_json)) {
+        // Handle missing data
+        header("Location: add_data.php?error=missing_data");
+        exit();
+    }
+
+    // Decode transactions JSON
+    $transactions = json_decode($transactions_json, true);
+    if (empty($transactions)) {
+        // Handle invalid or empty transactions
+        header("Location: add_data.php?error=invalid_transactions");
         exit();
     }
 
@@ -66,13 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!$stmt) {
             throw new Exception("Prepare failed for fuel query: ({$conn->errno}) {$conn->error}");
         }
+        $fuel_date = $transaction_date; // Assuming fuel date is the same as transaction date
         $stmt->bind_param(
             "sddsd",
-            $_SESSION['fuel_date'],       // "s" - string (date)
-            $_SESSION['fuel_liters'],     // "d" - double (Liters)
-            $_SESSION['fuel_unit_price'], // "d" - double (UnitPrice)
-            $_SESSION['fuel_type'],       // "s" - string (FuelType)
-            $_SESSION['fuel_amount']      // "d" - double (Amount)
+            $fuel_date,                           // "s" - string (date)
+            $fuel_data['liters'],                 // "d" - double (Liters)
+            $fuel_data['unit_price'],             // "d" - double (UnitPrice)
+            $fuel_data['fuel_type'],              // "s" - string (FuelType)
+            $fuel_data['amount']                  // "d" - double (Amount)
         );
         if (!$stmt->execute()) {
             throw new Exception("Failed to insert into fuel table: " . $stmt->error);
@@ -81,23 +106,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->close();
 
         // ---- Step 2: Insert into expenses table ----
-        // TotalExpense = fuel.amount + SalaryAmount + MobileAmount + OtherAmount
-        $total_expense = $_SESSION['fuel_amount'] + $_SESSION['expenses_salary'] + $_SESSION['expenses_mobile_fee'] + $_SESSION['expenses_other_amount'];
-
+        // TotalExpense is already provided in $expenses_data['total']
         $expenses_query = "INSERT INTO expenses (Date, SalaryAmount, MobileAmount, OtherAmount, TotalExpense, FuelID)
                            VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($expenses_query);
         if (!$stmt) {
             throw new Exception("Prepare failed for expenses query: ({$conn->errno}) {$conn->error}");
         }
+        $expenses_date = $transaction_date; // Assuming expenses date is the same as transaction date
         $stmt->bind_param(
             "sddddi",
-            $_SESSION['expenses_date'],      // "s" - string (date)
-            $_SESSION['expenses_salary'],    // "d" - double (SalaryAmount)
-            $_SESSION['expenses_mobile_fee'],// "d" - double (MobileAmount)
-            $_SESSION['expenses_other_amount'],// "d" - double (OtherAmount)
-            $total_expense,                  // "d" - double (TotalExpense)
-            $fuel_id                         // "i" - integer (FuelID)
+            $expenses_date,                      // "s" - string (date)
+            $expenses_data['salary'],            // "d" - double (SalaryAmount)
+            $expenses_data['mobile_fee'],        // "d" - double (MobileAmount)
+            $expenses_data['other_amount'],      // "d" - double (OtherAmount)
+            $expenses_data['total'],             // "d" - double (TotalExpense)
+            $fuel_id                             // "i" - integer (FuelID)
         );
         if (!$stmt->execute()) {
             throw new Exception("Failed to insert into expenses table: " . $stmt->error);
@@ -106,12 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->close();
 
         // ---- Step 3: Calculate Rounded Total KGs ----
-        $total_kgs = $_SESSION['total_kgs'];
+        $total_kgs = array_sum(array_column($transactions, 'kgs'));
         $rounded_total_kgs = round_up_kgs($total_kgs);
-        $_SESSION['rounded_total_kgs'] = $rounded_total_kgs;
 
         // ---- Step 4: Retrieve ClusterID using the OutletName from the first transaction ----
-        $transactions = $_SESSION['transactions'] ?? [];
         if (!empty($transactions)) {
             $first_outlet_name = $transactions[0]['outletName'];
             $customer_query = "SELECT CustomerID, ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?)";
@@ -128,7 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($customer_result->num_rows > 0) {
                 $customer = $customer_result->fetch_assoc();
                 $cluster_id = $customer['ClusterID'];
-                $_SESSION['cluster_id'] = $cluster_id; // Store ClusterID in session
             } else {
                 // Handle the case where the OutletName does not exist in the Customers table
                 throw new Exception("The Outlet Name '{$first_outlet_name}' does not exist in the Customers table.");
@@ -152,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!$stmt) {
                 throw new Exception("Prepare failed for cluster query: ({$conn->errno}) {$conn->error}");
             }
-            $fuel_unit_price = $_SESSION['fuel_unit_price'];
+            $fuel_unit_price = $fuel_data['unit_price'];
             $stmt->bind_param("idd", $cluster_id, $fuel_unit_price, $tonner);
             if (!$stmt->execute()) {
                 throw new Exception("Failed to execute cluster query: " . $stmt->error);
@@ -162,26 +183,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($cluster_result->num_rows > 0) {
                 $cluster = $cluster_result->fetch_assoc();
                 $rate_amount = $cluster['RateAmount']; // Retrieved based on ClusterID, FuelPrice, and Tonner
-                $_SESSION['rate_amount'] = $rate_amount; // Store RateAmount in session
             } else {
                 throw new Exception("No RateAmount found in clusters table for ClusterID '{$cluster_id}', FuelPrice '{$fuel_unit_price}', and Tonner '{$tonner}'.");
             }
             $stmt->close();
         } else {
             $rate_amount = 0;
-            $_SESSION['rate_amount'] = $rate_amount; // Store RateAmount in session
         }
 
         // ---- Step 6: Retrieve TotalExpense from expenses data ----
-        // Already computed as $total_expense during Step 2
+        $total_expense = $expenses_data['total'];
 
-        // ---- Step 7: Retrieve Toll Fee Amount from session ----
-        $toll_fee_amount = $_SESSION['toll_fee_amount'];
+        // ---- Step 7: Retrieve Toll Fee Amount ----
+        $toll_fee_amount = floatval($toll_fee_amount);
 
         // ---- Step 8: Calculate Final Amount ----
         // Final Amount = RateAmount + TollFeeAmount
         $final_amount = $rate_amount + $toll_fee_amount;
-        $_SESSION['final_amount'] = $final_amount; // Store Final Amount in session
 
         // ---- Step 9: Insert into transactiongroup table ----
         $transaction_group_query = "INSERT INTO transactiongroup (TruckID, Date, TollFeeAmount, RateAmount, Amount, TotalKGs, ExpenseID)
@@ -192,13 +210,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->bind_param(
             "isddiid",
-            $_SESSION['truck_id'],          // "i" - integer
-            $_SESSION['transaction_date'],  // "s" - string (date)
-            $toll_fee_amount,               // "d" - double (decimal)
-            $rate_amount,                   // "d" - double (decimal)
-            $final_amount,                  // "d" - double (decimal)
-            $rounded_total_kgs,             // "i" - integer (Rounded Total KGs)
-            $expense_id                     // "i" - integer (ExpenseID)
+            $truck_id,                          // "i" - integer
+            $transaction_date,                  // "s" - string (date)
+            $toll_fee_amount,                   // "d" - double (decimal)
+            $rate_amount,                       // "d" - double (decimal)
+            $final_amount,                      // "d" - double (decimal)
+            $rounded_total_kgs,                 // "i" - integer (Rounded Total KGs)
+            $expense_id                         // "i" - integer (ExpenseID)
         );
         if (!$stmt->execute()) {
             throw new Exception("Failed to insert into transactiongroup table: " . $stmt->error);
@@ -217,15 +235,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Ensure that 'quantity' and 'kgs' are numeric values
             $quantity = isset($txn['quantity']) && is_numeric($txn['quantity']) ? floatval($txn['quantity']) : 0;
             $kgs = isset($txn['kgs']) && is_numeric($txn['kgs']) ? floatval($txn['kgs']) : 0;
+            $drNo = isset($txn['drNo']) ? intval($txn['drNo']) : 0;
+            $outletName = $txn['outletName'] ?? '';
 
             $stmt->bind_param(
                 "isissd",
                 $transaction_group_id,         // "i" - integer
-                $_SESSION['transaction_date'], // "s" - string (date)
-                $txn['drNo'],                  // "i" - integer
-                $txn['outletName'],            // "s" - string
-                $quantity,                     // "s" - string (if Qty is string; change to "d" if decimal)
-                $kgs                           // "d" - double (decimal)
+                $transaction_date,             // "s" - string (date)
+                $drNo,                         // "i" - integer
+                $outletName,                   // "s" - string
+                $quantity,                     // "d" - double
+                $kgs                           // "d" - double
             );
             if (!$stmt->execute()) {
                 throw new Exception("Failed to insert into transactions table: " . $stmt->error);
@@ -259,38 +279,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         // ---- End of Activity Log Insertion ----
 
-        // ---- Step 12: Clear transaction-related session data ----
-        unset(
-            $_SESSION['toll_fee_amount'],
-            $_SESSION['fuel_date'],
-            $_SESSION['fuel_liters'],
-            $_SESSION['fuel_unit_price'],
-            $_SESSION['fuel_type'],
-            $_SESSION['fuel_amount'],
-            $_SESSION['expenses_date'],
-            $_SESSION['expenses_salary'],
-            $_SESSION['expenses_mobile_fee'],
-            $_SESSION['expenses_other_amount'],
-            $_SESSION['total_kgs'],
-            $_SESSION['transactions'],
-            $_SESSION['cluster_id'],
-            $_SESSION['rate_amount'],
-            $_SESSION['final_amount'],
-            $_SESSION['truck_id'],
-            $_SESSION['transaction_date']
-        );
-
-        // ---- Step 13: Commit the transaction ----
+        // ---- Step 12: Commit the transaction ----
         $conn->commit();
 
-        // ---- Step 14: Redirect to a success page or display a success message ----
+        // ---- Step 13: Redirect to a success page or display a success message ----
         include '../officer/header.php';
         ?>
         <div class="body-wrapper">
             <div class="container-fluid">
                 <div class="card card-body py-3">
                     <h4 class="card-title">Transaction Saved Successfully</h4>
-                    <p>Your transaction group has been saved with Billing Invoice No: <strong>To Be Assigned</strong></p>
+                    <p>Your transaction group has been saved successfully.</p>
                     <a href="add_data.php" class="btn btn-primary">Add Another Transaction</a>
                 </div>
             </div>
@@ -313,7 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="card card-body py-3">
                     <h4 class="card-title">Error Saving Transaction</h4>
                     <p>An error occurred while saving the transaction: <?php echo htmlspecialchars($e->getMessage()); ?></p>
-                    <a href="transaction_summary.php" class="btn btn-danger">Go Back to Summary</a>
+                    <a href="add_data.php" class="btn btn-danger">Go Back to Add Data</a>
                 </div>
             </div>
         </div>
