@@ -162,27 +162,24 @@ include '../includes/db_connection.php';
           <!-- Tab panes -->
           <div class="tab-content p-4">
             <div class="tab-pane active" id="home" role="tabpanel">
-              <div class="row mt-3">
 
 
-              </div>
-              <div class="py-3">
-                <!-- Expense Table -->
-                <div class="table-controls mb-3">
-                  <div class="row align-items-center">
-                    <div class="col-md-4">
-                      <input type="text" id="searchBar" class="form-control" placeholder="Search..." onkeyup="filterTable()" />
-                    </div>
-                    <div class="col-md-4 offset-md-4 text-end">
-                      <select id="rowsPerPage" class="form-select w-auto d-inline" onchange="changeRowsPerPage()">
-                        <option value="5">5 rows</option>
-                        <option value="10">10 rows</option>
-                        <option value="20">20 rows</option>
-                      </select>
-                    </div>
+              <!-- Expense Table -->
+              <div class="table-controls mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <input type="text" id="searchBar" class="form-control" placeholder="Search..." onkeyup="filterTable()" />
+                  </div>
+                  <div class="col-md-4 offset-md-4 text-end">
+                    <select id="rowsPerPage" class="form-select w-auto d-inline" onchange="changeRowsPerPage()">
+                      <option value="5">5 rows</option>
+                      <option value="10">10 rows</option>
+                      <option value="20">20 rows</option>
+                    </select>
                   </div>
                 </div>
-
+              </div>
+              <div class="py-3">
                 <div class="table-responsive">
                   <table id="expenseTable" class="table text-center table-striped table-bordered">
                     <thead>
@@ -360,14 +357,8 @@ include '../includes/db_connection.php';
 
               </div>
             </div>
-            <div class="tab-pane py-3" id="profile" role="tabpanel">
-              <div class="row mb-3">
-                <div class="col-md-4 col-xl-3">
-                </div>
-                <div
-                  class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                </div>
-              </div>
+            <div class="tab-pane" id="profile" role="tabpanel">
+
 
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
@@ -383,66 +374,66 @@ include '../includes/db_connection.php';
                   </div>
                 </div>
               </div>
+              <div class="py-3">
+                <div class="table-responsive">
+                  <table id="fuelTable" class="table text-center table-striped table-bordered display text-nowrap">
+                    <thead>
+                      <tr>
+                        <th onclick="sortFuelTable(0)">Fuel ID</th>
+                        <th onclick="sortFuelTable(1)">Date</th>
+                        <th onclick="sortFuelTable(2)">Liters</th>
+                        <th onclick="sortFuelTable(3)">Unit Price</th>
+                        <th onclick="sortFuelTable(4)">Fuel Type</th>
+                        <th onclick="sortFuelTable(5)">Amount</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fuelTableBody">
+                      <?php
+                      include '../includes/db_connection.php';
 
-              <div class="table-responsive">
-                <table id="fuelTable" class="table text-center table-striped table-bordered display text-nowrap">
-                  <thead>
-                    <tr>
-                      <th onclick="sortFuelTable(0)">Fuel ID</th>
-                      <th onclick="sortFuelTable(1)">Date</th>
-                      <th onclick="sortFuelTable(2)">Liters</th>
-                      <th onclick="sortFuelTable(3)">Unit Price</th>
-                      <th onclick="sortFuelTable(4)">Fuel Type</th>
-                      <th onclick="sortFuelTable(5)">Amount</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="fuelTableBody">
-                    <?php
-                    include '../includes/db_connection.php';
+                      // Fetch data from the fuel table
+                      $sql = "SELECT FuelID, Date, Liters, UnitPrice, FuelType, Amount FROM fuel";
+                      $result = $conn->query($sql);
 
-                    // Fetch data from the fuel table
-                    $sql = "SELECT FuelID, Date, Liters, UnitPrice, FuelType, Amount FROM fuel";
-                    $result = $conn->query($sql);
+                      if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                          $fuelData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
 
-                    if ($result->num_rows > 0) {
-                      while ($row = $result->fetch_assoc()) {
-                        $fuelData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
-
-                        echo "<tr>";
-                        echo "<td>" . $row['FuelID'] . "</td>";
-                        echo "<td>" . $row['Date'] . "</td>";
-                        echo "<td>" . $row['Liters'] . "</td>";
-                        echo "<td>" . $row['UnitPrice'] . "</td>";
-                        echo "<td>" . $row['FuelType'] . "</td>";
-                        echo "<td>" . $row['Amount'] . "</td>";
-                        echo "<td>";
-                        echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelModal' onclick='populateFuelEditForm(" . $fuelData . ");'><i class='fs-4 ti ti-edit'></i></a>";
-                        echo "</td>";
-                        echo "</tr>";
+                          echo "<tr>";
+                          echo "<td>" . $row['FuelID'] . "</td>";
+                          echo "<td>" . $row['Date'] . "</td>";
+                          echo "<td>" . $row['Liters'] . "</td>";
+                          echo "<td>" . $row['UnitPrice'] . "</td>";
+                          echo "<td>" . $row['FuelType'] . "</td>";
+                          echo "<td>" . $row['Amount'] . "</td>";
+                          echo "<td>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelModal' onclick='populateFuelEditForm(" . $fuelData . ");'><i class='fs-4 ti ti-edit'></i></a>";
+                          echo "</td>";
+                          echo "</tr>";
+                        }
+                      } else {
+                        echo "<tr><td colspan='7'>No records found</td></tr>";
                       }
-                    } else {
-                      echo "<tr><td colspan='7'>No records found</td></tr>";
-                    }
-                    $conn->close();
-                    ?>
-                  </tbody>
-                </table>
+                      $conn->close();
+                      ?>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
+                  <!-- Previous button with margin on the right for spacing -->
+                  <button id="fuelPrevBtn" class="btn btn-primary me-2" onclick="prevFuelPage()">Previous</button>
+
+                  <!-- Bootstrap pagination component for page numbers -->
+                  <nav>
+                    <ul class="pagination mb-0" id="fuelPaginationNumbers"></ul>
+                  </nav>
+
+                  <!-- Next button with margin on the left for spacing -->
+                  <button id="fuelNextBtn" class="btn btn-primary ms-2" onclick="nextFuelPage()">Next</button>
+                </div>
               </div>
-
-              <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-                <!-- Previous button with margin on the right for spacing -->
-                <button id="fuelPrevBtn" class="btn btn-primary me-2" onclick="prevFuelPage()">Previous</button>
-
-                <!-- Bootstrap pagination component for page numbers -->
-                <nav>
-                  <ul class="pagination mb-0" id="fuelPaginationNumbers"></ul>
-                </nav>
-
-                <!-- Next button with margin on the left for spacing -->
-                <button id="fuelNextBtn" class="btn btn-primary ms-2" onclick="nextFuelPage()">Next</button>
-              </div>
-
 
 
               <!-- Edit Fuel Modal -->

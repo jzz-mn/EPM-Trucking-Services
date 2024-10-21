@@ -617,139 +617,146 @@ include '../officer/header.php';
 
               </div>
             </div>
+
             <div class="tab-pane" id="trucks" role="tabpanel">
-              <div class="row mt-3">
-                <div class="col-md-4 col-xl-3">
-                  <!-- Search Bar -->
-                  <input type="text" id="trucksSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTrucksTable()" />
+              <div class="table-controls mb-3">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <!-- Search Bar -->
+                    <input type="text" id="trucksSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTrucksTable()" />
+                  </div>
+                  <div class="col-md-4 offset-md-4 text-end">
+                  </div>
                 </div>
               </div>
+
+              <!-- Trucks Table -->
+              <?php
+              include '../includes/db_connection.php';
+              $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+              $result = $conn->query($query);
+              ?>
               <div class="py-3">
-                <!-- Trucks Table -->
-                <?php
-                include '../includes/db_connection.php';
-                $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
-                $result = $conn->query($query);
-                ?>
-                <div class="table-responsive">
-                  <table id="trucksTable" class="table text-center table-striped table-bordered display text-nowrap">
-                    <thead>
-                      <tr>
-                        <th>Truck ID</th>
-                        <th>Plate Number</th>
-                        <th>Truck Brand</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody id="trucksTableBody">
-                      <?php
-                      if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                          $truckData = json_encode($row);  // Prepare the row data as a JSON object
-                          echo "<tr>";
-                          echo "<td>" . $row['TruckID'] . "</td>";
-                          echo "<td>" . $row['PlateNo'] . "</td>";
-                          echo "<td>" . $row['TruckBrand'] . "</td>";
-                          echo "<td>";
-                          // Add a data-attribute to store the row data and attach the edit button
-                          echo "<a href='#' class='me-3 text-primary edit-truck-btn' data-bs-toggle='modal' data-truck='" . htmlspecialchars($truckData) . "'>";
-                          echo "<i class='fs-4 ti ti-edit'></i></a>";
-                          echo "</td>";
-                          echo "</tr>";
-                        }
-                      } else {
-                        echo "<tr><td colspan='4' class='text-center'>No data available</td></tr>";
+              <div class="table-responsive">
+                <table id="trucksTable" class="table text-center table-striped table-bordered display text-nowrap">
+                  <thead>
+                    <tr>
+                      <th onclick="sortTrucksTable(0)">Truck ID</th>
+                      <th onclick="sortTrucksTable(1)">Plate Number</th>
+                      <th onclick="sortTrucksTable(2)">Truck Brand</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="trucksTableBody">
+                    <?php
+                    if ($result->num_rows > 0) {
+                      while ($row = $result->fetch_assoc()) {
+                        $truckData = json_encode($row);  // Prepare the row data as a JSON object
+                        echo "<tr>";
+                        echo "<td>" . $row['TruckID'] . "</td>";
+                        echo "<td>" . $row['PlateNo'] . "</td>";
+                        echo "<td>" . $row['TruckBrand'] . "</td>";
+                        echo "<td>";
+                        // Add a data-attribute to store the row data and attach the edit button
+                        echo "<a href='#' class='me-3 text-primary edit-truck-btn' data-bs-toggle='modal' data-truck='" . htmlspecialchars($truckData) . "'>";
+                        echo "<i class='fs-4 ti ti-edit'></i></a>";
+                        echo "</td>";
+                        echo "</tr>";
                       }
-                      ?>
-                    </tbody>
-                  </table>
-                </div>
+                    } else {
+                      echo "<tr><td colspan='4' class='text-center'>No data available</td></tr>";
+                    }
+                    ?>
+                  </tbody>
+                </table>
               </div>
             </div>
-
           </div>
+        </div>
 
         </div>
+
       </div>
     </div>
-    <script>
-      // Function to populate the Edit Maintenance modal with the selected record data
-      function populateEditMaintenanceForm(maintenance) {
-        // Map month names to numbers
-        const monthMap = {
-          'January': '1',
-          'February': '2',
-          'March': '3',
-          'April': '4',
-          'May': '5',
-          'June': '6',
-          'July': '7',
-          'August': '8',
-          'September': '9',
-          'October': '10',
-          'November': '11',
-          'December': '12'
-        };
-
-        let monthValue = maintenance.Month;
-
-        // If the month is a name, map it to its numeric value
-        if (isNaN(monthValue)) {
-          monthValue = monthMap[monthValue];
-        }
-
-        // Set values in the modal based on the selected maintenance row
-        document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-        document.getElementById("maintenanceYear").value = maintenance.Year;
-        document.getElementById("maintenanceMonth").value = monthValue; // Set month
-        document.getElementById("maintenanceCategory").value = maintenance.Category;
-        document.getElementById("maintenanceDescription").value = maintenance.Description;
-        document.getElementById("maintenanceAmount").value = maintenance.Amount;
-      }
-
-      // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
-      function attachMaintenanceEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-        editButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
-            populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
-            $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
-          });
-        });
-      }
-
-      // Execute this function when the document is fully loaded
-      document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
-    </script>
-    <script>
-      // Function to populate the Edit Transaction modal with the selected record data1
-      function populateEditTransactionForm(transaction) {
-        // Set values in the modal based on the selected transaction
-        document.getElementById("transactionId").value = transaction.TransactionID;
-        document.getElementById("transactionDate").value = transaction.TransactionDate;
-        document.getElementById("drNo").value = transaction.DRno;
-        document.getElementById("outletName").value = transaction.OutletName;
-        document.getElementById("qty").value = transaction.Qty;
-        document.getElementById("kgs").value = transaction.KGs;
-      }
-
-      // Attach the 'populateEditTransactionForm' function to the edit button in your table
-      function attachTransactionEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-transaction-btn');
-        editButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
-            populateEditTransactionForm(transactionData); // Populate modal with transaction data
-            $('#editTransactionModal').modal('show'); // Show the modal
-          });
-        });
-      }
-
-      // Execute this function when the document is fully loaded
-      document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
-    </script>
   </div>
+  <script>
+    // Function to populate the Edit Maintenance modal with the selected record data
+    function populateEditMaintenanceForm(maintenance) {
+      // Map month names to numbers
+      const monthMap = {
+        'January': '1',
+        'February': '2',
+        'March': '3',
+        'April': '4',
+        'May': '5',
+        'June': '6',
+        'July': '7',
+        'August': '8',
+        'September': '9',
+        'October': '10',
+        'November': '11',
+        'December': '12'
+      };
+
+      let monthValue = maintenance.Month;
+
+      // If the month is a name, map it to its numeric value
+      if (isNaN(monthValue)) {
+        monthValue = monthMap[monthValue];
+      }
+
+      // Set values in the modal based on the selected maintenance row
+      document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+      document.getElementById("maintenanceYear").value = maintenance.Year;
+      document.getElementById("maintenanceMonth").value = monthValue; // Set month
+      document.getElementById("maintenanceCategory").value = maintenance.Category;
+      document.getElementById("maintenanceDescription").value = maintenance.Description;
+      document.getElementById("maintenanceAmount").value = maintenance.Amount;
+    }
+
+    // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
+    function attachMaintenanceEditButtons() {
+      const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+      editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
+          populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
+          $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+        });
+      });
+    }
+
+    // Execute this function when the document is fully loaded
+    document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
+  </script>
+  <script>
+    // Function to populate the Edit Transaction modal with the selected record data1
+    function populateEditTransactionForm(transaction) {
+      // Set values in the modal based on the selected transaction
+      document.getElementById("transactionId").value = transaction.TransactionID;
+      document.getElementById("transactionDate").value = transaction.TransactionDate;
+      document.getElementById("drNo").value = transaction.DRno;
+      document.getElementById("outletName").value = transaction.OutletName;
+      document.getElementById("qty").value = transaction.Qty;
+      document.getElementById("kgs").value = transaction.KGs;
+    }
+
+    // Attach the 'populateEditTransactionForm' function to the edit button in your table
+    function attachTransactionEditButtons() {
+      const editButtons = document.querySelectorAll('.edit-transaction-btn');
+      editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
+          populateEditTransactionForm(transactionData); // Populate modal with transaction data
+          $('#editTransactionModal').modal('show'); // Show the modal
+        });
+      });
+    }
+
+    // Execute this function when the document is fully loaded
+    document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
+  </script>
+</div>
 </div>
 
 <script>
@@ -794,20 +801,34 @@ include '../officer/header.php';
 
   function sortMaintenanceTable(columnIndex) {
     let table = document.getElementById("maintenanceTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    maintenanceSortAscending = maintenanceSortColumn === columnIndex ? !maintenanceSortAscending : true;
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+    maintenanceSortAscending = maintenanceSortColumn === columnIndex ? !maintenanceSortAscending : true; // Toggle sorting direction
     maintenanceSortColumn = columnIndex;
 
+    // Determine if the column contains numeric values (e.g., Maintenance ID, Year, Amount)
+    let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5); // Numeric columns: MaintenanceID, Year, Amount
+
     let sortedRows = rows.sort((a, b) => {
-      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+      // Sort numerically if it's a numeric column
+      if (isNumericColumn) {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+        return maintenanceSortAscending ? aValue - bValue : bValue - aValue;
+      }
+
+      // Otherwise, sort alphabetically
       return maintenanceSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
+    // Clear and append sorted rows
     let tableBody = document.getElementById("maintenanceTableBody");
     tableBody.innerHTML = "";
     sortedRows.forEach(row => tableBody.appendChild(row));
 
+    // Update the sorting icons
     updateMaintenanceSortIcons(columnIndex, maintenanceSortAscending);
   }
 
@@ -830,20 +851,34 @@ include '../officer/header.php';
 
   function sortTransactionsTable(columnIndex) {
     let table = document.getElementById("transactionsTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    transactionsSortAscending = transactionsSortColumn === columnIndex ? !transactionsSortAscending : true;
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+    transactionsSortAscending = transactionsSortColumn === columnIndex ? !transactionsSortAscending : true; // Toggle sorting direction
     transactionsSortColumn = columnIndex;
 
+    // Determine if the column contains numeric values (e.g., TransactionID, TransactionGroupID, Qty, KGs)
+    let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5 || columnIndex === 6); // Numeric columns: TransactionID, TransactionGroupID, Qty, KGs
+
     let sortedRows = rows.sort((a, b) => {
-      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+      // Sort numerically if it's a numeric column
+      if (isNumericColumn) {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+        return transactionsSortAscending ? aValue - bValue : bValue - aValue;
+      }
+
+      // Otherwise, sort alphabetically
       return transactionsSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
+    // Clear and append sorted rows
     let tableBody = document.getElementById("transactionsTableBody");
     tableBody.innerHTML = "";
     sortedRows.forEach(row => tableBody.appendChild(row));
 
+    // Update the sorting icons
     updateTransactionsSortIcons(columnIndex, transactionsSortAscending);
   }
 
@@ -860,34 +895,49 @@ include '../officer/header.php';
 
 <!-- Trucks Table -->
 <script>
+  // Sorting logic for Trucks Table
   let trucksSortColumn = -1;
   let trucksSortAscending = true;
 
   function sortTrucksTable(columnIndex) {
     let table = document.getElementById("trucksTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    trucksSortAscending = trucksSortColumn === columnIndex ? !trucksSortAscending : true;
+    let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+    trucksSortAscending = trucksSortColumn === columnIndex ? !trucksSortAscending : true; // Toggle sorting direction
     trucksSortColumn = columnIndex;
 
+    // Determine if the column contains numeric values (for sorting numerically)
+    let isNumericColumn = columnIndex === 0; // Assume TruckID (columnIndex 0) is numeric
+
     let sortedRows = rows.sort((a, b) => {
-      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+      // Sort numerically if it's a numeric column
+      if (isNumericColumn) {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+        return trucksSortAscending ? aValue - bValue : bValue - aValue;
+      }
+
+      // Otherwise, sort alphabetically
       return trucksSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     });
 
+    // Clear and append sorted rows
     let tableBody = document.getElementById("trucksTableBody");
     tableBody.innerHTML = "";
     sortedRows.forEach(row => tableBody.appendChild(row));
 
+    // Update the sorting icons
     updateTrucksSortIcons(columnIndex, trucksSortAscending);
   }
 
   function updateTrucksSortIcons(columnIndex, ascending) {
     const headers = document.querySelectorAll("#trucksTable th");
     headers.forEach((header, index) => {
-      header.innerHTML = header.innerText;
+      header.classList.remove('ascending', 'descending'); // Remove previous sorting class
       if (index === columnIndex) {
-        header.innerHTML += ascending ? " &#9650;" : " &#9660;";
+        header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
       }
     });
   }
