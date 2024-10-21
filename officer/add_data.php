@@ -40,23 +40,6 @@ $truck_result = $conn->query($truck_query);
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Handle Truck Selection and Transaction Date
-    if (isset($_POST['transaction_date']) && isset($_POST['truck_id'])) {
-        $_SESSION['transaction_date'] = $_POST['transaction_date'];
-        $_SESSION['truck_id'] = $_POST['truck_id'];
-
-        // Fetch truck details for display
-        $truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
-        $stmt = $conn->prepare($truck_query);
-        $stmt->bind_param("i", $_SESSION['truck_id']);
-        $stmt->execute();
-        $truck_result_display = $stmt->get_result();
-        $truck_display = $truck_result_display->fetch_assoc();
-        $stmt->close();
-    } else {
-        $errors[] = "Please select a truck and date.";
-    }
-
     // Handle Transactions Data
     if (isset($_POST['transactions_json'])) {
         $_SESSION['transactions'] = json_decode($_POST['transactions_json'], true);
@@ -93,9 +76,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Handle Final Submission
     if (isset($_POST['final_submit'])) {
         // Validate that all necessary data is present
-        if (!isset($_SESSION['transaction_date'], $_SESSION['truck_id'], $_SESSION['transactions'], $_SESSION['fuel_data'], $_SESSION['expenses_data'], $_SESSION['toll_fee_amount'])) {
+        if (
+            empty($_POST['transaction_date']) ||
+            empty($_POST['truck_id']) ||
+            empty($_SESSION['transactions']) ||
+            empty($_SESSION['fuel_data']) ||
+            empty($_SESSION['expenses_data']) ||
+            empty($_SESSION['toll_fee_amount'])
+        ) {
             $errors[] = "Please complete all sections of the form.";
         } else {
+            // Save transaction_date and truck_id in session
+            $_SESSION['transaction_date'] = $_POST['transaction_date'];
+            $_SESSION['truck_id'] = $_POST['truck_id'];
+
             // Begin database transaction
             $conn->begin_transaction();
             try {
@@ -163,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Fetch truck details for display if not already fetched
+// Fetch truck details for display
 if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
     $truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
     $stmt = $conn->prepare($truck_query);
@@ -225,233 +219,223 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
         <!-- Multi-Step Form -->
         <form id="add-data-form" method="POST" action="save_transaction_group.php">
-            <h5 class="border-bottom py-2 px-4 mb-4">Transaction Form</h5>
-            <div class="card p-0">
-                <!-- Step 1: Truck Selection -->
-                <section id="truck-selection" class="mb-5">
-
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h4 class="card-title ">Select Truck and Date</h4>
-                            <p class="card-subtitle">Choose a truck and set the date for your transaction group.</p>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <!-- Date Field -->
-                                <div class="col-md-6">
-                                    <label for="transaction-date" class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="transaction-date"
-                                        name="transaction_date"
-                                        value="<?php echo $_SESSION['transaction_date'] ?? date('Y-m-d'); ?>" required>
-                                </div>
-                                <!-- Truck Selection -->
-                                <div class="col-md-6">
-                                    <label for="truck-select" class="form-label">Select Truck</label>
-                                    <select class="form-select" id="truck-select" name="truck_id" required>
-                                        <option value="" disabled <?php echo isset($_SESSION['truck_id']) ? '' : 'selected'; ?>>Select a truck</option>
-                                        <?php
-                                        if ($truck_result->num_rows > 0) {
-                                            while ($truck = $truck_result->fetch_assoc()) {
-                                                $selected = (isset($_SESSION['truck_id']) && $_SESSION['truck_id'] == $truck['TruckID']) ? 'selected' : '';
-                                                echo '<option value="' . $truck['TruckID'] . '" ' . $selected . '>' . $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . '</option>';
-                                            }
-                                        } else {
-                                            echo '<option value="">No trucks available</option>';
+            <!-- Step 1: Truck Selection -->
+            <section id="truck-selection" class="mb-5">
+                <h5 class="border-bottom py-2 px-4 mb-4">Truck Selection</h5>
+                <div class="card w-100 border position-relative overflow-hidden mb-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title">Select Truck and Date</h4>
+                        <p class="card-subtitle mb-4">Choose a truck and set the date for your transaction group.</p>
+                        <div class="row g-3">
+                            <!-- Date Field -->
+                            <div class="col-md-6">
+                                <label for="transaction-date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="transaction-date" name="transaction_date"
+                                    value="<?php echo $_SESSION['transaction_date'] ?? date('Y-m-d'); ?>" required>
+                            </div>
+                            <!-- Truck Selection -->
+                            <div class="col-md-6">
+                                <label for="truck-select" class="form-label">Select Truck</label>
+                                <select class="form-select" id="truck-select" name="truck_id" required>
+                                    <option value="" disabled <?php echo isset($_SESSION['truck_id']) ? '' : 'selected'; ?>>Select a truck</option>
+                                    <?php
+                                    if ($truck_result->num_rows > 0) {
+                                        while ($truck = $truck_result->fetch_assoc()) {
+                                            $selected = (isset($_SESSION['truck_id']) && $_SESSION['truck_id'] == $truck['TruckID']) ? 'selected' : '';
+                                            echo '<option value="' . $truck['TruckID'] . '" ' . $selected . '>' . $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . '</option>';
                                         }
-                                        ?>
-                                    </select>
-                                </div>
+                                    } else {
+                                        echo '<option value="">No trucks available</option>';
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <?php if (isset($_SESSION['transaction_date'], $_SESSION['truck_id'])): ?>
-                    <!-- Step 2: Transactions Entry -->
-                    <section id="transactions-entry" class="mb-5">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4 class="card-title ">Add New Transaction</h4>
-                                <p class="card-subtitle">Choose a truck and set the date for your transaction group.</p>
-                            </div>
-                            <div class="card-body">
-                                <div id="add-transaction-form">
-                                    <div class="row g-3 align-items-end">
-                                        <!-- Outlet Name with Autocomplete and Validation -->
-                                        <div class="col-md-4 position-relative">
-                                            <label for="input-outlet-name" class="form-label">Outlet Name</label>
-                                            <input type="text" class="form-control" id="input-outlet-name"
-                                                placeholder="Search Outlet Name" autocomplete="off">
-                                            <div id="outlet-suggestions" class="list-group position-absolute w-100"
-                                                style="z-index: 1000; background-color: white;"></div>
-                                            <!-- Validation Feedback -->
-                                            <div class="invalid-feedback" id="outlet-error">
-                                                Outlet Name does not exist.
-                                            </div>
-                                        </div>
-                                        <!-- Quantity -->
-                                        <div class="col-md-3">
-                                            <label for="input-quantity" class="form-label">Quantity</label>
-                                            <input type="number" class="form-control" id="input-quantity"
-                                                placeholder="Quantity" step="0.01">
-                                        </div>
-                                        <!-- KGs -->
-                                        <div class="col-md-3">
-                                            <label for="input-kgs" class="form-label">KGs</label>
-                                            <input type="number" class="form-control" id="input-kgs" placeholder="KGs"
-                                                step="0.01">
-                                        </div>
-                                        <!-- Add Transaction Button -->
-                                        <div class="col-md-2">
-                                            <button type="button" class="btn btn-primary w-100" id="add-transaction-btn">Add
-                                                Transaction</button>
-                                        </div>
+            <!-- Step 2: Transactions Entry -->
+            <section id="transactions-entry" class="mb-5">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Add New Transaction</h5>
+                        <div id="add-transaction-form">
+                            <div class="row g-3 align-items-end">
+                                <!-- Outlet Name with Autocomplete and Validation -->
+                                <div class="col-md-4 position-relative">
+                                    <label for="input-outlet-name" class="form-label">Outlet Name</label>
+                                    <input type="text" class="form-control" id="input-outlet-name"
+                                        placeholder="Search Outlet Name" autocomplete="off">
+                                    <div id="outlet-suggestions" class="list-group position-absolute w-100"
+                                        style="z-index: 1000; background-color: white;"></div>
+                                    <!-- Validation Feedback -->
+                                    <div class="invalid-feedback" id="outlet-error">
+                                        Outlet Name does not exist.
                                     </div>
                                 </div>
-
-                                <div class="card-body px-0">
-                                    <h5 class="card-title">Transactions Entry</h5>
-                                    <div class="table-responsive">
-                                        <table
-                                            class="table table-striped table-bordered text-nowrap align-middle text-center"
-                                            id="transactions-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>DR No</th>
-                                                    <th>Outlet Name</th>
-                                                    <th>Quantity</th>
-                                                    <th>KGs</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="transactions-body">
-                                                <!-- Transactions will be appended here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- Hidden input to store transactions data -->
-                                    <input type="hidden" name="transactions_json" id="transactions-json">
+                                <!-- Quantity -->
+                                <div class="col-md-3">
+                                    <label for="input-quantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="input-quantity" placeholder="Quantity"
+                                        step="0.01">
+                                </div>
+                                <!-- KGs -->
+                                <div class="col-md-3">
+                                    <label for="input-kgs" class="form-label">KGs</label>
+                                    <input type="number" class="form-control" id="input-kgs" placeholder="KGs"
+                                        step="0.01">
+                                </div>
+                                <!-- Add Transaction Button -->
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary w-100" id="add-transaction-btn">Add
+                                        Transaction</button>
                                 </div>
                             </div>
                         </div>
-                    </section>
 
-                    <!-- Step 3: Fuel Entry -->
-                    <section id="fuel-entry" class="mb-5">
-
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4 class="card-title ">Fuel Entry</h4>
-                                <p class="card-subtitle">Enter fuel details for the transaction group below.</p>
+                        <div class="card-body px-0">
+                            <h5 class="card-title">Transactions Entry</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered text-nowrap align-middle text-center"
+                                    id="transactions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>DR No</th>
+                                            <th>Outlet Name</th>
+                                            <th>Quantity</th>
+                                            <th>KGs</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactions-body">
+                                        <!-- Transactions will be appended here -->
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="card-body">
-                                <!-- Fuel Entry Form -->
-                                <div class="row g-3">
-                                    <!-- Liters -->
-                                    <div class="col-md-6">
-                                        <label for="fuel-liters" class="form-label">Liters</label>
-                                        <input type="number" class="form-control" id="fuel-liters" name="fuel_liters"
-                                            placeholder="Enter liters" step="0.01">
-                                    </div>
-                                    <!-- Unit Price -->
-                                    <div class="col-md-6">
-                                        <label for="fuel-unit-price" class="form-label">Unit Price</label>
-                                        <input type="number" class="form-control" id="fuel-unit-price"
-                                            name="fuel_unit_price" placeholder="Enter price per liter" step="0.01">
-                                    </div>
-                                </div>
-
-                                <div class="row g-3 mt-3">
-                                    <!-- Fuel Type -->
-                                    <div class="col-md-6">
-                                        <label for="fuel-type" class="form-label">Fuel Type</label>
-                                        <select class="form-select" id="fuel-type" name="fuel_type">
-                                            <option value="" disabled selected>Select fuel type</option>
-                                            <option value="Diesel">Diesel</option>
-                                            <option value="Gasoline">Gasoline</option>
-                                        </select>
-                                    </div>
-                                    <!-- Amount (Calculated) -->
-                                    <div class="col-md-6">
-                                        <label for="fuel-amount" class="form-label">Amount</label>
-                                        <input type="number" class="form-control" id="fuel-amount" name="fuel_amount"
-                                            placeholder="Calculated amount" step="0.01" readonly>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Hidden input to store transactions data -->
+                            <input type="hidden" name="transactions_json" id="transactions-json">
                         </div>
-                    </section>
-
-                    <!-- Step 4: Expenses Entry -->
-                    <section id="expenses-entry" class="mb-5">
-                        <div class="card mb-4 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="card-title">Expenses Entry</h4>
-                                <p class="card-subtitle">Enter expense details for the transaction group.</p>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <!-- Salary Amount -->
-                                    <div class="col-md-6">
-                                        <label for="expenses-salary" class="form-label">Salary Amount</label>
-                                        <input type="number" class="form-control" id="expenses-salary"
-                                            name="expenses_salary" step="0.01" min="0">
-                                    </div>
-
-                                    <!-- Mobile Fee Amount -->
-                                    <div class="col-md-6">
-                                        <label for="expenses-mobile-fee" class="form-label">Mobile Fee Amount</label>
-                                        <input type="number" class="form-control" id="expenses-mobile-fee"
-                                            name="expenses_mobile_fee" step="0.01" min="0">
-                                    </div>
-
-                                    <!-- Other Amount -->
-                                    <div class="col-md-6">
-                                        <label for="expenses-other-amount" class="form-label">Other Amount</label>
-                                        <input type="number" class="form-control" id="expenses-other-amount"
-                                            name="expenses_other_amount" step="0.01" min="0">
-                                    </div>
-
-                                    <!-- Total Expense (Calculated) -->
-                                    <div class="col-md-6">
-                                        <label for="expenses-total" class="form-label">Total Expense</label>
-                                        <input type="number" class="form-control" id="expenses-total" name="expenses_total"
-                                            step="0.01" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Step 5: Transaction Summary -->
-                    <section id="transaction-summary" class="mb-5">
-                        <div class="card mb-4 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="card-title">Transaction Summary</h4>
-                                <p class="card-subtitle">Review all the data before final submission.</p>
-                            </div>
-                            <div class="card-body">
-                                <!-- Display Summary of All Data -->
-                                <div id="summary-content">
-                                    <!-- Summary will be generated by JavaScript -->
-                                </div>
-                                <!-- Toll Fee Input -->
-                                <div class="row g-3 mt-3">
-                                    <div class="col-md-6">
-                                        <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
-                                        <input type="number" class="form-control" id="toll-fee-amount"
-                                            name="toll_fee_amount" step="0.01" min="0" required>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Final Submission Button -->
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" name="final_submit" class="btn btn-success">Submit All Data</button>
                     </div>
-                <?php endif; ?>
+                </div>
+            </section>
+
+            <!-- Step 3: Fuel Entry -->
+            <section id="fuel-entry" class="mb-5">
+                <h5 class="border-bottom py-2 px-4 mb-4">Fuel Entry</h5>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h4 class="card-title ">Fuel Entry</h4>
+                        <p class="card-subtitle">Enter fuel details for the transaction group below.</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Fuel Entry Form -->
+                        <div class="row g-3">
+                            <!-- Liters -->
+                            <div class="col-md-6">
+                                <label for="fuel-liters" class="form-label">Liters</label>
+                                <input type="number" class="form-control" id="fuel-liters" name="fuel_liters"
+                                    placeholder="Enter liters" step="0.01">
+                            </div>
+                            <!-- Unit Price -->
+                            <div class="col-md-6">
+                                <label for="fuel-unit-price" class="form-label">Unit Price</label>
+                                <input type="number" class="form-control" id="fuel-unit-price" name="fuel_unit_price"
+                                    placeholder="Enter price per liter" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <!-- Fuel Type -->
+                            <div class="col-md-6">
+                                <label for="fuel-type" class="form-label">Fuel Type</label>
+                                <select class="form-select" id="fuel-type" name="fuel_type">
+                                    <option value="" disabled selected>Select fuel type</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="Gasoline">Gasoline</option>
+                                </select>
+                            </div>
+                            <!-- Amount (Calculated) -->
+                            <div class="col-md-6">
+                                <label for="fuel-amount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="fuel-amount" name="fuel_amount"
+                                    placeholder="Calculated amount" step="0.01" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Expenses Entry -->
+            <section id="expenses-entry" class="mb-5">
+                <h5 class="border-bottom py-2 px-4 mb-4">Expenses Entry</h5>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h4 class="card-title">Expenses Entry</h4>
+                        <p class="card-subtitle">Enter expense details for the transaction group.</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Salary Amount -->
+                            <div class="col-md-6">
+                                <label for="expenses-salary" class="form-label">Salary Amount</label>
+                                <input type="number" class="form-control" id="expenses-salary" name="expenses_salary"
+                                    step="0.01" min="0">
+                            </div>
+
+                            <!-- Mobile Fee Amount -->
+                            <div class="col-md-6">
+                                <label for="expenses-mobile-fee" class="form-label">Mobile Fee Amount</label>
+                                <input type="number" class="form-control" id="expenses-mobile-fee"
+                                    name="expenses_mobile_fee" step="0.01" min="0">
+                            </div>
+
+                            <!-- Other Amount -->
+                            <div class="col-md-6">
+                                <label for="expenses-other-amount" class="form-label">Other Amount</label>
+                                <input type="number" class="form-control" id="expenses-other-amount"
+                                    name="expenses_other_amount" step="0.01" min="0">
+                            </div>
+
+                            <!-- Total Expense (Calculated) -->
+                            <div class="col-md-6">
+                                <label for="expenses-total" class="form-label">Total Expense</label>
+                                <input type="number" class="form-control" id="expenses-total" name="expenses_total"
+                                    step="0.01" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 5: Transaction Summary -->
+            <section id="transaction-summary" class="mb-5">
+                <h5 class="border-bottom py-2 px-4 mb-4">Transaction Summary</h5>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h4 class="card-title">Transaction Summary</h4>
+                        <p class="card-subtitle">Review all the data before final submission.</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Summary of All Data -->
+                        <div id="summary-content">
+                            <!-- Summary will be generated by JavaScript -->
+                        </div>
+                        <!-- Toll Fee Input -->
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
+                                <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount"
+                                    step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Final Submission Button -->
+            <div class="d-flex justify-content-end">
+                <button type="submit" name="final_submit" class="btn btn-success">Submit All Data</button>
             </div>
         </form>
     </div>
@@ -674,8 +658,12 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         // Generate Summary
         function generateSummary() {
             let summaryHtml = '<h5>Summary</h5>';
-            summaryHtml += '<p><strong>Truck:</strong> ' + <?php echo json_encode($truck_display['PlateNo'] . ' - ' . $truck_display['TruckBrand']); ?> + '</p>';
-            summaryHtml += '<p><strong>Date:</strong> ' + <?php echo json_encode($_SESSION['transaction_date']); ?> + '</p>';
+
+            let truckInfo = <?php echo isset($truck_display) ? json_encode($truck_display['PlateNo'] . ' - ' . $truck_display['TruckBrand']) : json_encode('No truck selected'); ?>;
+            let transactionDate = <?php echo json_encode($_SESSION['transaction_date'] ?? 'No date selected'); ?>;
+
+            summaryHtml += '<p><strong>Truck:</strong> ' + truckInfo + '</p>';
+            summaryHtml += '<p><strong>Date:</strong> ' + transactionDate + '</p>';
 
             // Transactions Summary
             summaryHtml += '<h6>Transactions</h6>';
@@ -818,12 +806,20 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 return;
             }
 
+            // Ensure that date and truck are selected
+            const transactionDate = $('#transaction-date').val();
+            const truckId = $('#truck-select').val();
+
+            if (transactionDate === '' || truckId === null) {
+                alert('Please select a date and truck.');
+                event.preventDefault();
+                return;
+            }
+
             // All validations passed, form will be submitted
         });
     });
 </script>
-
-
 
 <?php
 include '../officer/footer.php';
