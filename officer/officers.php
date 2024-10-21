@@ -223,7 +223,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
         }
 
         // Call the function on page load to set the initial state
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
           togglePasswordFields();
         });
       </script>
@@ -494,8 +494,8 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function () {
-    $('.edit-button').on('click', function () {
+  $(document).ready(function() {
+    $('.edit-button').on('click', function() {
       var officerID = $(this).data('officerid');
 
       $.ajax({
@@ -505,7 +505,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
           officerID: officerID
         },
         dataType: 'json',
-        success: function (data) {
+        success: function(data) {
           if (data.success) {
             // Populate the modal fields
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
@@ -529,14 +529,14 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             alert('Failed to fetch officer data.');
           }
         },
-        error: function () {
+        error: function() {
           alert('Error in AJAX request.');
         }
       });
     });
 
     // Handle "Reset Password" button click
-    $('#resetPasswordButton').on('click', function () {
+    $('#resetPasswordButton').on('click', function() {
       var userID = $('#editOfficerForm input[name="userID"]').val();
 
       if (confirm('Are you sure you want to reset the password for this officer?')) {
@@ -549,14 +549,14 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             userID: userID,
             role: 'Officer' // Indicate that this is an officer account
           },
-          success: function (data) {
+          success: function(data) {
             if (data.success) {
               alert('Password reset successfully. An email has been sent to the officer.');
             } else {
               alert('Error resetting password: ' + data.message);
             }
           },
-          error: function () {
+          error: function() {
             alert('An error occurred while resetting the password.');
           }
         });
@@ -567,8 +567,8 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
 
 <script>
-  $(document).ready(function () {
-    $('#editOfficerForm').submit(function (event) {
+  $(document).ready(function() {
+    $('#editOfficerForm').submit(function(event) {
       event.preventDefault(); // Prevent the form from submitting via the browser.
       var formData = $(this).serialize(); // Get form data.
 
@@ -577,7 +577,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
         url: "edit_officer.php",
         data: formData,
         dataType: "json",
-        success: function (response) {
+        success: function(response) {
           if (response.user_message) {
             $('#editContactModal').modal('hide'); // Hide the modal if success
             window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
@@ -585,7 +585,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             alert('Failed to update: ' + response.error);
           }
         },
-        error: function () {
+        error: function() {
           alert('Error updating officer.');
         }
       });
@@ -602,9 +602,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
     // AJAX request to check username
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -626,9 +626,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
     // AJAX request to check email
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -672,6 +672,25 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
   // Validate password match when user types
   passwordInput.addEventListener('input', validatePasswordMatch);
   confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+</script>
+
+<script>
+  document.getElementById('input-search').addEventListener('keyup', function() {
+    var searchTerm = this.value.toLowerCase();
+    var tableRows = document.querySelectorAll('tbody tr');
+
+    tableRows.forEach(function(row) {
+      var nameCell = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+      var positionCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+      var statusCell = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+
+      if (nameCell.includes(searchTerm) || positionCell.includes(searchTerm) || statusCell.includes(searchTerm)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  });
 </script>
 
 

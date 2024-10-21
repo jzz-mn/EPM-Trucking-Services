@@ -370,6 +370,68 @@ include '../officer/header.php';
       </div>
     </div>
 
+    <div class="modal fade" id="updateTrucksRecordModal" tabindex="-1" role="dialog"
+      aria-labelledby="updateTrucksRecordModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header d-flex align-items-center bg-primary">
+            <h5 class="modal-title text-white fs-4">Edit Trucks Record</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-12">
+                <div class="card w-100 border position-relative overflow-hidden mb-0">
+                  <div class="card-body p-4">
+                    <h4 class="card-title">Edit Trucks Record</h4>
+                    <p class="card-subtitle mb-4">Fill out the form to record a truck information.</p>
+
+                    <!-- Place the updated form here -->
+                    <form method="POST" action="edit_truck.php">
+                      <div class="row">
+                        <!-- Maintenance ID -->
+                        <div class="col-lg-6">
+                          <div class="mb-3">
+                            <label for="maintenanceId" class="form-label">Truck ID</label>
+                            <input type="text" class="form-control" id="truckId" name="truckId" readonly>
+                          </div>
+                        </div>
+
+                        <!-- Plate Number -->
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="plateNumber" class="form-label">Plate Number</label>
+                            <input type="text" class="form-control" id="plateNumber" name="plateNumber"
+                              placeholder="Enter Plate Number">
+                          </div>
+                        </div>
+
+                        <!-- Truck Brand -->
+                        <div class="col-lg-4">
+                          <div class="mb-3">
+                            <label for="truckBrand" class="form-label">Truck Brand</label>
+                            <input type="text" class="form-control" id="truckBrand"
+                              name="truckBrand" placeholder="Enter Truck Brand">
+                          </div>
+                        </div>
+                        <!-- Submit and Cancel Buttons -->
+                        <div class="col-12">
+                          <div class="d-flex justify-content-end mt-4 gap-3">
+                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
 
 
@@ -536,7 +598,7 @@ include '../officer/header.php';
                         echo "</td>";
                         echo "</tr>";
                       }
-                      
+
                       ?>
                     </tbody>
                   </table>
@@ -583,14 +645,14 @@ include '../officer/header.php';
                       <?php
                       if ($result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
-                          $transactionData = json_encode($row);  // Prepare the row data as a JSON object
+                          $truckData = json_encode($row);  // Prepare the row data as a JSON object
                           echo "<tr>";
                           echo "<td>" . $row['TruckID'] . "</td>";
                           echo "<td>" . $row['PlateNo'] . "</td>";
                           echo "<td>" . $row['TruckBrand'] . "</td>";
                           echo "<td>";
                           // Add a data-attribute to store the row data and attach the edit button
-                          echo "<a href='#' class='me-3 text-primary edit-transaction-btn' data-bs-toggle='modal' data-transaction='" . htmlspecialchars($transactionData) . "'>";
+                          echo "<a href='#' class='me-3 text-primary edit-truck-btn' data-bs-toggle='modal' data-truck='" . htmlspecialchars($truckData) . "'>";
                           echo "<i class='fs-4 ti ti-edit'></i></a>";
                           echo "</td>";
                           echo "</tr>";
@@ -689,6 +751,41 @@ include '../officer/header.php';
     </script>
   </div>
 </div>
+
+<script>
+  // Listen for clicks on edit buttons
+  document.querySelectorAll('.edit-truck-btn').forEach(button => {
+    button.addEventListener('click', function(event) {
+      event.preventDefault();
+
+      // Get TruckID from the data-transaction attribute
+      const truckId = JSON.parse(this.getAttribute('data-truck')).TruckID;
+
+      // Send an AJAX request to fetch truck data
+      fetch(`fetch_truck.php?truckId=${truckId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.error) {
+            // Prefill the form with the fetched data
+            document.getElementById('truckId').value = data.TruckID;
+            document.getElementById('plateNumber').value = data.PlateNo;
+            document.getElementById('truckBrand').value = data.TruckBrand;
+
+            // Open the modal
+            const updateModal = new bootstrap.Modal(document.getElementById('updateTrucksRecordModal'));
+            updateModal.show();
+          } else {
+            alert(data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching truck data:', error);
+        });
+    });
+  });
+</script>
+
+
 <!-- Maintenance Table -->
 <script>
   // Sorting logic for Maintenance Table

@@ -187,7 +187,7 @@ include '../includes/db_connection.php';
                   <table id="expenseTable" class="table text-center table-striped table-bordered">
                     <thead>
                       <tr>
-                        <th onclick="sortTable(0)">ExpenseID</th>
+                        <th onclick="sortTable(0)">Expense ID</th>
                         <th onclick="sortTable(1)">Date</th>
                         <th onclick="sortTable(2)">SalaryAmount</th>
                         <th onclick="sortTable(3)">MobileAmount</th>
@@ -388,7 +388,7 @@ include '../includes/db_connection.php';
                 <table id="fuelTable" class="table text-center table-striped table-bordered display text-nowrap">
                   <thead>
                     <tr>
-                      <th onclick="sortFuelTable(0)">FuelID</th>
+                      <th onclick="sortFuelTable(0)">Fuel ID</th>
                       <th onclick="sortFuelTable(1)">Date</th>
                       <th onclick="sortFuelTable(2)">Liters</th>
                       <th onclick="sortFuelTable(3)">Unit Price</th>
@@ -749,6 +749,61 @@ include '../includes/db_connection.php';
       });
     }
   </script>
+
+  <script>
+    let currentFuelSortColumn = -1; // Track the currently sorted column for the fuel table
+    let isFuelAscending = true; // Track the sorting direction for the fuel table
+
+    function sortFuelTable(columnIndex) {
+      let table = document.getElementById("fuelTable");
+      let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip the header row
+      let isNumeric = columnIndex === 0 || columnIndex >= 2 && columnIndex <= 5; // Define numeric columns (FuelID, Liters, Unit Price, Amount)
+
+      // Toggle sorting direction
+      if (currentFuelSortColumn === columnIndex) {
+        isFuelAscending = !isFuelAscending;
+      } else {
+        currentFuelSortColumn = columnIndex;
+        isFuelAscending = true; // Default to ascending order
+      }
+
+      // Sort the rows
+      let sortedRows = rows.sort((a, b) => {
+        let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+        let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+        if (isNumeric) {
+          aValue = parseFloat(aValue) || 0;
+          bValue = parseFloat(bValue) || 0;
+        }
+
+        if (isFuelAscending) {
+          return aValue > bValue ? 1 : -1;
+        } else {
+          return aValue < bValue ? 1 : -1;
+        }
+      });
+
+      // Update the table with sorted rows
+      let tableBody = document.getElementById("fuelTableBody");
+      tableBody.innerHTML = ""; // Clear the current table body
+      sortedRows.forEach(row => tableBody.appendChild(row));
+
+      // Update the sorting icons
+      updateFuelSortingIcons(columnIndex);
+    }
+
+    function updateFuelSortingIcons(columnIndex) {
+      let headers = document.querySelectorAll("#fuelTable th");
+      headers.forEach((header, index) => {
+        header.classList.remove('ascending', 'descending');
+        if (index === columnIndex) {
+          header.classList.add(isFuelAscending ? 'ascending' : 'descending');
+        }
+      });
+    }
+  </script>
+
 
   <style>
     th {
