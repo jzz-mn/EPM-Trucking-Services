@@ -217,15 +217,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             </div>
         <?php endif; ?>
 
-        <!-- Multi-Step Form -->
+        <!-- Combined Form for Steps 1 to 4 -->
         <form id="add-data-form" method="POST" action="save_transaction_group.php">
-            <!-- Step 1: Truck Selection -->
-            <section id="truck-selection" class="mb-5">
-                <h5 class="border-bottom py-2 px-4 mb-4">Truck Selection</h5>
-                <div class="card w-100 border position-relative overflow-hidden mb-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title">Select Truck and Date</h4>
-                        <p class="card-subtitle mb-4">Choose a truck and set the date for your transaction group.</p>
+            <div class="card mb-4">
+                <div class="card-body p-4">
+                    <!-- Step 1: Truck Selection -->
+                    <section id="truck-selection" class="mb-5">
+                        <h5 class="border-bottom py-2 mb-4">Truck Selection</h5>
                         <div class="row g-3">
                             <!-- Date Field -->
                             <div class="col-md-6">
@@ -251,85 +249,74 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                 </select>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
+                    </section>
 
-            <!-- Step 2: Transactions Entry -->
-            <section id="transactions-entry" class="mb-5">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Add New Transaction</h5>
-                        <div id="add-transaction-form">
-                            <div class="row g-3 align-items-end">
-                                <!-- Outlet Name with Autocomplete and Validation -->
-                                <div class="col-md-4 position-relative">
-                                    <label for="input-outlet-name" class="form-label">Outlet Name</label>
-                                    <input type="text" class="form-control" id="input-outlet-name"
-                                        placeholder="Search Outlet Name" autocomplete="off">
-                                    <div id="outlet-suggestions" class="list-group position-absolute w-100"
-                                        style="z-index: 1000; background-color: white;"></div>
-                                    <!-- Validation Feedback -->
-                                    <div class="invalid-feedback" id="outlet-error">
-                                        Outlet Name does not exist.
+                    <!-- Step 2: Transactions Entry -->
+                    <section id="transactions-entry" class="mb-5">
+                        <h5 class="border-bottom py-2 mb-4">Transactions Entry</h5>
+                        <div class="card-body p-0">
+                            <div id="add-transaction-form">
+                                <div class="row g-3 align-items-end">
+                                    <!-- Outlet Name with Autocomplete and Validation -->
+                                    <div class="col-md-4 position-relative">
+                                        <label for="input-outlet-name" class="form-label">Outlet Name</label>
+                                        <input type="text" class="form-control" id="input-outlet-name"
+                                            placeholder="Search Outlet Name" autocomplete="off">
+                                        <div id="outlet-suggestions" class="list-group position-absolute w-100"
+                                            style="z-index: 1000; background-color: white;"></div>
+                                        <!-- Validation Feedback -->
+                                        <div class="invalid-feedback" id="outlet-error">
+                                            Outlet Name does not exist.
+                                        </div>
+                                    </div>
+                                    <!-- Quantity -->
+                                    <div class="col-md-3">
+                                        <label for="input-quantity" class="form-label">Quantity</label>
+                                        <input type="number" class="form-control" id="input-quantity"
+                                            placeholder="Quantity" step="0.01">
+                                    </div>
+                                    <!-- KGs -->
+                                    <div class="col-md-3">
+                                        <label for="input-kgs" class="form-label">KGs</label>
+                                        <input type="number" class="form-control" id="input-kgs" placeholder="KGs"
+                                            step="0.01">
+                                    </div>
+                                    <!-- Add Transaction Button -->
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" id="add-transaction-btn">Add
+                                            Transaction</button>
                                     </div>
                                 </div>
-                                <!-- Quantity -->
-                                <div class="col-md-3">
-                                    <label for="input-quantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="input-quantity" placeholder="Quantity"
-                                        step="0.01">
+                            </div>
+
+                            <div class="card-body px-0">
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-striped table-bordered text-nowrap align-middle text-center"
+                                        id="transactions-table">
+                                        <thead>
+                                            <tr>
+                                                <th>DR No</th>
+                                                <th>Outlet Name</th>
+                                                <th>Quantity</th>
+                                                <th>KGs</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactions-body">
+                                            <!-- Transactions will be appended here -->
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <!-- KGs -->
-                                <div class="col-md-3">
-                                    <label for="input-kgs" class="form-label">KGs</label>
-                                    <input type="number" class="form-control" id="input-kgs" placeholder="KGs"
-                                        step="0.01">
-                                </div>
-                                <!-- Add Transaction Button -->
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-primary w-100" id="add-transaction-btn">Add
-                                        Transaction</button>
-                                </div>
+                                <!-- Hidden input to store transactions data -->
+                                <input type="hidden" name="transactions_json" id="transactions-json">
                             </div>
                         </div>
+                    </section>
 
-                        <div class="card-body px-0">
-                            <h5 class="card-title">Transactions Entry</h5>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-bordered text-nowrap align-middle text-center"
-                                    id="transactions-table">
-                                    <thead>
-                                        <tr>
-                                            <th>DR No</th>
-                                            <th>Outlet Name</th>
-                                            <th>Quantity</th>
-                                            <th>KGs</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="transactions-body">
-                                        <!-- Transactions will be appended here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!-- Hidden input to store transactions data -->
-                            <input type="hidden" name="transactions_json" id="transactions-json">
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Step 3: Fuel Entry -->
-            <section id="fuel-entry" class="mb-5">
-                <h5 class="border-bottom py-2 px-4 mb-4">Fuel Entry</h5>
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header">
-                        <h4 class="card-title ">Fuel Entry</h4>
-                        <p class="card-subtitle">Enter fuel details for the transaction group below.</p>
-                    </div>
-                    <div class="card-body">
-                        <!-- Fuel Entry Form -->
+                    <!-- Step 3: Fuel Entry -->
+                    <section id="fuel-entry" class="mb-5">
+                        <h5 class="border-bottom py-2 mb-4">Fuel Entry</h5>
                         <div class="row g-3">
                             <!-- Liters -->
                             <div class="col-md-6">
@@ -362,87 +349,94 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                     placeholder="Calculated amount" step="0.01" readonly>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
+                    </section>
 
-            <!-- Step 4: Expenses Entry -->
-            <section id="expenses-entry" class="mb-5">
-                <h5 class="border-bottom py-2 px-4 mb-4">Expenses Entry</h5>
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header">
-                        <h4 class="card-title">Expenses Entry</h4>
-                        <p class="card-subtitle">Enter expense details for the transaction group.</p>
-                    </div>
-                    <div class="card-body">
+                    <!-- Step 4: Expenses Entry -->
+                    <section id="expenses-entry" class="mb-5">
+                        <h5 class="border-bottom py-2 mb-4">Expenses Entry</h5>
                         <div class="row g-3">
                             <!-- Salary Amount -->
                             <div class="col-md-6">
                                 <label for="expenses-salary" class="form-label">Salary Amount</label>
                                 <input type="number" class="form-control" id="expenses-salary" name="expenses_salary"
-                                    step="0.01" min="0">
+                                    placeholder="Enter salary amount" step="0.01" min="0">
                             </div>
 
                             <!-- Mobile Fee Amount -->
                             <div class="col-md-6">
                                 <label for="expenses-mobile-fee" class="form-label">Mobile Fee Amount</label>
                                 <input type="number" class="form-control" id="expenses-mobile-fee"
-                                    name="expenses_mobile_fee" step="0.01" min="0">
+                                    name="expenses_mobile_fee" placeholder="Enter mobile fee amount" step="0.01"
+                                    min="0">
                             </div>
 
                             <!-- Other Amount -->
                             <div class="col-md-6">
                                 <label for="expenses-other-amount" class="form-label">Other Amount</label>
                                 <input type="number" class="form-control" id="expenses-other-amount"
-                                    name="expenses_other_amount" step="0.01" min="0">
+                                    name="expenses_other_amount" placeholder="Enter other amount" step="0.01" min="0">
                             </div>
 
                             <!-- Total Expense (Calculated) -->
                             <div class="col-md-6">
                                 <label for="expenses-total" class="form-label">Total Expense</label>
                                 <input type="number" class="form-control" id="expenses-total" name="expenses_total"
-                                    step="0.01" readonly>
+                                    placeholder="Calculated total expenses" step="0.01" readonly>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
+                    </section>
 
-            <!-- Step 5: Transaction Summary -->
-            <section id="transaction-summary" class="mb-5">
-                <h5 class="border-bottom py-2 px-4 mb-4">Transaction Summary</h5>
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header">
-                        <h4 class="card-title">Transaction Summary</h4>
-                        <p class="card-subtitle">Review all the data before final submission.</p>
-                    </div>
-                    <div class="card-body">
-                        <!-- Display Summary of All Data -->
-                        <div id="summary-content">
-                            <!-- Summary will be generated by JavaScript -->
-                        </div>
-                        <!-- Toll Fee Input -->
-                        <div class="row g-3 mt-3">
+                    <!-- Toll Fee Input -->
+                    <section id="toll-fee-entry" class="mb-5">
+                        <h5 class="border-bottom py-2 mb-4">Toll Fee Amount</h5>
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
                                 <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount"
-                                    step="0.01" min="0" required>
+                                    placeholder="Enter toll fee" step="0.01" min="0" required>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
-            </section>
-
-            <!-- Final Submission Button -->
-            <div class="d-flex justify-content-end">
-                <button type="submit" name="final_submit" class="btn btn-success">Submit All Data</button>
+                <!-- Final Submission Button -->
+                <div class="d-flex justify-content-end">
+                    <button type="button" id="review-submit-btn" class="btn m-4 btn-success">Submit All Data</button>
+                </div>
             </div>
+
+
+
+            <!-- Hidden Submit Button -->
+            <button type="submit" id="final-submit-btn" name="final_submit" style="display: none;"></button>
         </form>
+    </div>
+</div>
+
+<!-- Transaction Summary Modal -->
+<div class="modal fade" id="transactionSummaryModal" tabindex="-1" aria-labelledby="transactionSummaryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Summary</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="summary-content-modal">
+                <!-- Summary will be generated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="confirm-submit-btn" class="btn btn-primary">Confirm Submission</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Again</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Include necessary scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include Bootstrap JS for modal functionality -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
 <script>
     $(document).ready(function () {
@@ -481,9 +475,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             // Update hidden input field
             $('#transactions-json').val(JSON.stringify(transactions));
-
-            // Update the summary
-            generateSummary();
         }
 
         // Function to clear transaction input fields
@@ -638,7 +629,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             } else {
                 $('#fuel-amount').val('');
             }
-            generateSummary();
         }
 
         $('#fuel-liters, #fuel-unit-price').on('input', calculateFuelAmount);
@@ -650,17 +640,19 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const otherAmount = parseFloat($('#expenses-other-amount').val()) || 0;
             const totalExpense = salary + mobileFee + otherAmount;
             $('#expenses-total').val(totalExpense.toFixed(2));
-            generateSummary();
         }
 
         $('#expenses-salary, #expenses-mobile-fee, #expenses-other-amount').on('input', calculateTotalExpense);
 
-        // Generate Summary
+        // Update transactions table on page load
+        updateTransactionsTable();
+
+        // Generate Summary Function
         function generateSummary() {
             let summaryHtml = '<h5>Summary</h5>';
 
-            let truckInfo = <?php echo isset($truck_display) ? json_encode($truck_display['PlateNo'] . ' - ' . $truck_display['TruckBrand']) : json_encode('No truck selected'); ?>;
-            let transactionDate = <?php echo json_encode($_SESSION['transaction_date'] ?? 'No date selected'); ?>;
+            let truckInfo = $('#truck-select option:selected').text() || 'No truck selected';
+            let transactionDate = $('#transaction-date').val() || 'No date selected';
 
             summaryHtml += '<p><strong>Truck:</strong> ' + truckInfo + '</p>';
             summaryHtml += '<p><strong>Date:</strong> ' + transactionDate + '</p>';
@@ -738,41 +730,30 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                             const finalAmount = parseFloat(data.rate_amount) + tollFeeAmount;
                             summaryHtml += '<p><strong>Final Amount:</strong> ₱' + finalAmount.toFixed(2) + '</p>';
                             // Display the summary
-                            $('#summary-content').html(summaryHtml);
+                            $('#summary-content-modal').html(summaryHtml);
                         } else {
                             summaryHtml += '<p><strong>Error:</strong> ' + data.message + '</p>';
-                            $('#summary-content').html(summaryHtml);
+                            $('#summary-content-modal').html(summaryHtml);
                         }
                     },
                     error: function () {
                         summaryHtml += '<p><strong>Error fetching Cluster ID and Rate Amount.</strong></p>';
-                        $('#summary-content').html(summaryHtml);
+                        $('#summary-content-modal').html(summaryHtml);
                     }
                 });
             } else {
                 summaryHtml += '<p><strong>No transactions to calculate Cluster ID and Rate Amount.</strong></p>';
-                $('#summary-content').html(summaryHtml);
+                $('#summary-content-modal').html(summaryHtml);
             }
         }
 
-        // Event listeners to trigger summary update
-        $('#add-data-form input, #add-data-form select').on('input change', generateSummary);
-        $('#toll-fee-amount').on('input', generateSummary);
-
-        // Initial call to display summary if data exists
-        generateSummary();
-
-        // Update transactions table on page load
-        updateTransactionsTable();
-
-        // Form submission validation
-        $('#add-data-form').on('submit', function (event) {
+        // Form submission validation and modal display
+        $('#review-submit-btn').on('click', function (event) {
             // Perform final validations before submission
 
             // Ensure that at least one transaction is added
             if (transactions.length === 0) {
                 alert('Please add at least one transaction.');
-                event.preventDefault();
                 return;
             }
 
@@ -784,7 +765,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             if (fuelLiters === '' || fuelUnitPrice === '' || fuelType === null || fuelAmount === '') {
                 alert('Please fill in all fuel details.');
-                event.preventDefault();
                 return;
             }
 
@@ -795,14 +775,12 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             if (expensesSalary === '' || expensesMobileFee === '' || expensesOtherAmount === '' || expensesTotal === '') {
                 alert('Please fill in all expenses details.');
-                event.preventDefault();
                 return;
             }
 
             const tollFeeAmount = $('#toll-fee-amount').val();
             if (tollFeeAmount === '') {
                 alert('Please enter the Toll Fee Amount.');
-                event.preventDefault();
                 return;
             }
 
@@ -812,11 +790,18 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             if (transactionDate === '' || truckId === null) {
                 alert('Please select a date and truck.');
-                event.preventDefault();
                 return;
             }
 
-            // All validations passed, form will be submitted
+            // All validations passed, generate summary and show modal
+            generateSummary();
+            $('#transactionSummaryModal').modal('show');
+        });
+
+        // Confirm submission button in modal
+        $('#confirm-submit-btn').on('click', function () {
+            // Submit the form
+            $('#final-submit-btn').click();
         });
     });
 </script>
