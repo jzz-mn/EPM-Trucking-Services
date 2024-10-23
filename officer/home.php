@@ -52,23 +52,69 @@ if (isset($_GET['action'])) {
       while ($row = mysqli_fetch_assoc($result)) {
         $data[] = ['x' => $row['Date'], 'y' => (float) $row['TotalExpense']];
       }
+
+      // Include fuel expenses
+      $queryFuel = "SELECT Date, SUM(Amount) as FuelExpense FROM fuel WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
+      $resultFuel = mysqli_query($conn, $queryFuel);
+      while ($rowFuel = mysqli_fetch_assoc($resultFuel)) {
+        $found = false;
+        foreach ($data as &$item) {
+          if ($item['x'] === $rowFuel['Date']) {
+            $item['y'] += (float) $rowFuel['FuelExpense'];
+            $found = true;
+            break;
+          }
+        }
+        if (!$found) {
+          $data[] = ['x' => $rowFuel['Date'], 'y' => (float) $rowFuel['FuelExpense']];
+        }
+      }
+
+      // Sort data by date
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
       echo json_encode($data);
       exit;
 
     case 'getRevenueData':
       // Fetch revenue trends over time
-      $query = "SELECT Date, SUM(RateAmount) as RateAmount FROM transactiongroup WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
+      $query = "SELECT Date, SUM(Amount) as RateAmount FROM transactiongroup WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
       $result = mysqli_query($conn, $query);
       $data = [];
       while ($row = mysqli_fetch_assoc($result)) {
-        $data[] = ['x' => $row['Date'], 'y' => (float) $row['RateAmount']];
+        // Total Revenue = RateAmount + TotalExpenses
+        // Fetch totalExpenses for the date
+        $date = $row['Date'];
+        $queryExpense = "SELECT IFNULL(SUM(TotalExpense), 0) as TotalExpense FROM expenses WHERE Date = '$date'";
+        $resultExpense = mysqli_query($conn, $queryExpense);
+        $rowExpense = mysqli_fetch_assoc($resultExpense);
+        $totalExpense = $rowExpense['TotalExpense'];
+
+        $queryFuel = "SELECT IFNULL(SUM(Amount), 0) as FuelAmount FROM fuel WHERE Date = '$date'";
+        $resultFuel = mysqli_query($conn, $queryFuel);
+        $rowFuel = mysqli_fetch_assoc($resultFuel);
+        $fuelAmount = $rowFuel['FuelAmount'];
+
+        $totalExpense += $fuelAmount;
+
+        $totalRevenue = $row['RateAmount'] + $totalExpense;
+
+        $data[] = ['x' => $date, 'y' => (float) $totalRevenue];
       }
+
+      // Sort data by date
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
       echo json_encode($data);
       exit;
 
     case 'getProfitData':
       // Fetch profit margins over time (Revenue - Expenses)
-      $query = "SELECT tg.Date, SUM(tg.RateAmount) as Revenue, IFNULL(SUM(e.TotalExpense),0) + IFNULL(SUM(f.Amount),0) as Expenses
+      $query = "SELECT tg.Date, SUM(tg.Amount) as Revenue, IFNULL(SUM(e.TotalExpense),0) + IFNULL(SUM(f.Amount),0) as Expenses
                       FROM transactiongroup tg
                       LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
                       LEFT JOIN fuel f ON e.FuelID = f.FuelID
@@ -81,6 +127,12 @@ if (isset($_GET['action'])) {
         $profit = (float) $row['Revenue'] - ((float) $row['Expenses']);
         $data[] = ['x' => $row['Date'], 'y' => $profit];
       }
+
+      // Sort data by date
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
       echo json_encode($data);
       exit;
 
@@ -92,6 +144,12 @@ if (isset($_GET['action'])) {
       while ($row = mysqli_fetch_assoc($result)) {
         $data[] = ['x' => $row['TransactionDate'], 'y' => (int) $row['TotalTransactions']];
       }
+
+      // Sort data by date
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
       echo json_encode($data);
       exit;
 
@@ -103,6 +161,12 @@ if (isset($_GET['action'])) {
       while ($row = mysqli_fetch_assoc($result)) {
         $data[] = ['x' => $row['Date'], 'y' => (float) $row['TotalLiters']];
       }
+
+      // Sort data by date
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
       echo json_encode($data);
       exit;
 
@@ -120,6 +184,11 @@ include 'dashboard.php';
 ?>
 
 <?php include '../officer/header.php'; ?>
+
+<!-- Include ApexCharts Library and Bootstrap JS if not already included in header.php -->
+<!-- If already included, you can omit these script tags -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
 
 <!-- DASHBOARD CONTENT-->
 <div class="body-wrapper">
@@ -196,15 +265,20 @@ include 'dashboard.php';
               <!-- Filter Buttons (Right Side) -->
               <div class="col-md-4 text-end">
                 <div class="btn-group mb-2" role="group" aria-label="Date Filters">
-                  <button type="submit" name="filter" value="year" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'year')
-                    echo 'active'; ?>">Year</button>
-                  <button type="submit" name="filter" value="month" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'month')
-                    echo 'active'; ?>">Month</button>
-                  <button type="submit" name="filter" value="week" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'week')
-                    echo 'active'; ?>">Week</button>
+                  <button type="submit" name="filter" value="year"
+                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'year')
+                      echo 'active'; ?>">Year</button>
+                  <button type="submit" name="filter" value="month"
+                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'month')
+                      echo 'active'; ?>">Month</button>
+                  <button type="submit" name="filter" value="week"
+                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'week')
+                      echo 'active'; ?>">Week</button>
                   <!-- Custom Button to Trigger Modal -->
-                  <button type="button" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'custom')
-                    echo 'active'; ?>" data-bs-toggle="modal" data-bs-target="#customDateModal">
+                  <button type="button"
+                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'custom')
+                      echo 'active'; ?>"
+                    data-bs-toggle="modal" data-bs-target="#customDateModal">
                     Custom
                   </button>
                 </div>
@@ -1224,6 +1298,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Expenses Over Time',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return '₱' + val.toFixed(2);
+                      }
+                    }
                   }
                 };
                 break;
@@ -1255,6 +1336,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Revenue Trends',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return '₱' + val.toFixed(2);
+                      }
+                    }
                   }
                 };
                 break;
@@ -1286,6 +1374,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Profit Margins',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return '₱' + val.toFixed(2);
+                      }
+                    }
                   }
                 };
                 break;
@@ -1301,6 +1396,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Transactions Distribution',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return val;
+                      }
+                    }
                   }
                 };
                 break;
@@ -1332,6 +1434,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Fuel Consumption Over Time',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return val + ' L';
+                      }
+                    }
                   }
                 };
                 break;
@@ -1363,6 +1472,13 @@ include 'dashboard.php';
                   title: {
                     text: 'Details',
                     align: 'center'
+                  },
+                  tooltip: {
+                    y: {
+                      formatter: function (val) {
+                        return val;
+                      }
+                    }
                   }
                 };
             }

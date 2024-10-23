@@ -328,14 +328,13 @@ include '../officer/header.php';
                 <?php endif; ?>
               </div>
 
-              <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
+              <div class="pagination-controls d-flex justify-content-end align-items-center mt-3 m-4 mb-5">
                 <button id="prevBtn" class="btn btn-primary me-2" onclick="prevPage()">Previous</button>
                 <nav>
                   <ul class="pagination mb-0" id="paginationNumbers"></ul>
                 </nav>
                 <button id="nextBtn" class="btn btn-primary ms-2" onclick="nextPage()">Next</button>
               </div>
-
 
             </div>
           </div>
@@ -415,7 +414,7 @@ include '../officer/header.php';
                   </table>
                 </div>
               </div>
-              <div class="modal-footer">
+              <div class="modal-footer ">
                 <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirmGenerateInvoice">Confirm and Generate
                   Invoice</button>

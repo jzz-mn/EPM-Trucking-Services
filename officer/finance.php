@@ -421,7 +421,7 @@ include '../includes/db_connection.php';
                   </table>
                 </div>
 
-                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
+                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3 m-3">
                   <!-- Previous button with margin on the right for spacing -->
                   <button id="fuelPrevBtn" class="btn btn-primary me-2" onclick="prevFuelPage()">Previous</button>
 

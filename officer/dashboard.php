@@ -90,7 +90,7 @@ $formattedExpenses = number_format($totalExpenses, 2);
 // --- Total Revenue Calculation ---
 
 // Get total RateAmount from transactiongroup table
-$queryRateAmount = "SELECT IFNULL(SUM(RateAmount), 0) AS RateAmount FROM transactiongroup $transactionGroupWhere";
+$queryRateAmount = "SELECT IFNULL(SUM(Amount), 0) AS RateAmount FROM transactiongroup $transactionGroupWhere";
 $resultRateAmount = mysqli_query($conn, $queryRateAmount);
 if (!$resultRateAmount) {
     die("Query Failed (RateAmount): " . mysqli_error($conn));
