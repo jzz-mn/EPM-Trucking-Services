@@ -404,8 +404,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 </div>
             </div>
 
-
-
             <!-- Hidden Submit Button -->
             <button type="submit" id="final-submit-btn" name="final_submit" style="display: none;"></button>
         </form>

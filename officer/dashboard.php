@@ -1,5 +1,8 @@
 <?php
-// Date range variables
+// Include your database connection at the top
+include '../includes/db_connection.php'; // Ensure this path is correct
+
+// Initialize variables
 $startDate = null;
 $endDate = null;
 
@@ -41,22 +44,25 @@ if (isset($_GET['filter'])) {
 // Prepare WHERE clauses for SQL queries
 $expensesWhere = '';
 $fuelWhere = '';
-$invoicesWhere = '';
+$transactionGroupWhere = '';
 $transactionsWhere = '';
+$invoicesWhere = '';
 
 if ($startDate && $endDate) {
-    // Escape the dates
+    // Escape the dates to prevent SQL injection
     $startDateEscaped = mysqli_real_escape_string($conn, $startDate);
     $endDateEscaped = mysqli_real_escape_string($conn, $endDate);
 
-    // Build WHERE clauses
+    // Build WHERE clauses for each table using appropriate date fields
     $expensesWhere = "WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'";
     $fuelWhere = "WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'";
-    $invoicesWhere = "WHERE BillingStartDate >= '$startDateEscaped' AND BillingEndDate <= '$endDateEscaped'";
+    $transactionGroupWhere = "WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'"; // Corrected field name
     $transactionsWhere = "WHERE TransactionDate BETWEEN '$startDateEscaped' AND '$endDateEscaped'";
+    $invoicesWhere = "WHERE BillingStartDate >= '$startDateEscaped' AND BillingEndDate <= '$endDateEscaped'";
 }
 
-// Total Expenses - Calculate separately and sum in PHP
+// --- Total Expenses Calculation ---
+
 // Get total expenses from expenses table
 $queryTotalExpense = "SELECT IFNULL(SUM(TotalExpense), 0) AS TotalExpense FROM expenses $expensesWhere";
 $resultTotalExpense = mysqli_query($conn, $queryTotalExpense);
@@ -81,21 +87,29 @@ $totalExpenses = $totalExpense + $fuelAmount;
 // Format the value for display
 $formattedExpenses = number_format($totalExpenses, 2);
 
-// Total Revenue
-$queryRevenue = "SELECT IFNULL(SUM(NetAmount), 0) AS TotalRevenue FROM invoices $invoicesWhere";
-$resultRevenue = mysqli_query($conn, $queryRevenue);
-if (!$resultRevenue) {
-    die("Query Failed (Revenue): " . mysqli_error($conn));
+// --- Total Revenue Calculation ---
+
+// Get total RateAmount from transactiongroup table
+$queryRateAmount = "SELECT IFNULL(SUM(RateAmount), 0) AS RateAmount FROM transactiongroup $transactionGroupWhere";
+$resultRateAmount = mysqli_query($conn, $queryRateAmount);
+if (!$resultRateAmount) {
+    die("Query Failed (RateAmount): " . mysqli_error($conn));
 }
-$rowRevenue = mysqli_fetch_assoc($resultRevenue);
-$totalRevenue = $rowRevenue['TotalRevenue'];
+$rowRateAmount = mysqli_fetch_assoc($resultRateAmount);
+$rateAmount = $rowRateAmount['RateAmount'];
+
+$totalRevenue = $rateAmount + $totalExpenses;
 $formattedRevenue = number_format($totalRevenue, 2);
 
-// Total Profit
+
+// --- Total Profit Calculation ---
+
+// Profit = Revenue - Expenses
 $totalProfit = $totalRevenue - $totalExpenses;
 $formattedProfit = number_format($totalProfit, 2);
 
-// Total Transactions
+// --- Total Transactions ---
+
 $queryTransactions = "SELECT COUNT(*) AS TotalTransactions FROM transactions $transactionsWhere";
 $resultTransactions = mysqli_query($conn, $queryTransactions);
 if (!$resultTransactions) {
@@ -105,7 +119,8 @@ $rowTransactions = mysqli_fetch_assoc($resultTransactions);
 $totalTransactions = $rowTransactions['TotalTransactions'];
 $formattedTransactions = number_format($totalTransactions);
 
-// Total Fuel Consumption
+// --- Total Fuel Consumption ---
+
 $queryFuelConsumption = "SELECT IFNULL(SUM(Liters), 0) AS TotalFuelConsumption FROM fuel $fuelWhere";
 $resultFuelConsumption = mysqli_query($conn, $queryFuelConsumption);
 if (!$resultFuelConsumption) {

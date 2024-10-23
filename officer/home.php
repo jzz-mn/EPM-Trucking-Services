@@ -1,21 +1,130 @@
 <?php
 session_start();
-include '../officer/header.php';
-include '../includes/db_connection.php'; // Adjust the path to your database connection file
+include '../includes/db_connection.php'; // Adjust the path as necessary
 
+// Handle AJAX Requests
+if (isset($_GET['action'])) {
+  header('Content-Type: application/json');
+
+  $action = $_GET['action'];
+  $startDate = null;
+  $endDate = null;
+
+  // Determine the date range based on the current filter
+  if (isset($_GET['filter'])) {
+    $filter = $_GET['filter'];
+    switch ($filter) {
+      case 'year':
+        $startDate = date('Y-01-01');
+        $endDate = date('Y-12-31');
+        break;
+      case 'month':
+        $startDate = date('Y-m-01');
+        $endDate = date('Y-m-t');
+        break;
+      case 'week':
+        $startDate = date('Y-m-d', strtotime('monday this week'));
+        $endDate = date('Y-m-d', strtotime('sunday this week'));
+        break;
+      case 'custom':
+        if (!empty($_GET['start_date']) && !empty($_GET['end_date'])) {
+          $startDate = $_GET['start_date'];
+          $endDate = $_GET['end_date'];
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Escape dates to prevent SQL injection
+  if ($startDate && $endDate) {
+    $startDateEscaped = mysqli_real_escape_string($conn, $startDate);
+    $endDateEscaped = mysqli_real_escape_string($conn, $endDate);
+  }
+
+  switch ($action) {
+    case 'getExpensesData':
+      // Fetch expenses by date
+      $query = "SELECT Date, SUM(TotalExpense) as TotalExpense FROM expenses WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
+      $result = mysqli_query($conn, $query);
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = ['x' => $row['Date'], 'y' => (float) $row['TotalExpense']];
+      }
+      echo json_encode($data);
+      exit;
+
+    case 'getRevenueData':
+      // Fetch revenue trends over time
+      $query = "SELECT Date, SUM(RateAmount) as RateAmount FROM transactiongroup WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
+      $result = mysqli_query($conn, $query);
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = ['x' => $row['Date'], 'y' => (float) $row['RateAmount']];
+      }
+      echo json_encode($data);
+      exit;
+
+    case 'getProfitData':
+      // Fetch profit margins over time (Revenue - Expenses)
+      $query = "SELECT tg.Date, SUM(tg.RateAmount) as Revenue, IFNULL(SUM(e.TotalExpense),0) + IFNULL(SUM(f.Amount),0) as Expenses
+                      FROM transactiongroup tg
+                      LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
+                      LEFT JOIN fuel f ON e.FuelID = f.FuelID
+                      WHERE tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
+                      GROUP BY tg.Date
+                      ORDER BY tg.Date ASC";
+      $result = mysqli_query($conn, $query);
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $profit = (float) $row['Revenue'] - ((float) $row['Expenses']);
+        $data[] = ['x' => $row['Date'], 'y' => $profit];
+      }
+      echo json_encode($data);
+      exit;
+
+    case 'getTransactionsData':
+      // Fetch number of transactions over time
+      $query = "SELECT TransactionDate, COUNT(*) as TotalTransactions FROM transactions WHERE TransactionDate BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY TransactionDate ORDER BY TransactionDate ASC";
+      $result = mysqli_query($conn, $query);
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = ['x' => $row['TransactionDate'], 'y' => (int) $row['TotalTransactions']];
+      }
+      echo json_encode($data);
+      exit;
+
+    case 'getFuelData':
+      // Fetch fuel consumption over time
+      $query = "SELECT Date, SUM(Liters) as TotalLiters FROM fuel WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
+      $result = mysqli_query($conn, $query);
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = ['x' => $row['Date'], 'y' => (float) $row['TotalLiters']];
+      }
+      echo json_encode($data);
+      exit;
+
+    default:
+      echo json_encode(['error' => 'Invalid action']);
+      exit;
+  }
+}
+
+// Include necessary files and initialize variables
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include 'dashboard.php';
 ?>
 
+<?php include '../officer/header.php'; ?>
+
 <!-- DASHBOARD CONTENT-->
 <div class="body-wrapper">
   <div class="container-fluid">
-    <!-- Date Filter Section -->
-
-
-    <!-- Custom Date Modal -->
+    <!-- Custom Date Range Modal -->
     <div class="modal fade" id="customDateModal" tabindex="-1" aria-labelledby="customDateModalLabel"
       aria-hidden="true">
       <div class="modal-dialog">
@@ -48,7 +157,24 @@ include 'dashboard.php';
       </div>
     </div>
 
-
+    <!-- Chart Modal -->
+    <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg"> <!-- Use modal-lg for larger charts -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="chartModalLabel">Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Apex Chart Container -->
+            <div id="chart"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Dashboard Cards -->
     <div class="row">
@@ -56,9 +182,8 @@ include 'dashboard.php';
         <div class="card">
           <div class="container-fluid mb-0 pb-0">
             <form method="get" action="home.php" class="row align-items-center">
-              <!-- Empty column to align buttons to the right when custom fields are not visible -->
+              <!-- Optional: Display Selected Date Range -->
               <div class="col-md-8">
-                <!-- Optional: Display Selected Date Range -->
                 <?php
                 if ($startDate && $endDate) {
                   echo "<p class='text-left mb-4'>Showing results from <strong>" . date('F j, Y', strtotime($startDate)) . "</strong> to <strong>" . date('F j, Y', strtotime($endDate)) . "</strong></p>";
@@ -101,10 +226,12 @@ include 'dashboard.php';
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       <?php echo '₱' . $formattedExpenses; ?>
                     </h4>
-                    <a href="expenses_details.php" class="btn btn-white fs-2 fw-semibold text-nowrap">View Details</a>
+                    <a href="#" class="btn btn-white fs-2 fw-semibold text-nowrap view-details-btn"
+                      data-metric="expenses">View Details</a>
                   </div>
                 </div>
               </div>
+
               <!-- Total Revenue Card -->
               <div class="col">
                 <div class="card warning-gradient">
@@ -117,10 +244,12 @@ include 'dashboard.php';
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       <?php echo '₱' . $formattedRevenue; ?>
                     </h4>
-                    <a href="revenue_details.php" class="btn btn-white fs-2 fw-semibold text-nowrap">View Details</a>
+                    <a href="#" class="btn btn-white fs-2 fw-semibold text-nowrap view-details-btn"
+                      data-metric="revenue">View Details</a>
                   </div>
                 </div>
               </div>
+
               <!-- Total Profit Card -->
               <div class="col">
                 <div class="card secondary-gradient">
@@ -133,10 +262,12 @@ include 'dashboard.php';
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       <?php echo '₱' . $formattedProfit; ?>
                     </h4>
-                    <a href="profit_details.php" class="btn btn-white fs-2 fw-semibold text-nowrap">View Details</a>
+                    <a href="#" class="btn btn-white fs-2 fw-semibold text-nowrap view-details-btn"
+                      data-metric="profit">View Details</a>
                   </div>
                 </div>
               </div>
+
               <!-- Total Transactions Card -->
               <div class="col">
                 <div class="card danger-gradient">
@@ -149,11 +280,12 @@ include 'dashboard.php';
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       <?php echo $formattedTransactions; ?>
                     </h4>
-                    <a href="transactions_details.php" class="btn btn-white fs-2 fw-semibold text-nowrap">View
-                      Details</a>
+                    <a href="#" class="btn btn-white fs-2 fw-semibold text-nowrap view-details-btn"
+                      data-metric="transactions">View Details</a>
                   </div>
                 </div>
               </div>
+
               <!-- Total Fuel Consumption Card -->
               <div class="col">
                 <div class="card success-gradient">
@@ -166,7 +298,8 @@ include 'dashboard.php';
                     <h4 class="mb-3 d-flex align-items-center justify-content-center gap-1">
                       <?php echo $formattedFuelConsumption . ' L'; ?>
                     </h4>
-                    <a href="fuel_details.php" class="btn btn-white fs-2 fw-semibold text-nowrap">View Details</a>
+                    <a href="#" class="btn btn-white fs-2 fw-semibold text-nowrap view-details-btn"
+                      data-metric="fuel">View Details</a>
                   </div>
                 </div>
               </div>
@@ -982,3 +1115,276 @@ include 'dashboard.php';
     <!-- Include your footer -->
     <?php include '../officer/footer.php'; ?>
   </div>
+</div>
+
+<!-- Include ApexCharts Library -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<!-- JavaScript to Handle Modals and Charts -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const viewDetailButtons = document.querySelectorAll('.view-details-btn');
+    const chartModal = new bootstrap.Modal(document.getElementById('chartModal'));
+    const chartContainer = document.getElementById('chart');
+    const chartModalLabel = document.getElementById('chartModalLabel');
+
+    let apexChart; // To store the ApexChart instance
+
+    viewDetailButtons.forEach(button => {
+      button.addEventListener('click', function (e) {
+        e.preventDefault();
+        const metric = this.getAttribute('data-metric');
+
+        // Set modal title and action based on metric
+        let title = '';
+        let action = '';
+        switch (metric) {
+          case 'expenses':
+            title = 'Total Expenses Details';
+            action = 'getExpensesData';
+            break;
+          case 'revenue':
+            title = 'Total Revenue Details';
+            action = 'getRevenueData';
+            break;
+          case 'profit':
+            title = 'Total Profit Details';
+            action = 'getProfitData';
+            break;
+          case 'transactions':
+            title = 'Total Transactions Details';
+            action = 'getTransactionsData';
+            break;
+          case 'fuel':
+            title = 'Total Fuel Consumption Details';
+            action = 'getFuelData';
+            break;
+          default:
+            title = 'Details';
+            action = '';
+        }
+
+        chartModalLabel.textContent = title;
+
+        if (action === '') {
+          chartContainer.innerHTML = '<p>No data available.</p>';
+          chartModal.show();
+          return;
+        }
+
+        // Fetch data via AJAX
+        // Get current filter parameters from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const filter = urlParams.get('filter') || 'month'; // Default to 'month' if not set
+        const startDate = urlParams.get('start_date') || '';
+        const endDate = urlParams.get('end_date') || '';
+
+        // Build the AJAX URL
+        let ajaxURL = `home.php?action=${action}&filter=${filter}`;
+        if (filter === 'custom') {
+          ajaxURL += `&start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        // Optional: Display a loading indicator
+        chartContainer.innerHTML = '<p>Loading...</p>';
+        chartModal.show();
+
+        fetch(ajaxURL)
+          .then(response => response.json())
+          .then(data => {
+            // Prepare data for ApexCharts
+            let chartOptions = {};
+
+            // Configure chart options based on metric
+            switch (metric) {
+              case 'expenses':
+                chartOptions = {
+                  chart: {
+                    type: 'bar',
+                    height: 400
+                  },
+                  series: [{
+                    name: 'Total Expenses',
+                    data: data.map(item => item.y)
+                  }],
+                  xaxis: {
+                    categories: data.map(item => item.x),
+                    title: {
+                      text: 'Date'
+                    },
+                    labels: {
+                      rotate: -45
+                    }
+                  },
+                  yaxis: {
+                    title: {
+                      text: 'Amount (₱)'
+                    }
+                  },
+                  title: {
+                    text: 'Expenses Over Time',
+                    align: 'center'
+                  }
+                };
+                break;
+
+              case 'revenue':
+                chartOptions = {
+                  chart: {
+                    type: 'line',
+                    height: 400
+                  },
+                  series: [{
+                    name: 'Total Revenue',
+                    data: data.map(item => item.y)
+                  }],
+                  xaxis: {
+                    categories: data.map(item => item.x),
+                    title: {
+                      text: 'Date'
+                    },
+                    labels: {
+                      rotate: -45
+                    }
+                  },
+                  yaxis: {
+                    title: {
+                      text: 'Amount (₱)'
+                    }
+                  },
+                  title: {
+                    text: 'Revenue Trends',
+                    align: 'center'
+                  }
+                };
+                break;
+
+              case 'profit':
+                chartOptions = {
+                  chart: {
+                    type: 'area',
+                    height: 400
+                  },
+                  series: [{
+                    name: 'Total Profit',
+                    data: data.map(item => item.y)
+                  }],
+                  xaxis: {
+                    categories: data.map(item => item.x),
+                    title: {
+                      text: 'Date'
+                    },
+                    labels: {
+                      rotate: -45
+                    }
+                  },
+                  yaxis: {
+                    title: {
+                      text: 'Amount (₱)'
+                    }
+                  },
+                  title: {
+                    text: 'Profit Margins',
+                    align: 'center'
+                  }
+                };
+                break;
+
+              case 'transactions':
+                chartOptions = {
+                  chart: {
+                    type: 'pie',
+                    height: 400
+                  },
+                  series: data.map(item => item.y),
+                  labels: data.map(item => item.x),
+                  title: {
+                    text: 'Transactions Distribution',
+                    align: 'center'
+                  }
+                };
+                break;
+
+              case 'fuel':
+                chartOptions = {
+                  chart: {
+                    type: 'bar',
+                    height: 400
+                  },
+                  series: [{
+                    name: 'Fuel Consumption (Liters)',
+                    data: data.map(item => item.y)
+                  }],
+                  xaxis: {
+                    categories: data.map(item => item.x),
+                    title: {
+                      text: 'Date'
+                    },
+                    labels: {
+                      rotate: -45
+                    }
+                  },
+                  yaxis: {
+                    title: {
+                      text: 'Liters'
+                    }
+                  },
+                  title: {
+                    text: 'Fuel Consumption Over Time',
+                    align: 'center'
+                  }
+                };
+                break;
+
+              default:
+                chartOptions = {
+                  chart: {
+                    type: 'bar',
+                    height: 400
+                  },
+                  series: [{
+                    name: 'Data',
+                    data: data.map(item => item.y)
+                  }],
+                  xaxis: {
+                    categories: data.map(item => item.x),
+                    title: {
+                      text: 'Category'
+                    },
+                    labels: {
+                      rotate: -45
+                    }
+                  },
+                  yaxis: {
+                    title: {
+                      text: 'Value'
+                    }
+                  },
+                  title: {
+                    text: 'Details',
+                    align: 'center'
+                  }
+                };
+            }
+
+            // Clear previous chart if exists
+            if (apexChart) {
+              apexChart.destroy();
+            }
+
+            // Create a new ApexChart
+            apexChart = new ApexCharts(chartContainer, chartOptions);
+            apexChart.render();
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            chartContainer.innerHTML = '<p>Error loading data.</p>';
+          });
+      });
+    });
+  });
+</script>
+
+</body>
+
+</html>

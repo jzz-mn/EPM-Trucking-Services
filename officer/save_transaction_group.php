@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $toll_fee_amount,                   // "d" - double (decimal)
             $rate_amount,                       // "d" - double (decimal)
             $final_amount,                      // "d" - double (decimal)
-            $rounded_total_kgs,                 // "i" - integer (Rounded Total KGs)
+            $total_kgs,                 // "i" - integer (Rounded Total KGs)
             $expense_id                         // "i" - integer (ExpenseID)
         );
         if (!$stmt->execute()) {
