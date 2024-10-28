@@ -50,9 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
       // Query to fetch transactiongroup records
       $query = "
-                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, e.TotalExpense
+                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, tg.TollFeeAmount
                 FROM transactiongroup tg
-                JOIN expenses e ON tg.ExpenseID = e.ExpenseID
                 WHERE tg.Date BETWEEN ? AND ?
             ";
 
@@ -71,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
             $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
             $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
-            $html .= '<td>' . number_format($row['TotalExpense'], 2) . '</td>';
+            $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
             $html .= '</tr>';
           }
           echo json_encode(['success' => true, 'html' => $html]);
@@ -108,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       try {
         // Query to select transactiongroup records
         $query = "
-                    SELECT tg.TransactionGroupID, tg.RateAmount, e.TotalExpense
+                    SELECT tg.TransactionGroupID, tg.RateAmount, tg.TollFeeAmount
                     FROM transactiongroup tg
                     JOIN expenses e ON tg.ExpenseID = e.ExpenseID
                     WHERE tg.Date BETWEEN ? AND ?
@@ -130,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         while ($row = $result->fetch_assoc()) {
           $grossAmount += $row['RateAmount'];
-          $totalExpenses += $row['TotalExpense'];
+          $totalExpenses += $row['TollFeeAmount'];
           $transactionGroupIDs[] = $row['TransactionGroupID'];
         }
 

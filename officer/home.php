@@ -265,20 +265,15 @@ include 'dashboard.php';
               <!-- Filter Buttons (Right Side) -->
               <div class="col-md-4 text-end">
                 <div class="btn-group mb-2" role="group" aria-label="Date Filters">
-                  <button type="submit" name="filter" value="year"
-                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'year')
-                      echo 'active'; ?>">Year</button>
-                  <button type="submit" name="filter" value="month"
-                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'month')
-                      echo 'active'; ?>">Month</button>
-                  <button type="submit" name="filter" value="week"
-                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'week')
-                      echo 'active'; ?>">Week</button>
+                  <button type="submit" name="filter" value="year" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'year')
+                    echo 'active'; ?>">Year</button>
+                  <button type="submit" name="filter" value="month" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'month')
+                    echo 'active'; ?>">Month</button>
+                  <button type="submit" name="filter" value="week" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'week')
+                    echo 'active'; ?>">Week</button>
                   <!-- Custom Button to Trigger Modal -->
-                  <button type="button"
-                    class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'custom')
-                      echo 'active'; ?>"
-                    data-bs-toggle="modal" data-bs-target="#customDateModal">
+                  <button type="button" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'custom')
+                    echo 'active'; ?>" data-bs-toggle="modal" data-bs-target="#customDateModal">
                     Custom
                   </button>
                 </div>
@@ -1186,8 +1181,6 @@ include 'dashboard.php';
       </div>
     </div>
 
-    <!-- Include your footer -->
-    <?php include '../officer/footer.php'; ?>
   </div>
 </div>
 
@@ -1501,6 +1494,5 @@ include 'dashboard.php';
   });
 </script>
 
-</body>
-
-</html>
+<!-- Include your footer -->
+<?php include '../officer/footer.php'; ?>

@@ -49,6 +49,7 @@ $tgQuery = "
     LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
     LEFT JOIN fuel f ON e.FuelID = f.FuelID
     WHERE tg.BillingInvoiceNo = ?
+    ORDER BY tg.TransactionGroupID ASC
 ";
 $stmt = $conn->prepare($tgQuery);
 if (!$stmt) {

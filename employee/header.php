@@ -794,15 +794,6 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                           <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Subscription
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            My Statements <span class="badge bg-danger-subtle text-danger rounded ms-8">4</span>
-                          </a>
-                          <a href="javascript:void(0)" class="p-2 dropdown-item h6 rounded-1">
-                            Account Settings
-                          </a>
                           <a href="../employee/authentication-login2.html" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
