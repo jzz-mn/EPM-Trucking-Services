@@ -596,6 +596,8 @@ $conn->close();
     });
   }
 
+
+  
   // Update the table to show rows for the current page
   function updateTable() {
     const table = document.getElementById("invoiceTableBody");
@@ -618,6 +620,8 @@ $conn->close();
     // Update pagination numbers
     updatePaginationNumbers();
   }
+
+
 
   // Function to update pagination numbers
   function updatePaginationNumbers() {
@@ -673,6 +677,8 @@ $conn->close();
     filteredRows = [...allRows]; // Initially, all rows are visible
   }
 </script>
+
+
 
 
 
