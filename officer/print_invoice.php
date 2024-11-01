@@ -6,6 +6,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 // --- Step 1: Retrieve BillingInvoiceNo and Format from POST ---
 if (!isset($_POST['BillingInvoiceNo'])) {
@@ -18,7 +19,7 @@ $billingInvoiceNo = intval($_POST['BillingInvoiceNo']);
 $format = isset($_POST['format']) ? $_POST['format'] : 'pdf'; // default to 'pdf'
 
 // --- Step 2: Handle Logo Image ---
-$logoPath = 'assets/images/logos/epm-logo-no-bg.png'; // Adjust the path as necessary
+$logoPath = '../assetsEPM/logos/epm-logo-no-bg.png'; // Adjusted the path as per your requirement
 if (file_exists($logoPath)) {
     $logoData = file_get_contents($logoPath);
     $base64Logo = base64_encode($logoData);
@@ -26,7 +27,16 @@ if (file_exists($logoPath)) {
     $base64Logo = ''; // Optional: Provide a default image or leave blank
 }
 
-// --- Step 3: Fetch Invoice Details ---
+// --- Step 3: Handle Signature Image ---
+$signaturePath = '../assetsEPM/images/sample.png'; // Signature image path
+if (file_exists($signaturePath)) {
+    $signatureData = file_get_contents($signaturePath);
+    $signatureBase64 = base64_encode($signatureData);
+} else {
+    $signatureBase64 = ''; // Optional: Handle as needed
+}
+
+// --- Step 4: Fetch Invoice Details ---
 $invoiceQuery = "SELECT * FROM invoices WHERE BillingInvoiceNo = ?";
 $stmt = $conn->prepare($invoiceQuery);
 if (!$stmt) {
@@ -41,7 +51,20 @@ if ($invoiceResult->num_rows === 0) {
 $invoice = $invoiceResult->fetch_assoc();
 $stmt->close();
 
-// --- Step 4: Fetch Transaction Groups Associated with the Invoice ---
+// --- Step 5: Generate Filename as per Requirement ---
+$billingStartDate = $invoice['BillingStartDate'];
+$billingEndDate = $invoice['BillingEndDate'];
+
+$startMonth = strtoupper(date('M', strtotime($billingStartDate)));
+$startDay = date('j', strtotime($billingStartDate));
+$endDay = date('j', strtotime($billingEndDate));
+$year = date('Y', strtotime($billingEndDate)); // Assuming both dates are in the same year
+
+$dateRangeStr = $startMonth . ' ' . $startDay . '-' . $endDay . ' ' . $year;
+
+$filename = 'INV ' . $invoice['BillingInvoiceNo'] . 'E ' . $dateRangeStr . ' BILLING INVOICE';
+
+// --- Step 6: Fetch Transaction Groups Associated with the Invoice ---
 $tgQuery = "
     SELECT tg.*, ti.PlateNo, e.TotalExpense, e.FuelID, f.FuelType, f.UnitPrice
     FROM transactiongroup tg
@@ -64,7 +87,7 @@ while ($row = $tgResult->fetch_assoc()) {
 }
 $stmt->close();
 
-// --- Step 5: Fetch Transactions Associated with These Transaction Groups ---
+// --- Step 7: Fetch Transactions Associated with These Transaction Groups ---
 $transactionGroupIDs = array_column($transactionGroups, 'TransactionGroupID');
 
 $transactionsByGroup = [];
@@ -84,7 +107,7 @@ if (!empty($transactionGroupIDs)) {
     }
 }
 
-// --- Step 6: Generate Output Based on Format ---
+// --- Step 8: Generate Output Based on Format ---
 if ($format === 'pdf') {
     // Generate the HTML content for the PDF
     ob_start();
@@ -94,45 +117,92 @@ if ($format === 'pdf') {
 
     <head>
         <meta charset="UTF-8">
-        <title>Invoice #<?php echo htmlspecialchars($billingInvoiceNo); ?></title>
+        <title><?php echo htmlspecialchars($filename); ?></title>
         <style>
             body {
                 font-family: DejaVu Sans, sans-serif;
-                font-size: 10px;
+                font-size: 8px;
+                /* Reduced font size */
                 text-transform: uppercase;
+                margin: 0;
+                /* Removed default margins */
+                padding: 0;
+                /* Removed default padding */
             }
 
             .invoice-header {
-                margin-bottom: 20px;
+                margin-bottom: 0;
+                /* Removed bottom margin */
+                padding: 0;
+                /* Removed padding */
+            }
+
+            .header-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                margin: 0;
+                padding: 0;
             }
 
             .logo {
-                float: left;
+                position: absolute;
+                left: 0;
+                margin: 0;
+                padding: 0;
             }
 
             .company-info {
                 text-align: center;
+                margin: 0;
+                padding: 0;
+            }
+
+            .company-info h2 {
+                margin: 0;
+                padding: 0;
+            }
+
+            .company-info p {
+                margin: 0;
+                padding: 0;
             }
 
             .invoice-details {
                 text-align: left;
-                margin-top: 20px;
+                margin-top: 0;
+                /* Removed top margin */
+                padding: 0;
+            }
+
+            .invoice-details p {
+                margin: 0;
+                padding: 0;
             }
 
             .transactions-table {
                 border-collapse: collapse;
                 width: 100%;
-                margin-top: 20px;
+                margin-top: 0;
+                /* Removed top margin */
+                margin-bottom: 0;
+                /* Removed bottom margin */
+                padding: 0;
             }
 
             .transactions-table th,
             .transactions-table td {
                 border: 1px solid #000;
-                padding: 5px;
+                padding: 2px;
+                /* Reduced padding */
+                margin: 0;
             }
 
             .transactions-table th {
                 background-color: #f0f0f0;
+                margin: 0;
+                padding: 2px;
             }
 
             .transactions-table td.numeric,
@@ -149,7 +219,9 @@ if ($format === 'pdf') {
             }
 
             .totals {
-                margin-top: 20px;
+                margin-top: 0;
+                /* Removed top margin */
+                padding: 0;
                 page-break-inside: avoid;
             }
 
@@ -157,10 +229,14 @@ if ($format === 'pdf') {
                 width: 50%;
                 margin-left: auto;
                 border-collapse: collapse;
+                margin-top: 0;
+                padding: 0;
             }
 
             .totals-table td {
-                padding: 3px;
+                padding: 2px;
+                /* Reduced padding */
+                margin: 0;
             }
 
             .totals-table td.numeric {
@@ -172,7 +248,8 @@ if ($format === 'pdf') {
             }
 
             .signatures {
-                margin-top: 50px;
+                margin-top: 30px;
+                /* Reduced top margin */
                 page-break-inside: avoid;
             }
 
@@ -183,10 +260,28 @@ if ($format === 'pdf') {
             .signature-table td {
                 width: 50%;
                 vertical-align: top;
+                padding: 5px;
             }
 
             .signature-table p {
                 margin: 5px 0;
+                padding: 0;
+            }
+
+            .signature-container {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+            }
+
+            .signature-container p {
+                margin: 0 10px 0 0;
+                padding: 0;
+            }
+
+            .signature-container img {
+                margin-right: 10px;
+                padding: 0;
             }
         </style>
     </head>
@@ -194,27 +289,27 @@ if ($format === 'pdf') {
     <body>
         <!-- Header Section -->
         <div class="invoice-header">
-            <div class="logo">
-                <?php if ($base64Logo): ?>
-                    <img src="data:image/png;base64,<?php echo $base64Logo; ?>" alt="Logo" width="100">
-                <?php endif; ?>
-            </div>
-            <div class="company-info">
-                <h2>E.P.MONTALBO TRUCKING</h2>
-                <p>ELMA/MANNY MONTALBO</p>
-                <p>244 COLIAT, IBAAN, BATANGAS</p>
-                <p>09190053438 / e.p.montalbo@gmail.com</p>
-                <p>TIN# 730-494-707-000</p>
-                <h3>STATEMENT OF ACCOUNT</h3>
+            <div class="header-content">
+                <div class="logo">
+                    <?php if ($base64Logo): ?>
+                        <img src="data:image/png;base64,<?php echo $base64Logo; ?>" alt="Logo" width="80">
+                    <?php endif; ?>
+                </div>
+                <div class="company-info">
+                    <h2>E.P.MONTALBO TRUCKING</h2>
+                    <p>ELMA/MANNY MONTALBO</p>
+                    <p>244 COLIAT, IBAAN, BATANGAS</p>
+                    <p>09190053438 / e.p.montalbo@gmail.com</p>
+                    <p>TIN# 730-494-707-000</p>
+                    <h3>STATEMENT OF ACCOUNT</h3>
+                </div>
             </div>
             <div class="invoice-details">
                 <p><strong>BILLED TO:</strong> <?php echo htmlspecialchars($invoice['BilledTo']); ?></p>
-                <p><strong>BILLING INVOICE #:</strong> SOA# <?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>
+                <p><strong>BILLING INVOICE #:</strong> SOA# <?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>-E
                 </p>
-                <p><strong>BILLING DATE:</strong>
-                    <?php echo strtoupper(date('M. d', strtotime($invoice['BillingStartDate']))); ?> -
-                    <?php echo date('d, Y', strtotime($invoice['BillingEndDate'])); ?>
-                </p>
+                <p><strong>SERVICE NO:</strong> <?php echo htmlspecialchars($invoice['ServiceNo']); ?></p>
+                <p><strong>BILLING DATE:</strong> <?php echo htmlspecialchars($dateRangeStr); ?></p>
             </div>
         </div>
 
@@ -312,6 +407,9 @@ if ($format === 'pdf') {
             </tbody>
         </table>
 
+        <!-- Add a space after totals -->
+        <div style="height: 10px;"></div>
+
         <!-- Totals Section from Invoices Table -->
         <?php
         // Extract totals from the invoices table
@@ -362,26 +460,26 @@ if ($format === 'pdf') {
             <table class="signature-table">
                 <tr>
                     <td>
-                        <p>PREPARED BY:</p>
-                        <p><strong>MANNY MONTALBO</strong></p>
-                        <p>E.P.MONTALBO TRUCKING</p>
+                        <div class="signature-container">
+                            <p>PREPARED BY:</p>
+                            <?php if ($signatureBase64): ?>
+                                <img src="data:image/png;base64,<?php echo $signatureBase64; ?>" alt="Signature" width="80">
+                            <?php endif; ?>
+                            <p><strong>MANNY MONTALBO</strong></p>
+                            <p>E.P.MONTALBO TRUCKING</p>
+                        </div>
                     </td>
                     <td>
-                        <p>RECEIVED BY:</p>
-                        <p>__________________________</p>
+                        <p>RECEIVED BY: __________________________</p>
                         <p>DATE:</p>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <p>CHECKED BY:</p>
-                        <p>__________________________</p>
-                        <p>DP ASSISTANT</p>
+                        <p>CHECKED BY: __________________________ DP ASSISTANT</p>
                     </td>
                     <td>
-                        <p>APPROVED BY:</p>
-                        <p>__________________________</p>
-                        <p>DP HEAD</p>
+                        <p>APPROVED BY: __________________________ DP HEAD</p>
                     </td>
                 </tr>
             </table>
@@ -392,7 +490,7 @@ if ($format === 'pdf') {
     <?php
     $html = ob_get_clean();
 
-    // --- Step 7: Configure Dompdf ---
+    // --- Step 9: Configure Dompdf ---
     $options = new Options();
     $options->set('defaultFont', 'DejaVu Sans'); // Ensure UTF-8 support
     $options->set('isRemoteEnabled', true); // Enable loading of remote content (if needed)
@@ -409,8 +507,8 @@ if ($format === 'pdf') {
     // Render the HTML as PDF
     $dompdf->render();
 
-    // Output the generated PDF to Browser
-    $dompdf->stream('invoice_' . $billingInvoiceNo . '.pdf', array('Attachment' => false));
+    // Output the generated PDF to Browser with the specified filename
+    $dompdf->stream($filename . '.pdf', array('Attachment' => false));
 
     // Close the database connection
     $conn->close();
@@ -426,16 +524,32 @@ if ($format === 'pdf') {
     // Set document properties
     $spreadsheet->getProperties()
         ->setCreator('E.P.MONTALBO TRUCKING')
-        ->setTitle('Invoice #' . $billingInvoiceNo)
+        ->setTitle($filename)
         ->setSubject('Invoice')
         ->setDescription('Generated Invoice');
 
     $sheet = $spreadsheet->getActiveSheet();
 
+    // --- Insert the Logo ---
+    if (file_exists($logoPath)) {
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setDescription('Company Logo');
+        $drawing->setPath($logoPath); // Path to your image file
+        $drawing->setHeight(80); // Adjust the height as needed
+        $drawing->setCoordinates('A1');
+        $drawing->setWorksheet($sheet);
+    }
+
     // --- Populate the spreadsheet with data ---
 
     // Header Section
     $rowNum = 1;
+
+    // Adjust rowNum if logo is inserted
+    if (file_exists($logoPath)) {
+        $rowNum = 6; // Adjust the starting row after the logo
+    }
 
     // Company Info
     $sheet->setCellValue('A' . $rowNum, 'E.P.MONTALBO TRUCKING');
@@ -479,8 +593,12 @@ if ($format === 'pdf') {
     $sheet->setCellValue('B' . $rowNum, 'SOA# ' . $invoice['BillingInvoiceNo']);
     $rowNum++;
 
+    $sheet->setCellValue('A' . $rowNum, 'SERVICE NO:');
+    $sheet->setCellValue('B' . $rowNum, $invoice['ServiceNo']);
+    $rowNum++;
+
     $sheet->setCellValue('A' . $rowNum, 'BILLING DATE:');
-    $sheet->setCellValue('B' . $rowNum, strtoupper(date('M. d', strtotime($invoice['BillingStartDate']))) . ' - ' . date('d, Y', strtotime($invoice['BillingEndDate'])));
+    $sheet->setCellValue('B' . $rowNum, $dateRangeStr);
     $rowNum += 2;
 
     // Transactions Table Headers
@@ -599,6 +717,24 @@ if ($format === 'pdf') {
     $sheet->getStyle('I' . $rowNum . ':J' . $rowNum)->getFont()->setBold(true);
     $rowNum += 2;
 
+    // --- Insert Signature Image ---
+    if (file_exists($signaturePath)) {
+        $signatureDrawing = new Drawing();
+        $signatureDrawing->setName('Signature');
+        $signatureDrawing->setDescription('Signature Image');
+        $signatureDrawing->setPath($signaturePath); // Path to your signature image file
+        $signatureDrawing->setHeight(60); // Adjust the height as needed
+        $signatureDrawing->setCoordinates('A' . $rowNum);
+        $signatureDrawing->setOffsetX(10);
+        $signatureDrawing->setOffsetY(10);
+        $signatureDrawing->setWorksheet($sheet);
+    }
+
+    // Signatures Section
+    $sheet->setCellValue('A' . ($rowNum + 4), 'PREPARED BY:');
+    $sheet->setCellValue('A' . ($rowNum + 5), 'MANNY MONTALBO');
+    $sheet->setCellValue('A' . ($rowNum + 6), 'E.P.MONTALBO TRUCKING');
+
     // Adjust column widths and styles
     foreach (range('A', 'J') as $columnID) {
         $sheet->getColumnDimension($columnID)->setAutoSize(true);
@@ -606,7 +742,7 @@ if ($format === 'pdf') {
 
     // Set number formats for numeric columns
     $numericColumns = ['F', 'G', 'H', 'I', 'J'];
-    for ($i = 1; $i <= $rowNum; $i++) {
+    for ($i = 1; $i <= $rowNum + 6; $i++) {
         foreach ($numericColumns as $col) {
             $sheet->getStyle($col . $i)->getAlignment()->setHorizontal('right');
         }
@@ -614,7 +750,7 @@ if ($format === 'pdf') {
 
     // Output the Excel file
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="invoice_' . $billingInvoiceNo . '.xlsx"');
+    header('Content-Disposition: attachment;filename="' . $filename . '.xlsx"');
     header('Cache-Control: max-age=0');
 
     // Write file to output

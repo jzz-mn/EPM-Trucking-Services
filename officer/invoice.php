@@ -145,10 +145,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $addTollCharges = $totalExpenses;
         $netAmount = $amountNetOfTax + $addTollCharges;
 
-        // Insert into 'invoices' table
+        // ---- Step to Handle ServiceNo ----
+
+        // Fetch the current maximum ServiceNo
+        $serviceNoQuery = "SELECT MAX(ServiceNo) as MaxServiceNo FROM invoices";
+        $serviceNoResult = $conn->query($serviceNoQuery);
+
+        if ($serviceNoResult) {
+          $serviceNoRow = $serviceNoResult->fetch_assoc();
+          $maxServiceNo = $serviceNoRow['MaxServiceNo'];
+          $newServiceNo = ($maxServiceNo !== null) ? $maxServiceNo + 1 : 1;
+        } else {
+          throw new Exception('Failed to fetch the current maximum ServiceNo.');
+        }
+
+        // Insert into 'invoices' table with ServiceNo
         $invoiceQuery = "
-                    INSERT INTO invoices (BillingStartDate, BillingEndDate, BilledTo, GrossAmount, TotalAmount, VAT, EWT, AddTollCharges, AmountNetOfTax, NetAmount)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO invoices (ServiceNo, BillingStartDate, BillingEndDate, BilledTo, GrossAmount, TotalAmount, VAT, EWT, AddTollCharges, AmountNetOfTax, NetAmount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ";
         $stmt = $conn->prepare($invoiceQuery);
         if (!$stmt) {
@@ -156,7 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         $stmt->bind_param(
-          'sssddddddd',
+          'isssddddddd',
+          $newServiceNo,
           $billingStartDate,
           $billingEndDate,
           $billedTo,
@@ -168,10 +183,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           $amountNetOfTax,
           $netAmount
         );
-        $stmt->execute();
+        if (!$stmt->execute()) {
+          throw new Exception('Failed to insert into invoices table: ' . $stmt->error);
+        }
 
-        // Get the BillingInvoiceNo of the inserted invoice
+        // Get the inserted BillingInvoiceNo
         $billingInvoiceNo = $stmt->insert_id;
+        $stmt->close();
 
         // Update 'transactiongroup' records to set 'BillingInvoiceNo' to the new 'BillingInvoiceNo'
         if (!empty($transactionGroupIDs)) {
@@ -183,11 +201,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             throw new Exception('Failed to prepare transactiongroup update statement.');
           }
           $updateStmt->bind_param('i', $billingInvoiceNo);
-          $updateStmt->execute();
+          if (!$updateStmt->execute()) {
+            throw new Exception('Failed to execute transactiongroup update: ' . $updateStmt->error);
+          }
           $updateStmt->close();
         }
 
-        // Commit the transaction
+        // Insert into 'invoices_transactions' table if exists, to link invoices and transactiongroups (if needed)
+        // Assuming such a table exists. If not, you can skip this step.
+
+        // ---- Step 4: Commit the transaction ----
         $conn->commit();
 
         echo json_encode(['success' => true]);
@@ -207,7 +230,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Rest of your PHP code to display the page
 include '../officer/header.php';
 ?>
-
 <div class="body-wrapper">
   <div class="container-fluid">
     <?php if (isset($error_message)): ?>
@@ -260,7 +282,8 @@ include '../officer/header.php';
               <div class="d-flex justify-content-between align-items-center m-4">
                 <!-- Search Bar on the left -->
                 <div class="col-md-4">
-                  <input type="text" id="invoiceSearchBar" class="form-control" placeholder="Search..." onkeyup="filterInvoices()">
+                  <input type="text" id="invoiceSearchBar" class="form-control" placeholder="Search..."
+                    onkeyup="filterInvoices()">
                 </div>
 
                 <!-- Rows per page dropdown on the right -->
@@ -281,14 +304,16 @@ include '../officer/header.php';
 
               <div class="table-responsive mt-3">
                 <?php if ($invoicesResult->num_rows > 0): ?>
-                  <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="invoiceTable">
+                  <table class="table table-striped table-bordered text-nowrap align-middle text-center"
+                    id="invoiceTable">
                     <thead>
                       <tr>
                         <th onclick="sortTable(0)">Invoice No</th>
-                        <th onclick="sortTable(1)">Date Range</th>
-                        <th onclick="sortTable(2)">Billed To</th>
-                        <th onclick="sortTable(3)">Gross Amount</th>
-                        <th onclick="sortTable(4)">Net Amount</th>
+                        <th onclick="sortTable(1)">Service No</th>
+                        <th onclick="sortTable(2)">Date Range</th>
+                        <th onclick="sortTable(3)">Billed To</th>
+                        <th onclick="sortTable(4)">Gross Amount</th>
+                        <th onclick="sortTable(5)">Net Amount</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -296,6 +321,7 @@ include '../officer/header.php';
                       <?php while ($invoice = $invoicesResult->fetch_assoc()): ?>
                         <tr>
                           <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
+                          <td><?php echo htmlspecialchars($invoice['ServiceNo']); ?></td>
                           <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
                             <?php echo htmlspecialchars($invoice['BillingEndDate']); ?>
                           </td>
@@ -432,8 +458,8 @@ $conn->close();
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('#btn-add-invoice').click(function() {
+  $(document).ready(function () {
+    $('#btn-add-invoice').click(function () {
       // Get form data
       var billingStartDate = $('#billingStartDate').val();
       var billingEndDate = $('#billingEndDate').val();
@@ -452,11 +478,10 @@ $conn->close();
         data: {
           action: 'fetch_records',
           billingStartDate: billingStartDate,
-          billingEndDate: billingEndDate,
-          billedTo: billedTo
+          billingEndDate: billingEndDate
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
           if (response.success) {
             // Populate the modal with the data
             $('#selectedRecordsTable tbody').html(response.html);
@@ -468,7 +493,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while fetching the records.');
         }
@@ -476,7 +501,7 @@ $conn->close();
     });
 
     // Handle invoice confirmation
-    $('#confirmGenerateInvoice').click(function() {
+    $('#confirmGenerateInvoice').click(function () {
       // Send AJAX request to generate the invoice
       $.ajax({
         url: 'invoice.php',
@@ -488,7 +513,7 @@ $conn->close();
           billedTo: $('#billedTo').val()
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
           if (response.success) {
             alert('Invoice generated successfully.');
             // Reload the page to show the new invoice
@@ -497,7 +522,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while generating the invoice.');
         }
@@ -545,8 +570,9 @@ $conn->close();
 
   // Sorting Function
   function sortTable(columnIndex) {
+    const isServiceNo = columnIndex === 1; // Specifically for "Service No" column
     const isInvoiceNumber = columnIndex === 0; // Specifically for "Invoice No" column
-    const isNumeric = isInvoiceNumber || columnIndex === 3 || columnIndex === 4; // Numeric columns (Invoice No, Gross Amount, Net Amount)
+    const isNumeric = isInvoiceNumber || isServiceNo || columnIndex === 3 || columnIndex === 4 || columnIndex === 5; // Numeric columns (Invoice No, Service No, Gross Amount, Net Amount)
 
     // Toggle sorting direction
     if (currentSortColumn === columnIndex) {
@@ -560,8 +586,8 @@ $conn->close();
       let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
       let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
 
-      // For "Invoice No", make sure we are sorting as integers
-      if (isInvoiceNumber) {
+      // For "Invoice No" and "Service No", sort as integers
+      if (isInvoiceNumber || isServiceNo) {
         aValue = parseInt(aValue) || 0; // Convert to integer
         bValue = parseInt(bValue) || 0; // Convert to integer
         return isAscending ? aValue - bValue : bValue - aValue;
@@ -596,8 +622,6 @@ $conn->close();
     });
   }
 
-
-  
   // Update the table to show rows for the current page
   function updateTable() {
     const table = document.getElementById("invoiceTableBody");
@@ -620,8 +644,6 @@ $conn->close();
     // Update pagination numbers
     updatePaginationNumbers();
   }
-
-
 
   // Function to update pagination numbers
   function updatePaginationNumbers() {
@@ -677,8 +699,6 @@ $conn->close();
     filteredRows = [...allRows]; // Initially, all rows are visible
   }
 </script>
-
-
 
 
 

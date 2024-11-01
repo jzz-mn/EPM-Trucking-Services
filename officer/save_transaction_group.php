@@ -39,10 +39,12 @@ function round_up_kgs($kgs)
         return 1000;
     }
     if ($kgs <= 4199) {
-        return ceil($kgs / 1000) * 1000;
+        $rounded_kgs = ceil($kgs / 1000) * 1000;
+        return $rounded_kgs > 4000 ? 4000 : $rounded_kgs; // Cap at 4000 if exceeded
     }
     return 4000; // Cap at 4000
 }
+
 
 // Check if the user submitted the form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

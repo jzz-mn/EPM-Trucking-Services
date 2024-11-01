@@ -60,11 +60,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Handle Expenses Data
     if (isset($_POST['expenses_salary'])) {
+        // Ensure fuel_data exists before adding fuel_amount to expenses_total
+        $fuelAmount = isset($_SESSION['fuel_data']['amount']) ? floatval($_SESSION['fuel_data']['amount']) : 0;
+        $expensesTotal = isset($_POST['expenses_total']) ? floatval($_POST['expenses_total']) : 0;
+
+        // Sum expenses_total with fuel_amount
+        $combinedExpensesTotal = $expensesTotal + $fuelAmount;
+
         $_SESSION['expenses_data'] = [
             'salary' => $_POST['expenses_salary'],
             'mobile_fee' => $_POST['expenses_mobile_fee'],
             'other_amount' => $_POST['expenses_other_amount'],
-            'total' => $_POST['expenses_total'],
+            'total' => $combinedExpensesTotal,
         ];
     }
 
@@ -128,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt->execute();
                 $stmt->close();
 
-                // Insert expenses data
+                // Insert expenses data (already includes fuel_amount)
                 $stmt = $conn->prepare("INSERT INTO expenses_entries (TransactionGroupID, SalaryAmount, MobileFeeAmount, OtherAmount, TotalExpense) VALUES (?, ?, ?, ?, ?)");
                 $stmt->bind_param(
                     "idddd",
@@ -379,7 +386,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
                             <!-- Total Expense (Calculated) -->
                             <div class="col-md-6">
-                                <label for="expenses-total" class="form-label">Total Expense</label>
+                                <label for="expenses-total" class="form-label">Total Expenses (Including Fuel)</label>
                                 <input type="number" class="form-control" id="expenses-total" name="expenses_total"
                                     placeholder="Calculated total expenses" step="0.01" readonly>
                             </div>
@@ -400,7 +407,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 </div>
                 <!-- Final Submission Button -->
                 <div class="d-flex justify-content-end">
-                    <button type="button" id="review-submit-btn" class="btn m-4 btn-success">Submit All Data</button>
+                    <button type="button" id="review-submit-btn" class="btn m-4 btn-primary">Submit Data</button>
                 </div>
             </div>
 
@@ -415,8 +422,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Transaction Summary</h5>
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">Transaction Summary</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="summary-content-modal">
@@ -425,6 +432,48 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             <div class="modal-footer">
                 <button type="button" id="confirm-submit-btn" class="btn btn-primary">Confirm Submission</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Edit Transaction Form -->
+                <form id="edit-transaction-form">
+                    <div class="mb-3 position-relative">
+                        <label for="edit-outlet-name" class="form-label">Outlet Name</label>
+                        <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name"
+                            autocomplete="off" required>
+                        <div id="edit-outlet-suggestions" class="list-group position-absolute w-100"
+                            style="z-index: 1000; background-color: white;"></div>
+                        <!-- Validation Feedback -->
+                        <div class="invalid-feedback" id="edit-outlet-error">
+                            Outlet Name does not exist.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="edit-quantity" placeholder="Quantity" step="0.01"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-kgs" class="form-label">KGs</label>
+                        <input type="number" class="form-control" id="edit-kgs" placeholder="KGs" step="0.01" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-edit-btn">Save changes</button>
             </div>
         </div>
     </div>
@@ -455,24 +504,50 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const tbody = $('#transactions-body');
             tbody.empty();
 
+            // Reassign DR Nos
+            let currentDRNo = drCounter;
+            transactions.forEach((txn, index) => {
+                txn.drNo = currentDRNo++;
+            });
+
+            // Now render transactions
             transactions.forEach((txn, index) => {
                 const row = `
-                    <tr>
-                        <td>${txn.drNo}</td>
-                        <td>${sanitizeHTML(txn.outletName)}</td>
-                        <td>${txn.quantity}</td>
-                        <td>${txn.kgs}</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-warning me-1" onclick="editTransaction(${index})">Edit</button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction(${index})">Delete</button>
-                        </td>
-                    </tr>
-                `;
+                <tr>
+                    <td>${txn.drNo}</td>
+                    <td>${sanitizeHTML(txn.outletName)}</td>
+                    <td>${txn.quantity}</td>
+                    <td>${txn.kgs}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary me-1" onclick="editTransaction(${index})">Edit</button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction(${index})">Delete</button>
+                    </td>
+                </tr>
+            `;
                 tbody.append(row);
             });
 
+            // Compute totals
+            let totalTransactions = transactions.length;
+            let totalQuantity = transactions.reduce((sum, txn) => sum + parseFloat(txn.quantity), 0);
+            let totalKGs = transactions.reduce((sum, txn) => sum + parseFloat(txn.kgs), 0);
+
+            // Append total row
+            const totalRow = `
+            <tr>
+                <td colspan="2"><strong>Total Transactions: ${totalTransactions}</strong></td>
+                <td><strong>${totalQuantity.toFixed(2)}</strong></td>
+                <td><strong>${totalKGs.toFixed(2)}</strong></td>
+                <td></td>
+            </tr>
+        `;
+            tbody.append(totalRow);
+
             // Update hidden input field
             $('#transactions-json').val(JSON.stringify(transactions));
+
+            // Update the summary
+            generateSummary();
         }
 
         // Function to clear transaction input fields
@@ -507,8 +582,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             $.getJSON(`../includes/validate_outlet.php`, { outlet_name: outletName }, function (data) {
                 if (data.exists) {
                     // Outlet exists, add transaction
-                    const transaction = { drNo: drCounter, outletName: outletName, quantity: quantity, kgs: kgs };
-                    drCounter++;
+                    const transaction = { outletName: outletName, quantity: quantity, kgs: kgs };
                     transactions.push(transaction);
                     updateTransactionsTable();
                     clearTransactionInputs();
@@ -566,7 +640,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 if (data.exists) {
                     // Outlet exists, update transaction
                     transactions[editingIndex] = {
-                        drNo: transactions[editingIndex].drNo,
                         outletName: outletName,
                         quantity: quantity,
                         kgs: kgs
@@ -610,14 +683,49 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             }
         });
 
-        // Hide suggestions when clicking outside
-        $(document).click(function (event) {
-            if (!$(event.target).closest('#input-outlet-name, #outlet-suggestions').length) {
-                $('#outlet-suggestions').empty();
+        // Outlet Name Autocomplete for Edit Transaction
+        document.getElementById('edit-outlet-name').addEventListener('input', function () {
+            const searchQuery = this.value;
+            if (searchQuery.length >= 1) {
+                fetch(`search_outlets.php?query=${encodeURIComponent(searchQuery)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const suggestionsList = document.getElementById('edit-outlet-suggestions');
+                        suggestionsList.innerHTML = ''; // Clear previous suggestions
+
+                        data.forEach(outlet => {
+                            const suggestionItem = document.createElement('a');
+                            suggestionItem.classList.add('list-group-item', 'list-group-item-action');
+                            suggestionItem.textContent = outlet.CustomerName;
+                            suggestionItem.href = '#';
+                            suggestionItem.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                document.getElementById('edit-outlet-name').value = outlet.CustomerName;
+                                suggestionsList.innerHTML = ''; // Clear suggestions after selection
+                            });
+                            suggestionsList.appendChild(suggestionItem);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching outlet suggestions:', error));
+            } else {
+                document.getElementById('edit-outlet-suggestions').innerHTML = ''; // Clear if query is too short
             }
         });
 
-        // Calculate Fuel Amount
+        // Hide suggestions when clicking outside for Add Transaction and Edit Transaction
+        document.addEventListener('click', function (event) {
+            const isClickInsideAdd = document.getElementById('input-outlet-name').contains(event.target) || document.getElementById('outlet-suggestions').contains(event.target);
+            if (!isClickInsideAdd) {
+                document.getElementById('outlet-suggestions').innerHTML = '';
+            }
+
+            const isClickInsideEdit = document.getElementById('edit-outlet-name').contains(event.target) || document.getElementById('edit-outlet-suggestions').contains(event.target);
+            if (!isClickInsideEdit) {
+                document.getElementById('edit-outlet-suggestions').innerHTML = '';
+            }
+        });
+
+        // Calculate Fuel Amount and Total Expenses
         function calculateFuelAmount() {
             const liters = parseFloat($('#fuel-liters').val());
             const unitPrice = parseFloat($('#fuel-unit-price').val());
@@ -627,17 +735,25 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             } else {
                 $('#fuel-amount').val('');
             }
+            // After calculating fuel amount, recalculate total expenses
+            calculateTotalExpense();
         }
 
         $('#fuel-liters, #fuel-unit-price').on('input', calculateFuelAmount);
 
-        // Calculate Total Expense
+        // Calculate Total Expense (Including Fuel)
         function calculateTotalExpense() {
             const salary = parseFloat($('#expenses-salary').val()) || 0;
             const mobileFee = parseFloat($('#expenses-mobile-fee').val()) || 0;
             const otherAmount = parseFloat($('#expenses-other-amount').val()) || 0;
-            const totalExpense = salary + mobileFee + otherAmount;
-            $('#expenses-total').val(totalExpense.toFixed(2));
+            const fuelAmount = parseFloat($('#fuel-amount').val()) || 0;
+
+            const combinedExpensesTotal = salary + mobileFee + otherAmount + fuelAmount;
+
+            $('#expenses-total').val(combinedExpensesTotal.toFixed(2));
+
+            // Update the summary
+            generateSummary();
         }
 
         $('#expenses-salary, #expenses-mobile-fee, #expenses-other-amount').on('input', calculateTotalExpense);
@@ -657,7 +773,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             // Transactions Summary
             summaryHtml += '<h6>Transactions</h6>';
-            summaryHtml += '<table class="table table-bordered">';
+            summaryHtml += '<table class=" table-responsive table table-striped table-bordered text-nowrap align-middle text-center">';
             summaryHtml += '<thead><tr><th>DR No</th><th>Outlet Name</th><th>Quantity</th><th>KGs</th></tr></thead><tbody>';
             let total_kgs = 0;
             transactions.forEach(txn => {
@@ -669,6 +785,14 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 summaryHtml += '</tr>';
                 total_kgs += parseFloat(txn.kgs);
             });
+            // Total row in summary
+            summaryHtml += '<tr>';
+            summaryHtml += '<td colspan="2"><strong>Total Transactions: ' + transactions.length + '</strong></td>';
+            let totalQuantity = transactions.reduce((sum, txn) => sum + parseFloat(txn.quantity), 0);
+            summaryHtml += '<td><strong>' + totalQuantity.toFixed(2) + '</strong></td>';
+            summaryHtml += '<td><strong>' + total_kgs.toFixed(2) + '</strong></td>';
+            summaryHtml += '</tr>';
+
             summaryHtml += '</tbody></table>';
 
             // Round up Total KGs
@@ -678,24 +802,31 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                     rounded_total_kgs = 1000;
                 } else if (total_kgs <= 4199) {
                     rounded_total_kgs = Math.ceil(total_kgs / 1000) * 1000;
+                    if (rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
+                        rounded_total_kgs = 4000;
+                    }
                 } else {
                     rounded_total_kgs = 4000;
                 }
             }
 
+            // Get expenses total (already includes fuel_amount)
+            const expensesTotal = parseFloat($('#expenses-total').val()) || 0;
+
             // Fuel Summary
+            const fuelAmount = parseFloat($('#fuel-amount').val()) || 0;
             summaryHtml += '<h6>Fuel Details</h6>';
             summaryHtml += '<p><strong>Liters:</strong> ' + $('#fuel-liters').val() + '</p>';
             summaryHtml += '<p><strong>Unit Price:</strong> ' + $('#fuel-unit-price').val() + '</p>';
             summaryHtml += '<p><strong>Fuel Type:</strong> ' + $('#fuel-type').val() + '</p>';
-            summaryHtml += '<p><strong>Amount:</strong> ' + $('#fuel-amount').val() + '</p>';
+            summaryHtml += '<p><strong>Fuel Amount:</strong> ' + fuelAmount.toFixed(2) + '</p>';
 
             // Expenses Summary
             summaryHtml += '<h6>Expenses</h6>';
             summaryHtml += '<p><strong>Salary Amount:</strong> ' + $('#expenses-salary').val() + '</p>';
             summaryHtml += '<p><strong>Mobile Fee:</strong> ' + $('#expenses-mobile-fee').val() + '</p>';
             summaryHtml += '<p><strong>Other Amount:</strong> ' + $('#expenses-other-amount').val() + '</p>';
-            summaryHtml += '<p><strong>Total Expense:</strong> ' + $('#expenses-total').val() + '</p>';
+            summaryHtml += '<p><strong>Total Expenses (Including Fuel):</strong> ' + expensesTotal.toFixed(2) + '</p>';
 
             // Toll Fee Amount
             const tollFeeAmount = parseFloat($('#toll-fee-amount').val()) || 0;
@@ -722,11 +853,10 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                     dataType: 'json',
                     success: function (data) {
                         if (data.success) {
-                            summaryHtml += '<p><strong>Cluster ID:</strong> ' + data.cluster_id + '</p>';
                             summaryHtml += '<p><strong>Rate Amount:</strong> ₱' + parseFloat(data.rate_amount).toFixed(2) + '</p>';
                             // Final Amount
                             const finalAmount = parseFloat(data.rate_amount) + tollFeeAmount;
-                            summaryHtml += '<p><strong>Final Amount:</strong> ₱' + finalAmount.toFixed(2) + '</p>';
+                            summaryHtml += '<p><strong>Total Amount:</strong> ₱' + finalAmount.toFixed(2) + '</p>';
                             // Display the summary
                             $('#summary-content-modal').html(summaryHtml);
                         } else {
@@ -802,6 +932,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             $('#final-submit-btn').click();
         });
     });
+
 </script>
 
 <?php

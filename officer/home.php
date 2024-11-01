@@ -2,6 +2,11 @@
 session_start();
 include '../includes/db_connection.php'; // Adjust the path as necessary
 
+// Set 'year' as the default filter if none is selected
+if (!isset($_GET['filter'])) {
+  $_GET['filter'] = 'year';
+}
+
 // Handle AJAX Requests
 if (isset($_GET['action'])) {
   header('Content-Type: application/json');
@@ -184,11 +189,6 @@ include 'dashboard.php';
 ?>
 
 <?php include '../officer/header.php'; ?>
-
-<!-- Include ApexCharts Library and Bootstrap JS if not already included in header.php -->
-<!-- If already included, you can omit these script tags -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
 
 <!-- DASHBOARD CONTENT-->
 <div class="body-wrapper">
