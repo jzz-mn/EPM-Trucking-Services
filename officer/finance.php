@@ -228,25 +228,42 @@ include '../includes/db_connection.php';
                     </tbody>
                   </table>
                 </div>
-
-                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-                  <!-- Previous button with margin on the right for spacing -->
-                  <button id="prevBtn" class="btn btn-primary me-2" onclick="prevPage()">Previous</button>
-
-                  <!-- Bootstrap pagination component for page numbers -->
-                  <nav>
-                    <ul class="pagination mb-0" id="paginationNumbers"></ul>
+                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                  <div class="order-2 order-md-1 mt-3 mt-md-0">
+                    Number of pages: <span id="totalPages"></span>
+                  </div>
+                  <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="paginationNumbers">
+                      <!-- Pagination buttons will be dynamically generated here -->
+                    </ul>
                   </nav>
-
-                  <!-- Next button with margin on the left for spacing -->
-                  <button id="nextBtn" class="btn btn-primary ms-2" onclick="nextPage()">Next</button>
                 </div>
+
 
                 <script>
                   let currentPage = 1;
                   let rowsPerPage = 5;
                   let totalRows = 0;
                   let totalPages = 0;
+                  let filteredRows = []; // Array to hold the filtered rows
+                  let allRows = []; // Array to hold all the rows initially
+
+                  document.addEventListener('DOMContentLoaded', () => {
+                    initializeTable();
+                  });
+
+                  function initializeTable() {
+                    const tableBody = document.getElementById("tableBody");
+                    if (!tableBody) {
+                      console.error("Table body not found");
+                      return;
+                    }
+                    allRows = Array.from(tableBody.getElementsByTagName("tr"));
+                    filteredRows = [...allRows]; // Initialize with all rows
+                    totalRows = filteredRows.length;
+                    totalPages = Math.ceil(totalRows / rowsPerPage);
+                    updateTable();
+                  }
 
                   function changeRowsPerPage() {
                     rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
@@ -255,59 +272,41 @@ include '../includes/db_connection.php';
                   }
 
                   function filterTable() {
-                    let input = document.getElementById("searchBar").value.toLowerCase();
-                    let table = document.getElementById("expenseTable");
-                    let rows = table.getElementsByTagName("tr");
-                    let noDataFound = true; // Flag to check if no row matches the search criteria
+                    const input = document.getElementById("searchBar").value.toLowerCase();
+                    filteredRows = allRows.filter(row => row.innerText.toLowerCase().includes(input));
 
-                    for (let i = 1; i < rows.length; i++) {
-                      let row = rows[i];
-                      if (row.id !== "noDataRow") {
-                        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+                    // Update total rows and pages after filtering
+                    totalRows = filteredRows.length;
+                    totalPages = Math.ceil(totalRows / rowsPerPage);
 
-                        // If any row is found, set the flag to false
-                        if (row.style.display === "") {
-                          noDataFound = false;
-                        }
+                    const noDataRow = document.getElementById("noDataRow");
+                    if (filteredRows.length === 0) {
+                      if (noDataRow) {
+                        noDataRow.style.display = "";
+                      }
+                    } else {
+                      if (noDataRow) {
+                        noDataRow.style.display = "none";
                       }
                     }
 
-                    // Show or hide the no data found row based on the flag
-                    document.getElementById("noDataRow").style.display = noDataFound ? "" : "none";
-                  }
-
-                  function sortTable(columnIndex) {
-                    let table = document.getElementById("expenseTable");
-                    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-                    let sortedRows = rows.sort((a, b) => {
-                      let aValue = a.getElementsByTagName("td")[columnIndex].innerText;
-                      let bValue = b.getElementsByTagName("td")[columnIndex].innerText;
-                      return aValue.localeCompare(bValue);
-                    });
-
-                    let tableBody = document.getElementById("tableBody");
-                    tableBody.innerHTML = "";
-                    sortedRows.forEach(row => tableBody.appendChild(row));
+                    currentPage = 1; // Reset to the first page after filtering
                     updateTable();
                   }
 
                   function updateTable() {
-                    let table = document.getElementById("expenseTable");
-                    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-                    totalRows = rows.length;
-                    totalPages = Math.ceil(totalRows / rowsPerPage);
+                    const startIndex = (currentPage - 1) * rowsPerPage;
+                    const endIndex = startIndex + rowsPerPage;
 
-                    let startIndex = (currentPage - 1) * rowsPerPage;
-                    let endIndex = startIndex + rowsPerPage;
-
-                    rows.forEach((row, index) => {
-                      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+                    allRows.forEach(row => row.style.display = "none"); // Hide all rows initially
+                    filteredRows.forEach((row, index) => {
+                      if (index >= startIndex && index < endIndex) {
+                        row.style.display = ""; // Display only rows that fit in the current page range
+                      }
                     });
 
-                    document.getElementById("prevBtn").disabled = currentPage === 1;
-                    document.getElementById("nextBtn").disabled = currentPage === totalPages;
+                    document.getElementById("totalPages").textContent = totalPages;
 
-                    // Update the pagination numbers
                     updatePaginationNumbers();
                   }
 
@@ -325,34 +324,108 @@ include '../includes/db_connection.php';
                     }
                   }
 
-                  // Function to dynamically update pagination numbers
                   function updatePaginationNumbers() {
                     const paginationNumbers = document.getElementById("paginationNumbers");
-                    paginationNumbers.innerHTML = ''; // Clear existing numbers
+                    if (!paginationNumbers) {
+                      console.error("Pagination container not found");
+                      return;
+                    }
+                    paginationNumbers.innerHTML = ''; // Clear existing pagination numbers
 
-                    for (let i = 1; i <= totalPages; i++) {
+                    const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5;
+                    const halfVisible = Math.floor(maxVisiblePages / 2);
+                    let startPage, endPage;
+
+                    if (totalPages <= maxVisiblePages) {
+                      startPage = 1;
+                      endPage = totalPages;
+                    } else if (currentPage <= halfVisible) {
+                      startPage = 1;
+                      endPage = maxVisiblePages;
+                    } else if (currentPage + halfVisible >= totalPages) {
+                      startPage = totalPages - maxVisiblePages + 1;
+                      endPage = totalPages;
+                    } else {
+                      startPage = currentPage - halfVisible;
+                      endPage = currentPage + halfVisible;
+                    }
+
+                    paginationNumbers.appendChild(createPaginationItem('«', currentPage === 1, () => {
+                      currentPage = 1;
+                      updateTable();
+                    }));
+
+                    paginationNumbers.appendChild(createPaginationItem('‹', currentPage === 1, prevPage));
+
+                    for (let i = startPage; i <= endPage; i++) {
                       const pageItem = document.createElement("li");
                       pageItem.classList.add("page-item");
                       if (i === currentPage) {
                         pageItem.classList.add("active");
                       }
-                      const pageLink = document.createElement("a");
+
+                      const pageLink = document.createElement("button");
                       pageLink.classList.add("page-link");
                       pageLink.textContent = i;
-                      pageLink.addEventListener('click', () => {
+                      pageLink.onclick = () => {
                         currentPage = i;
                         updateTable();
-                      });
+                      };
 
                       pageItem.appendChild(pageLink);
                       paginationNumbers.appendChild(pageItem);
                     }
+
+                    paginationNumbers.appendChild(createPaginationItem('›', currentPage === totalPages, nextPage));
+
+                    paginationNumbers.appendChild(createPaginationItem('»', currentPage === totalPages, () => {
+                      currentPage = totalPages;
+                      updateTable();
+                    }));
                   }
 
-                  // Initial load
-                  updateTable();
+                  function createPaginationItem(label, isDisabled, onClick) {
+                    const pageItem = document.createElement("li");
+                    pageItem.classList.add("page-item");
+                    if (isDisabled) pageItem.classList.add("disabled");
+
+                    const pageLink = document.createElement("button");
+                    pageLink.classList.add("page-link");
+                    pageLink.textContent = label;
+
+                    if (onClick) pageLink.onclick = onClick;
+
+                    pageItem.appendChild(pageLink);
+                    return pageItem;
+                  }
                 </script>
 
+                <style>
+                  .pagination .page-item .page-link {
+                    min-width: 40px;
+                    height: 40px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border: none;
+                    color: #000;
+                  }
+
+                  .pagination .page-item.active .page-link {
+                    background-color: #0d6efd;
+                    color: #fff;
+                    border-radius: 50%;
+                  }
+
+                  .pagination .page-item.disabled .page-link {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                  }
+
+                  .pagination .page-link:hover {
+                    background-color: #e9ecef;
+                  }
+                </style>
 
 
               </div>
@@ -421,18 +494,7 @@ include '../includes/db_connection.php';
                   </table>
                 </div>
 
-                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-                  <!-- Previous button with margin on the right for spacing -->
-                  <button id="fuelPrevBtn" class="btn btn-primary me-2" onclick="prevFuelPage()">Previous</button>
 
-                  <!-- Bootstrap pagination component for page numbers -->
-                  <nav>
-                    <ul class="pagination mb-0" id="fuelPaginationNumbers"></ul>
-                  </nav>
-
-                  <!-- Next button with margin on the left for spacing -->
-                  <button id="fuelNextBtn" class="btn btn-primary ms-2" onclick="nextFuelPage()">Next</button>
-                </div>
               </div>
 
 
@@ -514,12 +576,43 @@ include '../includes/db_connection.php';
                 </div>
               </div>
 
+              <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                <div class="order-2 order-md-1 mt-3 mt-md-0">
+                  Number of pages: <span id="totalFuelPages"></span>
+                </div>
+                <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                  <ul class="pagination justify-content-center justify-content-md-end mb-0" id="fuelPaginationNumbers">
+                    <!-- Pagination buttons will be dynamically generated here -->
+                  </ul>
+                </nav>
+              </div>
+
+
 
               <script>
                 let fuelCurrentPage = 1;
                 let fuelRowsPerPage = 5;
                 let totalFuelRows = 0;
                 let totalFuelPages = 0;
+                let allFuelRows = [];
+                let filteredFuelRows = [];
+
+                document.addEventListener('DOMContentLoaded', () => {
+                  initializeFuelTable();
+                });
+
+                function initializeFuelTable() {
+                  const fuelTableBody = document.getElementById("fuelTableBody");
+                  if (!fuelTableBody) {
+                    console.error("Fuel table body not found");
+                    return;
+                  }
+                  allFuelRows = Array.from(fuelTableBody.getElementsByTagName("tr"));
+                  filteredFuelRows = [...allFuelRows]; // Initialize with all rows
+                  totalFuelRows = filteredFuelRows.length;
+                  totalFuelPages = Math.ceil(totalFuelRows / fuelRowsPerPage);
+                  updateFuelTable();
+                }
 
                 function changeFuelRowsPerPage() {
                   fuelRowsPerPage = parseInt(document.getElementById("fuelRowsPerPage").value);
@@ -527,49 +620,42 @@ include '../includes/db_connection.php';
                   updateFuelTable();
                 }
 
-                function updateFuelTable() {
-                  let table = document.getElementById("fuelTable");
-                  let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Exclude header
-                  totalFuelRows = rows.length;
+                function filterFuelTable() {
+                  const input = document.getElementById("fuelSearchBar").value.toLowerCase();
+                  filteredFuelRows = allFuelRows.filter(row => row.innerText.toLowerCase().includes(input));
+
+                  // Update total rows and pages after filtering
+                  totalFuelRows = filteredFuelRows.length;
                   totalFuelPages = Math.ceil(totalFuelRows / fuelRowsPerPage);
 
-                  let startIndex = (fuelCurrentPage - 1) * fuelRowsPerPage;
-                  let endIndex = startIndex + fuelRowsPerPage;
+                  const noFuelDataRow = document.getElementById("noFuelDataRow");
+                  if (filteredFuelRows.length === 0) {
+                    if (noFuelDataRow) {
+                      noFuelDataRow.style.display = "";
+                    }
+                  } else {
+                    if (noFuelDataRow) {
+                      noFuelDataRow.style.display = "none";
+                    }
+                  }
 
-                  // Display rows based on the current page
-                  rows.forEach((row, index) => {
-                    row.style.display = index >= startIndex && index < endIndex ? "" : "none";
-                  });
-
-                  // Disable prev/next buttons accordingly
-                  document.getElementById("fuelPrevBtn").disabled = fuelCurrentPage === 1;
-                  document.getElementById("fuelNextBtn").disabled = fuelCurrentPage === totalFuelPages;
-
-                  // Update pagination numbers
-                  updateFuelPaginationNumbers();
+                  fuelCurrentPage = 1; // Reset to the first page after filtering
+                  updateFuelTable();
                 }
 
-                function updateFuelPaginationNumbers() {
-                  const paginationNumbers = document.getElementById("fuelPaginationNumbers");
-                  paginationNumbers.innerHTML = ''; // Clear existing numbers
+                function updateFuelTable() {
+                  const startIndex = (fuelCurrentPage - 1) * fuelRowsPerPage;
+                  const endIndex = startIndex + fuelRowsPerPage;
 
-                  for (let i = 1; i <= totalFuelPages; i++) {
-                    const pageItem = document.createElement("li");
-                    pageItem.classList.add("page-item");
-                    if (i === fuelCurrentPage) {
-                      pageItem.classList.add("active");
+                  allFuelRows.forEach(row => row.style.display = "none"); // Hide all rows initially
+                  filteredFuelRows.forEach((row, index) => {
+                    if (index >= startIndex && index < endIndex) {
+                      row.style.display = ""; // Display only rows that fit in the current page range
                     }
-                    const pageLink = document.createElement("a");
-                    pageLink.classList.add("page-link");
-                    pageLink.textContent = i;
-                    pageLink.addEventListener('click', () => {
-                      fuelCurrentPage = i;
-                      updateFuelTable();
-                    });
+                  });
 
-                    pageItem.appendChild(pageLink);
-                    paginationNumbers.appendChild(pageItem);
-                  }
+                  document.getElementById("totalFuelPages").textContent = totalFuelPages;
+                  updateFuelPaginationNumbers();
                 }
 
                 function nextFuelPage() {
@@ -586,44 +672,80 @@ include '../includes/db_connection.php';
                   }
                 }
 
-                // Call this function to initialize the table on page load
-                document.addEventListener('DOMContentLoaded', updateFuelTable);
+                function updateFuelPaginationNumbers() {
+                  const paginationNumbers = document.getElementById("fuelPaginationNumbers");
+                  if (!paginationNumbers) {
+                    console.error("Pagination container not found");
+                    return;
+                  }
+                  paginationNumbers.innerHTML = ''; // Clear existing pagination numbers
 
-                // Populate modal form with the selected row data
-                function populateFuelEditForm(fuel) {
-                  document.getElementById("updateFuelID").value = fuel.FuelID;
-                  document.getElementById("updateDate").value = fuel.Date;
-                  document.getElementById("updateLiters").value = fuel.Liters;
-                  document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
-                  document.getElementById("updateFuelType").value = fuel.FuelType;
-                  document.getElementById("updateAmount").value = fuel.Amount;
-                }
+                  const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5;
+                  const halfVisible = Math.floor(maxVisiblePages / 2);
+                  let startPage, endPage;
 
-                function filterFuelTable() {
-                  let input = document.getElementById("fuelSearchBar").value.toLowerCase();
-                  let table = document.getElementById("fuelTable");
-                  let rows = table.getElementsByTagName("tr");
-                  let noDataFound = true; // Flag to check if no row matches the search criteria
-
-                  for (let i = 1; i < rows.length; i++) { // Start from 1 to skip the header
-                    let row = rows[i];
-                    if (row.id !== "noFuelDataRow") {
-                      row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
-
-                      // If any row is found, set the flag to false
-                      if (row.style.display === "") {
-                        noDataFound = false;
-                      }
-                    }
+                  if (totalFuelPages <= maxVisiblePages) {
+                    startPage = 1;
+                    endPage = totalFuelPages;
+                  } else if (fuelCurrentPage <= halfVisible) {
+                    startPage = 1;
+                    endPage = maxVisiblePages;
+                  } else if (fuelCurrentPage + halfVisible >= totalFuelPages) {
+                    startPage = totalFuelPages - maxVisiblePages + 1;
+                    endPage = totalFuelPages;
+                  } else {
+                    startPage = fuelCurrentPage - halfVisible;
+                    endPage = fuelCurrentPage + halfVisible;
                   }
 
-                  // Show or hide the no data found row based on the flag
-                  document.getElementById("noFuelDataRow").style.display = noDataFound ? "" : "none";
+                  paginationNumbers.appendChild(createFuelPaginationItem('«', fuelCurrentPage === 1, () => {
+                    fuelCurrentPage = 1;
+                    updateFuelTable();
+                  }));
+
+                  paginationNumbers.appendChild(createFuelPaginationItem('‹', fuelCurrentPage === 1, prevFuelPage));
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    const pageItem = document.createElement("li");
+                    pageItem.classList.add("page-item");
+                    if (i === fuelCurrentPage) {
+                      pageItem.classList.add("active");
+                    }
+
+                    const pageLink = document.createElement("button");
+                    pageLink.classList.add("page-link");
+                    pageLink.textContent = i;
+                    pageLink.onclick = () => {
+                      fuelCurrentPage = i;
+                      updateFuelTable();
+                    };
+
+                    pageItem.appendChild(pageLink);
+                    paginationNumbers.appendChild(pageItem);
+                  }
+
+                  paginationNumbers.appendChild(createFuelPaginationItem('›', fuelCurrentPage === totalFuelPages, nextFuelPage));
+
+                  paginationNumbers.appendChild(createFuelPaginationItem('»', fuelCurrentPage === totalFuelPages, () => {
+                    fuelCurrentPage = totalFuelPages;
+                    updateFuelTable();
+                  }));
                 }
 
+                function createFuelPaginationItem(label, isDisabled, onClick) {
+                  const pageItem = document.createElement("li");
+                  pageItem.classList.add("page-item");
+                  if (isDisabled) pageItem.classList.add("disabled");
 
-                // Initial load
-                updateFuelTable();
+                  const pageLink = document.createElement("button");
+                  pageLink.classList.add("page-link");
+                  pageLink.textContent = label;
+
+                  if (onClick) pageLink.onclick = onClick;
+
+                  pageItem.appendChild(pageLink);
+                  return pageItem;
+                }
               </script>
 
             </div>

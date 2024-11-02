@@ -35,15 +35,15 @@ include '../includes/db_connection.php';
 
     <div class="widget-content searchable-container list">
       <div class="card card-body">
-        <div class="row">
-          <div class="col-md-4 col-xl-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="col-md-4 ">
             <form class="position-relative">
-              <input type="text" class="form-control product-search ps-5" id="input-search" placeholder="Search" />
-              <i class="ti ti-search position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
+              <input type="text" class="form-control" id="input-search" placeholder="Search..." />
+
             </form>
           </div>
-          <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-            <select id="rowsPerPage" class="form-select w-auto d-inline">
+          <div class="col-md-4 text-end ">
+            <select id="rowsPerPage" class="form-select w-auto d-inline m-1">
               <option value="5">5 rows</option>
               <option value="10">10 rows</option>
               <option value="20">20 rows</option>
@@ -94,12 +94,15 @@ include '../includes/db_connection.php';
             </tbody>
           </table>
         </div>
-        <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-          <button id="prevBtn" class="btn btn-primary me-2" onclick="prevPage()">Previous</button>
-          <nav>
-            <ul class="pagination mb-0" id="paginationNumbers"></ul>
+        <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+          <div class="order-2 order-md-1 mt-3 mt-md-0">
+            Number of pages: <span id="totalPages"></span>
+          </div>
+          <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+            <ul class="pagination justify-content-center justify-content-md-end mb-0" id="paginationNumbers">
+              <!-- Pagination buttons will be dynamically generated here -->
+            </ul>
           </nav>
-          <button id="nextBtn" class="btn btn-primary ms-2" onclick="nextPage()">Next</button>
         </div>
 
       </div>
@@ -124,8 +127,8 @@ include '../includes/db_connection.php';
 
       // Handle numeric sorting
       if (isNumeric) {
-        aValue = parseFloat(aValue);
-        bValue = parseFloat(bValue);
+        aValue = parseFloat(aValue.replace(/[^0-9.-]/g, '')) || 0; // Remove non-numeric characters and convert to float
+        bValue = parseFloat(bValue.replace(/[^0-9.-]/g, '')) || 0;
       }
 
       return isAscending ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
@@ -150,17 +153,16 @@ include '../includes/db_connection.php';
     });
   }
 
-  // Pagination logic (remains unchanged)
+  // Pagination logic
   let currentPage = 1;
   let rowsPerPage = 5;
   let totalRows = 0;
   let totalPages = 0;
-  const maxVisiblePages = 5;
-  let filteredRows = []; // Store the filtered rows for pagination
+  let filteredRows = [];
 
   function updateTable() {
-    const table = document.getElementById("activityLogsTable");
-    const rows = filteredRows.length ? filteredRows : Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+    const tableBody = document.getElementById("activityLogsbody");
+    const rows = filteredRows.length ? filteredRows : Array.from(tableBody.children);
     totalRows = rows.length;
     totalPages = Math.ceil(totalRows / rowsPerPage);
 
@@ -171,9 +173,7 @@ include '../includes/db_connection.php';
       row.style.display = index >= startIndex && index < endIndex ? "" : "none";
     });
 
-    document.getElementById("prevBtn").disabled = currentPage === 1;
-    document.getElementById("nextBtn").disabled = currentPage === totalPages;
-
+    document.getElementById("totalPages").textContent = totalPages;
     updatePaginationNumbers();
   }
 
@@ -195,73 +195,114 @@ include '../includes/db_connection.php';
     const paginationNumbers = document.getElementById("paginationNumbers");
     paginationNumbers.innerHTML = ""; // Clear existing numbers
 
-    const pagesToShow = [];
+    const isMobile = window.innerWidth <= 768; // Check if it's mobile view
+    const maxVisiblePages = isMobile ? 3 : 5; // Show 3 pages on mobile, 5 on desktop
     const halfVisible = Math.floor(maxVisiblePages / 2);
+    let startPage, endPage;
 
-    let startPage = Math.max(1, currentPage - halfVisible);
-    let endPage = Math.min(totalPages, currentPage + halfVisible);
-
-    if (currentPage - halfVisible < 1) {
-      endPage = Math.min(totalPages, endPage + (halfVisible - (currentPage - 1)));
+    // Ensure currentPage is within bounds
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+      currentPage = 1;
     }
 
-    if (currentPage + halfVisible > totalPages) {
-      startPage = Math.max(1, startPage - (currentPage + halfVisible - totalPages));
+    if (totalPages <= maxVisiblePages) {
+      startPage = 1;
+      endPage = totalPages;
+    } else if (currentPage <= halfVisible) {
+      startPage = 1;
+      endPage = maxVisiblePages;
+    } else if (currentPage + halfVisible >= totalPages) {
+      startPage = totalPages - maxVisiblePages + 1;
+      endPage = totalPages;
+    } else {
+      startPage = currentPage - halfVisible;
+      endPage = currentPage + halfVisible;
     }
 
-    if (startPage > 1) {
-      pagesToShow.push(1);
-      if (startPage > 2) pagesToShow.push('...');
-    }
+    // Create first page button (<<)
+    paginationNumbers.appendChild(createPaginationItem('«', currentPage === 1, () => {
+      currentPage = 1;
+      updateTable();
+    }));
+
+    // Create previous button (<)
+    paginationNumbers.appendChild(createPaginationItem('‹', currentPage === 1, prevPage));
 
     for (let i = startPage; i <= endPage; i++) {
-      pagesToShow.push(i);
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) pagesToShow.push('...');
-      pagesToShow.push(totalPages);
-    }
-
-    pagesToShow.forEach(page => {
       const pageItem = document.createElement("li");
-      pageItem.style.display = 'inline'; // Inline display for list item
+      pageItem.classList.add('page-item');
 
-      if (page === '...') {
-        const dots = document.createElement("span");
-        dots.textContent = '...';
-        pageItem.appendChild(dots);
-      } else {
-        const pageLink = document.createElement("a");
-        pageLink.style.padding = '6px 12px';
-        pageLink.style.margin = '0 5px';
-        pageLink.style.textDecoration = 'none';
-        pageLink.style.cursor = 'pointer';
-        pageLink.textContent = page;
-        if (page === currentPage) {
-          pageLink.style.fontWeight = 'bold';
-          pageLink.style.color = '#007bff';
-          pageLink.style.border = '1px solid #007bff'; // Circle border
-          pageLink.style.borderRadius = '50%'; // Circle shape
-          pageLink.style.padding = '5px 10px'; // Padding for circle effect
-        }
-        pageLink.addEventListener('click', () => {
-          currentPage = page;
-          updateTable();
-        });
-        pageItem.appendChild(pageLink);
+      const pageLink = document.createElement("button");
+      pageLink.classList.add('page-link', 'border-0');
+      pageLink.textContent = i;
+      pageLink.style.minWidth = '40px';
+      pageLink.style.height = '40px';
+      pageLink.style.display = 'flex';
+      pageLink.style.justifyContent = 'center';
+      pageLink.style.alignItems = 'center';
+
+      if (i === currentPage) {
+        pageLink.classList.add('active', 'rounded-circle', 'bg-primary', 'text-white');
+        pageLink.classList.remove('border-0'); // Remove border-0 for the active button
       }
+
+      pageLink.onclick = () => {
+        currentPage = i;
+        updateTable();
+      };
+
+      pageItem.appendChild(pageLink);
       paginationNumbers.appendChild(pageItem);
-    });
+    }
+
+    // Create next button (>)
+    paginationNumbers.appendChild(createPaginationItem('›', currentPage === totalPages, nextPage));
+
+    // Create last page button (>>)
+    paginationNumbers.appendChild(createPaginationItem('»', currentPage === totalPages, () => {
+      currentPage = totalPages;
+      updateTable();
+    }));
   }
+
+  function createPaginationItem(label, isDisabled = false, onClick = null) {
+    const pageItem = document.createElement("li");
+    pageItem.classList.add('page-item');
+    if (isDisabled) {
+      pageItem.classList.add('disabled');
+    }
+
+    const pageLink = document.createElement("button");
+    pageLink.classList.add('page-link', 'border-0');
+    pageLink.textContent = label;
+    pageLink.style.minWidth = '40px';
+    pageLink.style.height = '40px';
+    pageLink.style.display = 'flex';
+    pageLink.style.justifyContent = 'center';
+    pageLink.style.alignItems = 'center';
+
+    if (onClick) {
+      pageLink.onclick = onClick;
+    }
+
+    pageItem.appendChild(pageLink);
+    return pageItem;
+  }
+
+  window.addEventListener('resize', updatePaginationNumbers); // Adjust on resize
+  document.addEventListener('DOMContentLoaded', () => {
+    updateTable();
+    updatePaginationNumbers();
+  });
 
   document.getElementById("rowsPerPage").addEventListener('change', function() {
     rowsPerPage = parseInt(this.value);
     currentPage = 1;
     updateTable();
   });
-
-  document.addEventListener('DOMContentLoaded', updateTable);
 
   // Search functionality
   document.getElementById('input-search').addEventListener('input', function() {
@@ -277,6 +318,7 @@ include '../includes/db_connection.php';
     updateTable(); // Update pagination after filtering
   });
 </script>
+
 
 
 
@@ -302,6 +344,26 @@ include '../includes/db_connection.php';
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .pagination .page-item .page-link {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: #000;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+  }
+
+  .pagination .page-link:hover {
+    background-color: #e9ecef;
   }
 </style>
 

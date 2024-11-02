@@ -353,13 +353,17 @@ include '../officer/header.php';
                 <?php endif; ?>
               </div>
 
-              <div class="pagination-controls d-flex justify-content-end align-items-center mt-3 m-4 mb-5">
-                <button id="prevBtn" class="btn btn-primary me-2" onclick="prevPage()">Previous</button>
-                <nav>
-                  <ul class="pagination mb-0" id="paginationNumbers"></ul>
+              <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row p-3">
+                <div class="order-2 order-md-1 mt-3 mt-md-0">
+                  Number of pages: <span id="totalPages"></span>
+                </div>
+                <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                  <ul class="pagination justify-content-center justify-content-md-end mb-0" id="paginationNumbers">
+                    <!-- Pagination buttons will be dynamically generated here -->
+                  </ul>
                 </nav>
-                <button id="nextBtn" class="btn btn-primary ms-2" onclick="nextPage()">Next</button>
               </div>
+
 
             </div>
           </div>
@@ -458,8 +462,8 @@ $conn->close();
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function () {
-    $('#btn-add-invoice').click(function () {
+  $(document).ready(function() {
+    $('#btn-add-invoice').click(function() {
       // Get form data
       var billingStartDate = $('#billingStartDate').val();
       var billingEndDate = $('#billingEndDate').val();
@@ -481,7 +485,7 @@ $conn->close();
           billingEndDate: billingEndDate
         },
         dataType: 'json',
-        success: function (response) {
+        success: function(response) {
           if (response.success) {
             // Populate the modal with the data
             $('#selectedRecordsTable tbody').html(response.html);
@@ -493,7 +497,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while fetching the records.');
         }
@@ -501,7 +505,7 @@ $conn->close();
     });
 
     // Handle invoice confirmation
-    $('#confirmGenerateInvoice').click(function () {
+    $('#confirmGenerateInvoice').click(function() {
       // Send AJAX request to generate the invoice
       $.ajax({
         url: 'invoice.php',
@@ -513,7 +517,7 @@ $conn->close();
           billedTo: $('#billedTo').val()
         },
         dataType: 'json',
-        success: function (response) {
+        success: function(response) {
           if (response.success) {
             alert('Invoice generated successfully.');
             // Reload the page to show the new invoice
@@ -522,7 +526,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function (xhr, status, error) {
+        error: function(xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while generating the invoice.');
         }
@@ -533,145 +537,133 @@ $conn->close();
 
 <script>
   let currentPage = 1;
-  let rowsPerPage = 5; // Default rows per page
+  let rowsPerPage = 5;
   let totalRows = 0;
   let totalPages = 0;
-  let allRows = []; // Array to store all rows initially
-  let filteredRows = []; // Array to store filtered rows
-  let currentSortColumn = -1; // Track currently sorted column
-  let isAscending = true; // Track sort direction (ascending/descending)
+  let allRows = [];
+  let filteredRows = [];
+  let currentSortColumn = -1; // Track the current column for sorting
+  let isAscending = true; // Track sort direction
 
-  // Initialize the table and pagination on page load
+  // Initialize rows and set event listeners after the DOM is loaded
   document.addEventListener('DOMContentLoaded', () => {
-    initializeRows(); // Initialize all rows
-    updateFilteredRows(); // Initialize filtered rows
-    updateTable(); // Populate the table with rows
+    initializeRows();
+    updateTable();
+    updatePaginationNumbers();
+    setEventListeners();
   });
 
-  // Function to initialize all rows
+  // Function to set event listeners for search and rows per page
+  function setEventListeners() {
+    document.getElementById("rowsPerPage").addEventListener('change', changeRowsPerPage);
+    document.getElementById("invoiceSearchBar").addEventListener('input', filterInvoices);
+  }
+
   function initializeRows() {
-    const table = document.getElementById("invoiceTableBody");
-    allRows = Array.from(table.getElementsByTagName("tr")); // Store all rows initially
-  }
-
-  // Function to filter rows based on search input
-  function filterInvoices() {
-    const input = document.getElementById("invoiceSearchBar").value.toLowerCase();
-
-    // Filter rows based on the search input
-    filteredRows = allRows.filter(row => {
-      const rowText = row.innerText.toLowerCase();
-      return rowText.includes(input); // Keep rows that match the search query
-    });
-
-    currentPage = 1; // Reset to the first page after filtering
-    updateTable(); // Update table with filtered results
-  }
-
-  // Sorting Function
-  function sortTable(columnIndex) {
-    const isServiceNo = columnIndex === 1; // Specifically for "Service No" column
-    const isInvoiceNumber = columnIndex === 0; // Specifically for "Invoice No" column
-    const isNumeric = isInvoiceNumber || isServiceNo || columnIndex === 3 || columnIndex === 4 || columnIndex === 5; // Numeric columns (Invoice No, Service No, Gross Amount, Net Amount)
-
-    // Toggle sorting direction
-    if (currentSortColumn === columnIndex) {
-      isAscending = !isAscending;
-    } else {
-      currentSortColumn = columnIndex;
-      isAscending = true; // Default to ascending order
+    const tableBody = document.getElementById("invoiceTableBody");
+    if (!tableBody) {
+      console.error("Table body element with ID 'invoiceTableBody' not found.");
+      return;
     }
-
-    filteredRows.sort((a, b) => {
-      let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
-      let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
-
-      // For "Invoice No" and "Service No", sort as integers
-      if (isInvoiceNumber || isServiceNo) {
-        aValue = parseInt(aValue) || 0; // Convert to integer
-        bValue = parseInt(bValue) || 0; // Convert to integer
-        return isAscending ? aValue - bValue : bValue - aValue;
-      }
-
-      // For other numeric columns
-      if (isNumeric) {
-        aValue = parseFloat(aValue.replace(/,/g, '')) || 0; // Handle commas for large numbers
-        bValue = parseFloat(bValue.replace(/,/g, '')) || 0;
-        return isAscending ? aValue - bValue : bValue - aValue;
-      }
-
-      // For string columns
-      return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-    });
-
-    currentPage = 1; // Reset to the first page after sorting
-    updateTable(); // Update table with sorted results
-
-    // Update the sorting icons
-    updateSortingIcons(columnIndex);
+    allRows = Array.from(tableBody.getElementsByTagName("tr"));
+    filteredRows = [...allRows];
+    totalRows = filteredRows.length;
+    totalPages = Math.ceil(totalRows / rowsPerPage);
   }
 
-  // Function to update sorting icons (arrow indicators)
-  function updateSortingIcons(columnIndex) {
-    const headers = document.querySelectorAll("th");
-    headers.forEach((header, index) => {
-      header.classList.remove('ascending', 'descending');
-      if (index === columnIndex) {
-        header.classList.add(isAscending ? 'ascending' : 'descending');
-      }
-    });
-  }
-
-  // Update the table to show rows for the current page
   function updateTable() {
-    const table = document.getElementById("invoiceTableBody");
+    const tableBody = document.getElementById("invoiceTableBody");
+    if (!tableBody) {
+      console.error("Table body element with ID 'invoiceTableBody' not found.");
+      return;
+    }
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
 
-    // Clear the table and display rows for the current page
-    table.innerHTML = "";
+    tableBody.innerHTML = "";
     filteredRows.slice(startIndex, endIndex).forEach(row => {
-      table.appendChild(row);
+      tableBody.appendChild(row);
     });
 
-    totalRows = filteredRows.length;
-    totalPages = Math.ceil(totalRows / rowsPerPage);
-
-    // Disable/Enable next/previous buttons
-    document.getElementById("prevBtn").disabled = currentPage === 1;
-    document.getElementById("nextBtn").disabled = currentPage === totalPages || totalPages === 0;
-
-    // Update pagination numbers
+    totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+    document.getElementById("totalPages").textContent = totalPages;
     updatePaginationNumbers();
   }
 
-  // Function to update pagination numbers
   function updatePaginationNumbers() {
     const paginationNumbers = document.getElementById("paginationNumbers");
-    paginationNumbers.innerHTML = ""; // Clear existing pagination numbers
+    if (!paginationNumbers) {
+      console.error("Pagination element with ID 'paginationNumbers' not found.");
+      return;
+    }
+    paginationNumbers.innerHTML = "";
 
-    // Loop through the total number of pages and create page links
-    for (let i = 1; i <= totalPages; i++) {
+    const isMobile = window.innerWidth <= 768; // Check if it's mobile view
+    const maxVisiblePages = isMobile ? 3 : 5; // Show 3 pages on mobile, 5 on desktop
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    let startPage, endPage;
+
+    if (totalPages <= maxVisiblePages) {
+      startPage = 1;
+      endPage = totalPages;
+    } else if (currentPage <= halfVisible) {
+      startPage = 1;
+      endPage = maxVisiblePages;
+    } else if (currentPage + halfVisible >= totalPages) {
+      startPage = totalPages - maxVisiblePages + 1;
+      endPage = totalPages;
+    } else {
+      startPage = currentPage - halfVisible;
+      endPage = currentPage + halfVisible;
+    }
+
+    paginationNumbers.appendChild(createPaginationItem('«', currentPage === 1, () => {
+      currentPage = 1;
+      updateTable();
+    }));
+    paginationNumbers.appendChild(createPaginationItem('‹', currentPage === 1, prevPage));
+
+    for (let i = startPage; i <= endPage; i++) {
       const pageItem = document.createElement("li");
       pageItem.classList.add("page-item");
       if (i === currentPage) {
-        pageItem.classList.add("active"); // Highlight current page
+        pageItem.classList.add("active");
       }
 
-      const pageLink = document.createElement("a");
+      const pageLink = document.createElement("button");
       pageLink.classList.add("page-link");
       pageLink.textContent = i;
-      pageLink.addEventListener('click', () => {
-        currentPage = i; // Change to clicked page number
+      pageLink.onclick = () => {
+        currentPage = i;
         updateTable();
-      });
+      };
 
       pageItem.appendChild(pageLink);
       paginationNumbers.appendChild(pageItem);
     }
+
+    paginationNumbers.appendChild(createPaginationItem('›', currentPage === totalPages, nextPage));
+    paginationNumbers.appendChild(createPaginationItem('»', currentPage === totalPages, () => {
+      currentPage = totalPages;
+      updateTable();
+    }));
   }
 
-  // Move to the next page
+  function createPaginationItem(label, isDisabled, onClick) {
+    const pageItem = document.createElement("li");
+    pageItem.classList.add("page-item");
+    if (isDisabled) pageItem.classList.add("disabled");
+
+    const pageLink = document.createElement("button");
+    pageLink.classList.add("page-link");
+    pageLink.textContent = label;
+
+    if (onClick) pageLink.onclick = onClick;
+
+    pageItem.appendChild(pageLink);
+    return pageItem;
+  }
+
   function nextPage() {
     if (currentPage < totalPages) {
       currentPage++;
@@ -679,7 +671,6 @@ $conn->close();
     }
   }
 
-  // Move to the previous page
   function prevPage() {
     if (currentPage > 1) {
       currentPage--;
@@ -687,16 +678,51 @@ $conn->close();
     }
   }
 
-  // Change the number of rows per page
   function changeRowsPerPage() {
     rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
-    currentPage = 1; // Reset to the first page
+    currentPage = 1;
     updateTable();
   }
 
-  // Helper function to update filtered rows based on search input
-  function updateFilteredRows() {
-    filteredRows = [...allRows]; // Initially, all rows are visible
+  function filterInvoices() {
+    const searchValue = document.getElementById("invoiceSearchBar").value.toLowerCase();
+    filteredRows = allRows.filter(row => row.innerText.toLowerCase().includes(searchValue));
+    currentPage = 1;
+    updateTable();
+  }
+
+  // Sorting function
+  function sortTable(columnIndex) {
+    isAscending = currentSortColumn === columnIndex ? !isAscending : true;
+    currentSortColumn = columnIndex;
+
+    filteredRows.sort((a, b) => {
+      let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+      let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+      if (columnIndex === 4 || columnIndex === 5) { // Adjust column index as needed for numeric columns
+        aValue = parseFloat(aValue.replace(/[^0-9.-]+/g, '')) || 0;
+        bValue = parseFloat(bValue.replace(/[^0-9.-]+/g, '')) || 0;
+      }
+
+      return isNaN(aValue) || isNaN(bValue) ?
+        isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue) :
+        isAscending ? aValue - bValue : bValue - aValue;
+    });
+
+    currentPage = 1;
+    updateTable();
+    updateSortIcons(columnIndex);
+  }
+
+  function updateSortIcons(columnIndex) {
+    const headers = document.querySelectorAll("th");
+    headers.forEach((header, index) => {
+      header.classList.remove('ascending', 'descending');
+      if (index === columnIndex) {
+        header.classList.add(isAscending ? 'ascending' : 'descending');
+      }
+    });
   }
 </script>
 
@@ -708,14 +734,32 @@ $conn->close();
     cursor: pointer;
   }
 
-  /* Adding arrow after the column header text */
   .ascending::after {
     content: ' ↑';
-    /* Unicode for up arrow */
   }
 
   .descending::after {
     content: ' ↓';
-    /* Unicode for down arrow */
+  }
+
+  .pagination .page-item .page-link {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: #000;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+    border: none;
+  }
+
+  .pagination .page-link:hover {
+    background-color: #e9ecef;
   }
 </style>
