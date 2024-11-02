@@ -15,6 +15,29 @@ if (!isset($_SESSION['Username'])) {
 $username = htmlspecialchars($_SESSION['Username'], ENT_QUOTES, 'UTF-8');
 $role = htmlspecialchars($_SESSION['Role'], ENT_QUOTES, 'UTF-8');
 $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
+
+// Include the database connection
+require_once('../includes/db_connection.php');
+
+// Initialize the user image source with a default placeholder
+$userImageSrc = '../assets/images/profile/user-1.jpg';
+
+// Get the user's image from the database
+if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = ?")) {
+  $stmt->bind_param("s", $_SESSION['Username']);
+  $stmt->execute();
+  $stmt->bind_result($userImageData);
+  if ($stmt->fetch() && !empty($userImageData)) {
+    // Get the MIME type of the image
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->buffer($userImageData);
+
+    // Build the data URI for the image
+    $userImageSrc = 'data:' . $mimeType . ';base64,' . base64_encode($userImageData);
+  }
+  $stmt->close();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -35,12 +58,9 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
   <title>EPM Trucking Services</title>
 </head>
 
-
-
 <body class="link-sidebar">
 
   <!-- Preloader -->
-
 
   <div id="main-wrapper">
     <!-- Sidebar Start -->
@@ -98,11 +118,6 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                   </a>
                 </li>
                 <?php
-                // Start the session if not already started
-                if (session_status() == PHP_SESSION_NONE) {
-                  session_start();
-                }
-
                 // Function to check if the user is logged in and has a specific role
                 function isUserRole($role)
                 {
@@ -163,14 +178,6 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                 <span class="hide-menu">Invoice</span>
               </a>
             </li>
-            <?php
-            // Start the session if not already started
-            if (session_status() == PHP_SESSION_NONE) {
-              session_start();
-            }
-
-            // Function to check if the user is logged in and has a specific role
-            ?>
             <?php if (isUserRole('SuperAdmin')): ?>
               <li class="sidebar-item">
                 <a class="sidebar-link" href="../officer/activity-logs.php">
@@ -199,14 +206,11 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
       }
     </style>
 
-
     <div class="page-wrapper">
       <!--  Header Start -->
       <header class="topbar">
         <div class="with-vertical">
-          <!-- ---------------------------------- -->
           <!-- Start Vertical Layout Header -->
-          <!-- ---------------------------------- -->
           <nav class="navbar navbar-expand-lg p-0">
             <ul class="navbar-nav">
               <li class="nav-item nav-icon-hover-bg rounded-circle d-flex">
@@ -214,11 +218,7 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                   <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-6"></iconify-icon>
                 </a>
               </li>
-              <li class="nav-item d-none d-xl-flex nav-icon-hover-bg rounded-circle">
-                <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                  <iconify-icon icon="solar:magnifer-linear" class="fs-6"></iconify-icon>
-                </a>
-              </li>
+              
             </ul>
 
             <div class="d-block d-lg-none py-9 py-xl-0">
@@ -282,8 +282,8 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
-                        <!-- Placeholder image; update dynamically if image data becomes available -->
-                        <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
+                        <!-- User's profile picture -->
+                        <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="35" height="35"
                           alt="user-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
@@ -292,8 +292,8 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                       aria-labelledby="drop1">
                       <div class="position-relative px-4 pt-3 pb-2">
                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <!-- Placeholder image; update dynamically if image data becomes available -->
-                          <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="56" height="56"
+                          <!-- User's profile picture -->
+                          <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="56" height="56"
                             alt="user-img" />
                           <div>
                             <h5 class="mb-0 fs-12">
@@ -312,7 +312,6 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                           <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
-
                         </div>
                       </div>
                     </div>
@@ -414,6 +413,7 @@ $email = htmlspecialchars($_SESSION['EmailAddress'], ENT_QUOTES, 'UTF-8');
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
+                        <!-- Placeholder image; update dynamically if image data becomes available -->
                         <img src="../assets/images/profile/user-1.jpg" class="rounded-circle" width="35" height="35"
                           alt="matdash-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>

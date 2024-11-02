@@ -13,9 +13,9 @@ if (!isset($_SESSION['UserID'])) {
 include '../includes/db_connection.php';
 
 // Enable error reporting for debugging (disable in production)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 // Initialize response array
 $response = [];
@@ -23,11 +23,36 @@ $response = [];
 // Check if the form is submitted with a valid officerID
 if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
     $officerID = intval($_POST['officerID']);
+    $userID = intval($_POST['userID']); // Added to identify the user account
 
     // Begin a transaction to ensure data integrity
     $conn->begin_transaction();
 
     try {
+        // Handle profile picture upload
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $maxSize = 800 * 1024; // 800KB
+        $profileImage = null;
+
+        if (isset($_FILES['profilePicture']) && $_FILES['profilePicture']['error'] == 0) {
+            $fileTmpPath = $_FILES['profilePicture']['tmp_name'];
+            $fileType = mime_content_type($fileTmpPath);
+            $fileSize = $_FILES['profilePicture']['size'];
+
+            if (in_array($fileType, $allowedTypes)) {
+                if ($fileSize <= $maxSize) {
+                    // Read the file content into a variable
+                    $profileImage = file_get_contents($fileTmpPath);
+                } else {
+                    // File size exceeds limit
+                    throw new Exception("Profile picture size exceeds the maximum allowed size of 800KB.");
+                }
+            } else {
+                // Invalid file type
+                throw new Exception("Invalid file type for profile picture. Allowed types are JPG, PNG, GIF.");
+            }
+        }
+
         // Prepare the SQL statement to update officer details
         $sql = "UPDATE officers SET FirstName=?, MiddleInitial=?, LastName=?, Position=?, Gender=?, CityAddress=?, MobileNo=?, EmailAddress=?, College=?, Program=?, YearGraduated=? WHERE OfficerID=?";
         $stmt = $conn->prepare($sql);
@@ -60,15 +85,10 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
 
         $stmt->close();
 
-        $response['message'] = "Officer updated successfully.";
-
         // Now update user account details
-        if (!empty($_POST['password'])) {
-            // **Security Enhancement:** Hash the new password before storing
-            $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-            // Prepare the SQL statement to update user account with password
-            $sqlUser = "UPDATE useraccounts SET Username=?, Password=?, EmailAddress=?, ActivationStatus=? WHERE OfficerID=?";
+        if ($profileImage !== null) {
+            // Update with new profile image
+            $sqlUser = "UPDATE useraccounts SET Username=?, EmailAddress=?, ActivationStatus=?, UserImage=? WHERE OfficerID=?";
             $stmtUser = $conn->prepare($sqlUser);
 
             if (!$stmtUser) {
@@ -76,15 +96,17 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
             }
 
             $stmtUser->bind_param(
-                "ssssi",
+                "sssbi",
                 $_POST['username'],
-                $hashedPassword, // Use hashed password
                 $_POST['userEmailAddress'],
                 $_POST['activationStatus'],
+                $null,
                 $officerID
             );
+            $null = NULL; // Placeholder for blob data
+            $stmtUser->send_long_data(3, $profileImage);
         } else {
-            // Prepare the SQL statement to update user account without password
+            // Update without changing the profile image
             $sqlUser = "UPDATE useraccounts SET Username=?, EmailAddress=?, ActivationStatus=? WHERE OfficerID=?";
             $stmtUser = $conn->prepare($sqlUser);
 
@@ -107,8 +129,6 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
         }
 
         $stmtUser->close();
-
-        $response['user_message'] = "User account updated successfully.";
 
         // ---- Insert Activity Log ----
         // Retrieve the logged-in user's UserID from the session
@@ -134,8 +154,6 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
         if (!$stmtLog->execute()) {
             // Log the error without halting the transaction
             error_log("Failed to insert activity log: " . $stmtLog->error);
-            // Optionally, you can choose to throw an exception to rollback the entire transaction
-            // throw new Exception("Failed to insert activity log: " . $stmtLog->error);
         }
 
         $stmtLog->close();
@@ -143,6 +161,9 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
 
         // Commit the transaction
         $conn->commit();
+
+        // Return success response
+        $response['user_message'] = "Officer updated successfully.";
 
     } catch (Exception $e) {
         // Rollback the transaction on error

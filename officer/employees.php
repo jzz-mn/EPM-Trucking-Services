@@ -10,7 +10,6 @@ if (isset($_SESSION['success_message'])) {
   // Unset the success message after displaying
   unset($_SESSION['success_message']);
 }
-
 ?>
 
 <div class="body-wrapper">
@@ -52,25 +51,37 @@ if (isset($_SESSION['success_message'])) {
             <div class="modal-body">
               <div class="add-contact-box">
                 <div class="add-contact-content">
-                  <form id="addEmployeeForm" method="POST" action="add_employee.php">
+                  <!-- Update the form enctype to handle file uploads -->
+                  <form id="addEmployeeForm" method="POST" action="add_employee.php" enctype="multipart/form-data">
                     <div class="row">
+                      <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
                           <div class="card-body p-4">
                             <h4 class="card-title">Add Profile Picture</h4>
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
-                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                              <img id="previewAdd" src="../assets/images/profile/user-1.jpg" alt="profile-img"
                                 class="img-fluid rounded-circle my-4 " width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
-                                <button class="btn btn-primary">Upload</button>
-                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                                <!-- Add file input for image upload -->
+                                <input type="file" id="addProfilePicture" name="profilePicture"
+                                  accept=".jpg,.jpeg,.png,.gif" class="form-control" required>
                               </div>
-                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                              <p class="mb-0">Allowed JPG, GIF, or PNG. Max size of 800KB.</p>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <script>
+                        // Preview selected profile picture in the Add Employee modal
+                        document.getElementById('addProfilePicture').addEventListener('change', function (event) {
+                          const [file] = event.target.files;
+                          if (file) {
+                            document.getElementById('previewAdd').src = URL.createObjectURL(file);
+                          }
+                        });
+                      </script>
                       <!-- Account Creation Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -209,7 +220,6 @@ if (isset($_SESSION['success_message'])) {
                       </div>
                     </div>
                   </form>
-
                 </div>
               </div>
             </div>
@@ -229,7 +239,8 @@ if (isset($_SESSION['success_message'])) {
               <div class="add-contact-box">
                 <div class="add-contact-content">
                   <!-- Edit Employee Form -->
-                  <form id="editEmployeeForm" method="POST" action="../officer/edit_employee.php">
+                  <form id="editEmployeeForm" method="POST" action="../officer/edit_employee.php"
+                    enctype="multipart/form-data">
                     <input type="hidden" id="editEmployeeID" name="employeeID">
                     <input type="hidden" id="resetPasswordFlag" name="resetPassword" value="false">
                     <div class="row">
@@ -240,17 +251,28 @@ if (isset($_SESSION['success_message'])) {
                             <h4 class="card-title">Edit Profile Picture</h4>
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
-                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                              <!-- Image preview -->
+                              <img id="previewEdit" src="../assets/images/profile/user-1.jpg" alt="profile-img"
                                 class="img-fluid rounded-circle my-4" width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
-                                <button class="btn btn-primary">Upload</button>
-                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                                <!-- File input for image upload -->
+                                <input type="file" id="editProfilePicture" name="profilePicture"
+                                  accept=".jpg,.jpeg,.png,.gif" class="form-control">
                               </div>
-                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                              <p class="mb-0">Allowed JPG, GIF, or PNG. Max size of 800KB.</p>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <script>
+                        // Preview selected profile picture in the Edit Employee modal
+                        document.getElementById('editProfilePicture').addEventListener('change', function (event) {
+                          const [file] = event.target.files;
+                          if (file) {
+                            document.getElementById('previewEdit').src = URL.createObjectURL(file);
+                          }
+                        });
+                      </script>
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
                           <div class="card-body p-4">
@@ -272,14 +294,14 @@ if (isset($_SESSION['success_message'])) {
                             <div class="mb-3">
                               <label class="form-label">Reset Password</label>
                               <div>
-                                <button type="button" id="resetPasswordButton" class="btn bg-danger-subtle text-danger">Reset Password</button>
+                                <button type="button" id="resetPasswordButton"
+                                  class="btn bg-danger-subtle text-danger">Reset Password</button>
 
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-
                     </div>
                     <div class="col-12">
                       <div class="card w-100 border mb-0">
@@ -363,7 +385,6 @@ if (isset($_SESSION['success_message'])) {
         </div>
       </div>
 
-
       <?php
       include '../includes/db_connection.php';
 
@@ -400,12 +421,17 @@ if (isset($_SESSION['success_message'])) {
           </thead>
           <tbody id="employeeTableBody">
             <?php
+            // Fetch employee data from database
             $query = "SELECT e.EmployeeID, e.FirstName, e.MiddleInitial, e.LastName, e.Position, e.Address, e.MobileNo, e.EmailAddress, e.EmploymentDate,
-                       ua.ActivationStatus
-                FROM employees e
-                LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
+ua.ActivationStatus, ua.UserImage
+FROM employees e
+LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 
             $result = $conn->query($query);
+
+            if (!$result) {
+              die("Database query failed: " . $conn->error);
+            }
 
             if ($result->num_rows > 0) {
               while ($row = $result->fetch_assoc()) {
@@ -429,11 +455,21 @@ if (isset($_SESSION['success_message'])) {
                   $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
                 }
 
+                // Fetch the user's profile picture
+                $userImageSrc = '../assets/images/profile/user-1.jpg'; // Default placeholder
+            
+                if (!empty($row['UserImage'])) {
+                  // Detect the MIME type
+                  $finfo = new finfo(FILEINFO_MIME_TYPE);
+                  $mimeType = $finfo->buffer($row['UserImage']);
 
-                // Output the table row with the data attribute to enable searching
+                  $userImageSrc = 'data:' . $mimeType . ';base64,' . base64_encode($row['UserImage']);
+                }
+
+                // Output the table row with the profile picture
                 echo "<tr data-name='{$fullName}' data-position='{$row['Position']}' data-status='{$row['ActivationStatus']}'>";
                 echo "<td><div class='d-flex align-items-center'>";
-                echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
+                echo "<img src='{$userImageSrc}' class='rounded-circle' width='40' height='40' />";
                 echo "<div class='ms-3'>";
                 echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
                 echo "</div></div></td>";
@@ -479,7 +515,7 @@ if (isset($_SESSION['success_message'])) {
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // Get the form reference
     const addEmployeeForm = document.getElementById('addEmployeeForm');
 
@@ -498,7 +534,7 @@ if (isset($_SESSION['success_message'])) {
     }
 
     // When the form is submitted
-    addEmployeeForm.addEventListener('submit', function(e) {
+    addEmployeeForm.addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the default form submission
 
       // Close the Add Employee modal
@@ -516,9 +552,9 @@ if (isset($_SESSION['success_message'])) {
       const formData = new FormData(addEmployeeForm);
 
       fetch('add_employee.php', {
-          method: 'POST',
-          body: formData,
-        })
+        method: 'POST',
+        body: formData,
+      })
         .then(response => response.json()) // Parse the response as JSON
         .then(data => {
           if (data.success) {
@@ -550,7 +586,8 @@ if (isset($_SESSION['success_message'])) {
 </script>
 
 <!-- Modal for Edit Submission and Success Message -->
-<div class="modal fade" id="editSubmissionModal" tabindex="-1" aria-labelledby="editSubmissionModalLabel" aria-hidden="true">
+<div class="modal fade" id="editSubmissionModal" tabindex="-1" aria-labelledby="editSubmissionModalLabel"
+  aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center">
       <div class="modal-body p-5" id="editModalBodyContent">
@@ -574,10 +611,10 @@ if (isset($_SESSION['success_message'])) {
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function() {
+      button.addEventListener('click', function () {
         const employeeID = this.getAttribute('data-id');
         fetch(`../officer/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -609,6 +646,9 @@ if (isset($_SESSION['success_message'])) {
             resetPasswordButton.classList.add('bg-danger-subtle', 'text-danger');
             resetPasswordButton.textContent = 'Reset Password';
             resetPasswordButton.disabled = false; // Ensure the button is enabled
+            // Load the profile picture
+            const profilePic = data.UserImage ? `data:image/jpeg;base64,${data.UserImage}` : '../assets/images/profile/user-1.jpg';
+            document.getElementById('previewEdit').src = profilePic;
           })
           .catch(error => console.error('Error fetching employee data:', error));
       });
@@ -630,7 +670,7 @@ if (isset($_SESSION['success_message'])) {
       editLoadingSpinner.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>'; // Replace spinner with checkmark
     }
 
-    editForm.addEventListener('submit', function(e) {
+    editForm.addEventListener('submit', function (e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       // Close the Edit Employee Modal (editContactModal) before showing submission modal
@@ -650,9 +690,9 @@ if (isset($_SESSION['success_message'])) {
       const formData = new FormData(editForm);
 
       fetch('../officer/edit_employee.php', {
-          method: 'POST',
-          body: formData
-        })
+        method: 'POST',
+        body: formData
+      })
         .then(response => response.json())
         .then(data => {
           console.log('Server response:', data);
@@ -687,10 +727,10 @@ if (isset($_SESSION['success_message'])) {
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const resetPasswordButton = document.getElementById('resetPasswordButton');
 
-    resetPasswordButton.addEventListener('click', function() {
+    resetPasswordButton.addEventListener('click', function () {
       if (confirm('Are you sure you want to reset the password for this employee?')) {
         const employeeID = document.getElementById('editEmployeeID').value;
 
@@ -699,9 +739,9 @@ if (isset($_SESSION['success_message'])) {
         formData.append('employeeID', employeeID);
 
         fetch('../officer/resetEmp_password.php', {
-            method: 'POST',
-            body: formData
-          })
+          method: 'POST',
+          body: formData
+        })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
@@ -722,11 +762,8 @@ if (isset($_SESSION['success_message'])) {
   });
 </script>
 
-
-
-
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const currentPasswordInput = document.getElementById('editCurrentPasswordInput');
     const newPasswordInput = document.getElementById('editNewPasswordInput');
     const confirmNewPasswordInput = document.getElementById('editConfirmNewPasswordInput');
@@ -782,7 +819,7 @@ if (isset($_SESSION['success_message'])) {
     addEmployeeForm.reset(); // This will reset the form fields
     // Remove validation classes
     const formControls = addEmployeeForm.querySelectorAll('.form-control');
-    formControls.forEach(function(control) {
+    formControls.forEach(function (control) {
       control.classList.remove('is-valid', 'is-invalid');
     });
   }
@@ -799,9 +836,9 @@ if (isset($_SESSION['success_message'])) {
 
     // AJAX request to check username
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -823,9 +860,9 @@ if (isset($_SESSION['success_message'])) {
 
     // AJAX request to check email
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -852,11 +889,11 @@ if (isset($_SESSION['success_message'])) {
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
 
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function () {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {
@@ -876,7 +913,7 @@ if (isset($_SESSION['success_message'])) {
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
     const table = document.getElementById('employeeTableBody');
@@ -905,7 +942,7 @@ if (isset($_SESSION['success_message'])) {
 
     // Add click event listener to each sortable header
     headers.forEach(header => {
-      header.addEventListener('click', function() {
+      header.addEventListener('click', function () {
         const column = this.getAttribute('data-sort');
 
         // Toggle sorting order if clicking on the same column
@@ -926,7 +963,7 @@ if (isset($_SESSION['success_message'])) {
     });
 
     // Search functionality
-    searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function () {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {
@@ -945,13 +982,7 @@ if (isset($_SESSION['success_message'])) {
   });
 </script>
 
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
-
-
-
-
 <style>
   .sortable {
     cursor: pointer;
@@ -965,9 +996,6 @@ if (isset($_SESSION['success_message'])) {
     content: ' ↓';
   }
 </style>
-
-
-
 <?php
 include '../officer/footer.php';
 ?>

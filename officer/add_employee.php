@@ -59,6 +59,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Set Activation Status to 'deactivated'
     $activationStatus = 'deactivated';
 
+    // Handle profile picture upload
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $maxSize = 800 * 1024; // 800KB
+
+    if (isset($_FILES['profilePicture']) && $_FILES['profilePicture']['error'] == 0) {
+        $fileTmpPath = $_FILES['profilePicture']['tmp_name'];
+        $fileType = mime_content_type($fileTmpPath);
+        $fileSize = $_FILES['profilePicture']['size'];
+
+        if (in_array($fileType, $allowedTypes)) {
+            if ($fileSize <= $maxSize) {
+                // Read the file content into a variable
+                $profileImage = file_get_contents($fileTmpPath);
+            } else {
+                // File size exceeds limit
+                echo json_encode(['success' => false, 'message' => 'Profile picture size exceeds the maximum allowed size of 800KB.']);
+                exit();
+            }
+        } else {
+            // Invalid file type
+            echo json_encode(['success' => false, 'message' => 'Invalid file type for profile picture. Allowed types are JPG, PNG, GIF.']);
+            exit();
+        }
+    } else {
+        // No file uploaded or an error occurred
+        $profileImage = null; // You can set a default image or handle accordingly
+    }
+
     // Insert employee data into `employees` table
     $sqlInsertEmployee = "INSERT INTO employees (FirstName, MiddleInitial, LastName, Gender, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate, Position)
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -75,20 +103,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Get the last inserted employee ID
         $employeeID = $conn->insert_id;
 
-        // Insert into `useraccounts` table
-        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken)
-                          VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, ?, ?)";
-
-        $stmtUser = $conn->prepare($sqlInsertUser);
-        if (!$stmtUser) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
-            exit();
+        if ($profileImage !== null) {
+            // Image uploaded
+            $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken, UserImage)
+                              VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, ?, ?, ?)";
+            $stmtUser = $conn->prepare($sqlInsertUser);
+            if (!$stmtUser) {
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
+                exit();
+            }
+            $null = NULL; // Placeholder for blob data
+            $stmtUser->bind_param('sssissb', $username, $hashedPassword, $emailAddress, $employeeID, $activationStatus, $activationToken, $null);
+            // Send blob data
+            $stmtUser->send_long_data(6, $profileImage);
+        } else {
+            // No image uploaded
+            $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken, UserImage)
+                              VALUES (?, ?, 'Employee', ?, ?, NULL, NULL, ?, ?, NULL)";
+            $stmtUser = $conn->prepare($sqlInsertUser);
+            if (!$stmtUser) {
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
+                exit();
+            }
+            $stmtUser->bind_param('sssisss', $username, $hashedPassword, $emailAddress, $employeeID, $activationStatus, $activationToken);
         }
 
-        // Bind parameters and execute
-        $stmtUser->bind_param('sssiss', $username, $hashedPassword, $emailAddress, $employeeID, $activationStatus, $activationToken);
-
-        // Place your if ($stmtUser->execute()) block here
+        // Execute the statement
         if ($stmtUser->execute()) {
             // Send activation email
             $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
@@ -97,19 +137,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail = new PHPMailer(true);
             try {
                 $mail->isSMTP();
-                $mail->Host       = $_ENV['SMTP_HOST'];
-                $mail->SMTPAuth   = true;
-                $mail->Username   = $_ENV['SMTP_USERNAME'];
-                $mail->Password   = $_ENV['SMTP_PASSWORD'];
+                $mail->Host = $_ENV['SMTP_HOST'];
+                $mail->SMTPAuth = true;
+                $mail->Username = $_ENV['SMTP_USERNAME'];
+                $mail->Password = $_ENV['SMTP_PASSWORD'];
                 $mail->SMTPSecure = $_ENV['SMTP_ENCRYPTION'];
-                $mail->Port       = $_ENV['SMTP_PORT'];
+                $mail->Port = $_ENV['SMTP_PORT'];
 
                 $mail->setFrom($_ENV['FROM_EMAIL'], $_ENV['FROM_NAME']);
                 $mail->addAddress($emailAddress, $firstName . ' ' . $lastName);
 
                 $mail->isHTML(true);
                 $mail->Subject = 'Activate Your Account';
-                $mail->Body    = "Dear $firstName,<br><br>
+                $mail->Body = "Dear $firstName,<br><br>
                                   Your account has been created. Please click the link below to activate your account and set your password:<br><br>
                                   <a href='$activationLink'>Activate Account</a><br><br>
                                   If you did not request this, please ignore this email.<br><br>

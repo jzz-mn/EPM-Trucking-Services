@@ -7,7 +7,6 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
   echo "Access denied. This page is only accessible to SuperAdmin.";
   exit();
 }
-
 ?>
 
 <div class="body-wrapper">
@@ -49,7 +48,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             <div class="modal-body">
               <div class="add-contact-box">
                 <div class="add-contact-content">
-                  <form id="addOfficerForm" method="POST" action="add_officer.php">
+                  <form id="addOfficerForm" method="POST" action="add_officer.php" enctype="multipart/form-data">
                     <div class="row">
                       <!-- Profile Picture Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -58,17 +57,28 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <h4 class="card-title">Add Profile Picture</h4>
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
-                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                              <img id="previewAdd" src="../assets/images/profile/user-1.jpg" alt="profile-img"
                                 class="img-fluid rounded-circle my-4" width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
-                                <button class="btn btn-primary">Upload</button>
-                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                                <!-- File input for image upload -->
+                                <input type="file" id="addProfilePicture" name="profilePicture"
+                                  accept=".jpg,.jpeg,.png,.gif" class="form-control" required>
                               </div>
-                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                              <p class="mb-0">Allowed JPG, GIF, or PNG. Max size of 800KB.</p>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <script>
+                        // Preview selected profile picture in the Add Officer modal
+                        document.getElementById('addProfilePicture').addEventListener('change', function (event) {
+                          const [file] = event.target.files;
+                          if (file) {
+                            document.getElementById('previewAdd').src = URL.createObjectURL(file);
+                          }
+                        });
+                      </script>
+
                       <!-- Create Account Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
                         <div class="card w-100 border position-relative overflow-hidden">
@@ -143,10 +153,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="gender" class="form-label">Gender</label>
-                              <select type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
-                                required>
-                                <option value="MALE">MALE</option>
-                                <option value="FEMALE">FEMALE</option>
+                              <select class="form-control" id="gender" name="gender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                               </select>
                             </div>
                           </div>
@@ -223,7 +232,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
         }
 
         // Call the function on page load to set the initial state
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
           togglePasswordFields();
         });
       </script>
@@ -240,7 +249,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             <div class="modal-body">
               <div class="edit-contact-box">
                 <div class="edit-contact-content">
-                  <form id="editOfficerForm" method="POST" action="edit_officer.php">
+                  <form id="editOfficerForm" method="POST" action="edit_officer.php" enctype="multipart/form-data">
                     <input type="hidden" name="officerID" value="">
                     <!-- Hidden field for UserID -->
                     <input type="hidden" name="userID" value="" id="userID">
@@ -252,17 +261,28 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <h4 class="card-title">Edit Profile Picture</h4>
                             <p class="card-subtitle mb-4">Upload a profile picture here.</p>
                             <div class="text-center">
-                              <img src="../assets/images/profile/user-1.jpg" alt="profile-img"
+                              <!-- Image preview -->
+                              <img id="previewEdit" src="../assets/images/profile/user-1.jpg" alt="profile-img"
                                 class="img-fluid rounded-circle my-4" width="140" height="140">
                               <div class="d-flex align-items-center justify-content-center my-4 gap-6">
-                                <button class="btn btn-primary">Upload</button>
-                                <button class="btn bg-danger-subtle text-danger">Reset</button>
+                                <!-- File input for image upload -->
+                                <input type="file" id="editProfilePicture" name="profilePicture"
+                                  accept=".jpg,.jpeg,.png,.gif" class="form-control">
                               </div>
-                              <p class="mb-0">Allowed JPG, GIF or PNG. Max size of 800K</p>
+                              <p class="mb-0">Allowed JPG, GIF, or PNG. Max size of 800KB.</p>
                             </div>
                           </div>
                         </div>
                       </div>
+                      <script>
+                        // Preview selected profile picture in the Edit Officer modal
+                        document.getElementById('editProfilePicture').addEventListener('change', function (event) {
+                          const [file] = event.target.files;
+                          if (file) {
+                            document.getElementById('previewEdit').src = URL.createObjectURL(file);
+                          }
+                        });
+                      </script>
 
                       <!-- Edit Account Section -->
                       <div class="col-lg-6 d-flex align-items-stretch">
@@ -283,14 +303,14 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <div class="mb-3">
                               <label for="activationStatus" class="form-label">Activation Status</label>
                               <select class="form-control" id="activationStatus" name="activationStatus">
-                                <option value="activated">Activated</option>
-                                <option value="deactivated">Deactivated</option>
+                                <option value="Activated">Activated</option>
+                                <option value="Deactivated">Deactivated</option>
                               </select>
                             </div>
                             <!-- Reset Password Button -->
                             <div class="mb-3">
-                              <button type="button" class="btn btn-warning" id="resetPasswordButton">Reset
-                                Password</button>
+                              <button type="button" class="btn bg-danger-subtle text-danger"
+                                id="resetPasswordButton">Reset Password</button>
                             </div>
                           </div>
                         </div>
@@ -327,10 +347,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="gender" class="form-label">Gender</label>
-                              <select type="text" class="form-control" id="gender" name="gender" placeholder="Gender"
-                                required>
-                                <option value="MALE">MALE</option>
-                                <option value="FEMALE">FEMALE</option>
+                              <select class="form-control" id="gender" name="gender" required>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                               </select>
                             </div>
                           </div>
@@ -385,7 +404,6 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                       </div>
                     </div>
                   </form>
-
                 </div>
               </div>
             </div>
@@ -413,7 +431,6 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             data-bs-target="#addContactModal">
             <i class="ti ti-users text-white me-1 fs-5"></i> Add Officer
           </a>
-
         </div>
       </div>
     </div>
@@ -431,9 +448,10 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
           <?php
           // Your query to join the two tables based on officerID
           $query = "SELECT o.OfficerID, o.FirstName, o.MiddleInitial, o.LastName, o.Position, o.Gender, o.CityAddress, 
-          o.MobileNo, o.EmailAddress, o.College, o.YearGraduated, ua.ActivationStatus
-          FROM officers o
-          JOIN useraccounts ua ON o.OfficerID = ua.officerID";
+  o.MobileNo, o.EmailAddress, o.College, o.YearGraduated, ua.ActivationStatus, ua.UserImage
+FROM officers o
+JOIN useraccounts ua ON o.OfficerID = ua.officerID";
+
           $result = $conn->query($query);
 
           if ($result->num_rows > 0) {
@@ -463,12 +481,21 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
               } elseif ($row['ActivationStatus'] === 'Deactivated' || $row['ActivationStatus'] === 'deactivated') {
                 $activationStatus = "<span class='badge text-bg-danger'>Deactivated</span>";
               }
+              // Fetch the user's profile picture
+              $userImageSrc = '../assets/images/profile/user-1.jpg'; // Default placeholder
+          
+              if (!empty($row['UserImage'])) {
+                // Detect the MIME type
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mimeType = $finfo->buffer($row['UserImage']);
+                $userImageSrc = 'data:' . $mimeType . ';base64,' . base64_encode($row['UserImage']);
+              }
 
 
               // Output table rows
               echo "<tr>";
               echo "<td><div class='d-flex align-items-center'>";
-              echo "<img src='../assets/images/profile/user-1.jpg' class='rounded-circle' width='40' height='40' />";
+              echo "<img src='{$userImageSrc}' class='rounded-circle' width='40' height='40' />";
               echo "<div class='ms-3'>";
               echo "<h6 class='fs-4 fw-semibold mb-0'>{$fullName}</h6>";
               echo "</div></div></td>";
@@ -488,14 +515,13 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
         </tbody>
       </table>
     </div>
-
   </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('.edit-button').on('click', function() {
+  $(document).ready(function () {
+    $('.edit-button').on('click', function () {
       var officerID = $(this).data('officerid');
 
       $.ajax({
@@ -505,7 +531,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
           officerID: officerID
         },
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
           if (data.success) {
             // Populate the modal fields
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
@@ -517,26 +543,34 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             $('#editOfficerForm input[name="program"]').val(data.officer.Program);
             $('#editOfficerForm input[name="yearGraduated"]').val(data.officer.YearGraduated);
             $('#editOfficerForm input[name="mobileNo"]').val(data.officer.MobileNo);
-            $('#editOfficerForm select[name="position"]').val(data.officer.Position);
+            $('#editOfficerForm input[name="position"]').val(data.officer.Position); // Corrected to input
             $('#editOfficerForm input[name="address"]').val(data.officer.CityAddress);
             $('#editOfficerForm input[name="emailAddress"]').val(data.officer.EmailAddress);
             $('#editOfficerForm input[name="username"]').val(data.officer.Username);
             $('#editOfficerForm input[name="userEmailAddress"]').val(data.officer.UserEmail);
-            $('#editOfficerForm select[name="activationStatus"]').val(data.officer.ActivationStatus.toLowerCase());
-            $('#editOfficerForm input[name="userID"]').val(data.officer.UserID); // Added UserID
+            $('#editOfficerForm select[name="activationStatus"]').val(data.officer.ActivationStatus); // Removed toLowerCase()
+            $('#editOfficerForm input[name="userID"]').val(data.officer.UserID);
 
+            // Load the profile picture
+            const profilePicElement = document.getElementById('previewEdit');
+            if (data.officer.UserImage) {
+              // Detect the MIME type from the server if possible
+              profilePicElement.src = `data:image/jpeg;base64,${data.officer.UserImage}`;
+            } else {
+              profilePicElement.src = '../assets/images/profile/user-1.jpg';
+            }
           } else {
             alert('Failed to fetch officer data.');
           }
         },
-        error: function() {
+        error: function () {
           alert('Error in AJAX request.');
         }
       });
     });
 
     // Handle "Reset Password" button click
-    $('#resetPasswordButton').on('click', function() {
+    $('#resetPasswordButton').on('click', function () {
       var userID = $('#editOfficerForm input[name="userID"]').val();
 
       if (confirm('Are you sure you want to reset the password for this officer?')) {
@@ -549,14 +583,14 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             userID: userID,
             role: 'Officer' // Indicate that this is an officer account
           },
-          success: function(data) {
+          success: function (data) {
             if (data.success) {
               alert('Password reset successfully. An email has been sent to the officer.');
             } else {
               alert('Error resetting password: ' + data.message);
             }
           },
-          error: function() {
+          error: function () {
             alert('An error occurred while resetting the password.');
           }
         });
@@ -565,19 +599,20 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
   });
 </script>
 
-
 <script>
-  $(document).ready(function() {
-    $('#editOfficerForm').submit(function(event) {
-      event.preventDefault(); // Prevent the form from submitting via the browser.
-      var formData = $(this).serialize(); // Get form data.
+  $(document).ready(function () {
+    $('#editOfficerForm').submit(function (event) {
+      event.preventDefault();
+      var formData = new FormData(this);
 
       $.ajax({
         type: "POST",
         url: "edit_officer.php",
         data: formData,
         dataType: "json",
-        success: function(response) {
+        processData: false,
+        contentType: false,
+        success: function (response) {
           if (response.user_message) {
             $('#editContactModal').modal('hide'); // Hide the modal if success
             window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
@@ -585,11 +620,12 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
             alert('Failed to update: ' + response.error);
           }
         },
-        error: function() {
+        error: function () {
           alert('Error updating officer.');
         }
       });
     });
+
   });
 </script>
 
@@ -602,9 +638,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
     // AJAX request to check username
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -626,9 +662,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 
     // AJAX request to check email
     fetch('check_user.php', {
-        method: 'POST',
-        body: formData,
-      })
+      method: 'POST',
+      body: formData,
+    })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -675,11 +711,11 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
 </script>
 
 <script>
-  document.getElementById('input-search').addEventListener('keyup', function() {
+  document.getElementById('input-search').addEventListener('keyup', function () {
     var searchTerm = this.value.toLowerCase();
     var tableRows = document.querySelectorAll('tbody tr');
 
-    tableRows.forEach(function(row) {
+    tableRows.forEach(function (row) {
       var nameCell = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
       var positionCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
       var statusCell = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
@@ -692,9 +728,6 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
     });
   });
 </script>
-
-
-
 <?php
 include '../officer/footer.php';
 ?>

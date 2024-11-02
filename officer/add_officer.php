@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Enforce strong password (adjust the pattern as needed)
+        // Enforce strong password
         if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
             echo "Password must be at least 8 characters long and include at least one letter and one number.";
             exit();
@@ -66,6 +66,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Set Activation Status to 'deactivated'
     $activationStatus = 'deactivated';
+
+    // Handle profile picture upload
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $maxSize = 800 * 1024; // 800KB
+
+    if (isset($_FILES['profilePicture']) && $_FILES['profilePicture']['error'] == 0) {
+        $fileTmpPath = $_FILES['profilePicture']['tmp_name'];
+        $fileType = mime_content_type($fileTmpPath);
+        $fileSize = $_FILES['profilePicture']['size'];
+
+        if (in_array($fileType, $allowedTypes)) {
+            if ($fileSize <= $maxSize) {
+                // Read the file content into a variable
+                $profileImage = file_get_contents($fileTmpPath);
+            } else {
+                // File size exceeds limit
+                echo "Profile picture size exceeds the maximum allowed size of 800KB.";
+                exit();
+            }
+        } else {
+            // Invalid file type
+            echo "Invalid file type for profile picture. Allowed types are JPG, PNG, GIF.";
+            exit();
+        }
+    } else {
+        // No file uploaded or an error occurred
+        $profileImage = null; // You can set a default image or handle accordingly
+    }
 
     // Step 1: Check if the username or email already exists
     $sqlCheck = "SELECT COUNT(*) AS count FROM useraccounts WHERE Username = ? OR EmailAddress = ?";
@@ -101,15 +129,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $officerID = $conn->insert_id;
 
         // Step 4: Insert into `useraccounts` table
-        $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken)
-                          VALUES (?, ?, 'Officer', ?, NULL, ?, NULL, ?, ?)";
-
-        $stmtUser = $conn->prepare($sqlInsertUser);
-        if ($stmtUser === false) {
-            echo "Error preparing user account insert statement: " . $conn->error;
-            exit();
+        if ($profileImage !== null) {
+            // Image uploaded
+            $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken, UserImage)
+                              VALUES (?, ?, 'Officer', ?, NULL, ?, NULL, ?, ?, ?)";
+            $stmtUser = $conn->prepare($sqlInsertUser);
+            if ($stmtUser === false) {
+                echo "Error preparing user account insert statement: " . $conn->error;
+                exit();
+            }
+            $null = NULL; // Placeholder for blob data
+            $stmtUser->bind_param('sssissb', $username, $hashedPassword, $emailAddress, $officerID, $activationStatus, $activationToken, $null);
+            $stmtUser->send_long_data(6, $profileImage);
+        } else {
+            // No image uploaded
+            $sqlInsertUser = "INSERT INTO useraccounts (Username, Password, Role, EmailAddress, employeeID, officerID, LastLogin, ActivationStatus, ActivationToken)
+                              VALUES (?, ?, 'Officer', ?, NULL, ?, NULL, ?, ?)";
+            $stmtUser = $conn->prepare($sqlInsertUser);
+            if ($stmtUser === false) {
+                echo "Error preparing user account insert statement: " . $conn->error;
+                exit();
+            }
+            $stmtUser->bind_param('sssiss', $username, $hashedPassword, $emailAddress, $officerID, $activationStatus, $activationToken);
         }
-        $stmtUser->bind_param('sssiss', $username, $hashedPassword, $emailAddress, $officerID, $activationStatus, $activationToken);
 
         if ($stmtUser->execute()) {
             // Send activation email

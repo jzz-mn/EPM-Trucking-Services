@@ -4,8 +4,6 @@ session_start();
 include '../officer/header.php';
 include '../includes/db_connection.php';
 
-?>
-<?php
 if (!isset($_SESSION['UserID'])) {
     // Redirect to login page if no session exists
     header('location: ../login/login.php');
@@ -15,31 +13,52 @@ if (!isset($_SESSION['UserID'])) {
 // Fetch current logged-in user's ID
 $userID = $_SESSION['UserID'];
 
+// Initialize the user image source with a default placeholder
+$userImageSrc = '../assets/images/profile/user-1.jpg';
+
+// Get the user's image from the database
+if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE UserID = ?")) {
+    $stmt->bind_param("i", $userID);
+    $stmt->execute();
+    $stmt->bind_result($userImageData);
+    if ($stmt->fetch() && !empty($userImageData)) {
+        // Get the MIME type of the image
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->buffer($userImageData);
+
+        // Build the data URI for the image
+        $userImageSrc = 'data:' . $mimeType . ';base64,' . base64_encode($userImageData);
+    }
+    $stmt->close();
+}
+
 // Query useraccounts table to get account information
-$queryAccount = "SELECT Username, EmailAddress, Role, Password FROM useraccounts WHERE UserID = ?";
+$queryAccount = "SELECT Username, EmailAddress, Role FROM useraccounts WHERE UserID = ?";
 $stmtAccount = mysqli_prepare($conn, $queryAccount);
-mysqli_stmt_bind_param($stmtAccount, "s", $userID);
+mysqli_stmt_bind_param($stmtAccount, "i", $userID);
 mysqli_stmt_execute($stmtAccount);
-mysqli_stmt_bind_result($stmtAccount, $dbUsername, $dbEmail, $dbRole, $dbPassword);
+mysqli_stmt_bind_result($stmtAccount, $dbUsername, $dbEmail, $dbRole);
 mysqli_stmt_fetch($stmtAccount);
 mysqli_stmt_close($stmtAccount);
 
 // Query officers table to get personal details
 $queryOfficer = "SELECT FirstName, MiddleInitial, LastName, Position, Gender, CityAddress, MobileNo, College, Program, YearGraduated FROM officers WHERE OfficerID = (SELECT OfficerID FROM useraccounts WHERE UserID = ?)";
 $stmtOfficer = mysqli_prepare($conn, $queryOfficer);
-mysqli_stmt_bind_param($stmtOfficer, "s", $userID);
+mysqli_stmt_bind_param($stmtOfficer, "i", $userID);
 mysqli_stmt_execute($stmtOfficer);
 mysqli_stmt_bind_result($stmtOfficer, $dbFirstName, $dbMiddleInitial, $dbLastName, $dbPosition, $dbGender, $dbCityAddress, $dbMobileNo, $dbCollege, $dbProgram, $dbYearGraduated);
 mysqli_stmt_fetch($stmtOfficer);
 mysqli_stmt_close($stmtOfficer);
 
+// Query employees table to get employee details (if applicable)
 $queryEmployees = "SELECT DateOfBirth, Position, EmploymentDate FROM employees WHERE EmployeeID = (SELECT EmployeeID FROM useraccounts WHERE UserID = ?)";
 $stmtEmployees = mysqli_prepare($conn, $queryEmployees);
-mysqli_stmt_bind_param($stmtEmployees, "s", $userID);
+mysqli_stmt_bind_param($stmtEmployees, "i", $userID);
 mysqli_stmt_execute($stmtEmployees);
 mysqli_stmt_bind_result($stmtEmployees, $dbDateOfBirth, $dbPosition, $dbEmploymentDate);
 mysqli_stmt_fetch($stmtEmployees);
 mysqli_stmt_close($stmtEmployees);
+
 // Close database connection
 mysqli_close($conn);
 ?>
@@ -80,8 +99,9 @@ mysqli_close($conn);
                             <div class="card-body p-4">
                                 <h4 class="card-title mb-4">Profile Picture</h4>
                                 <div class="text-center">
-                                    <img src="../assets/images/profile/user-1.jpg" alt="Profile Image"
-                                        class="img-fluid rounded-circle mb-1" width="300" height="300">
+                                    <!-- User's profile picture -->
+                                    <img src="<?php echo $userImageSrc; ?>" alt="Profile Image"
+                                        class="img-fluid rounded-circle mb-1 profile-img">
                                 </div>
                             </div>
                         </div>
@@ -105,7 +125,7 @@ mysqli_close($conn);
                                     </div>
                                     <div class="mb-2">
                                         <label for="Role" class="form-label">Role</label>
-                                        <input type="role" class="form-control" id="Role"
+                                        <input type="text" class="form-control" id="Role"
                                             value="<?php echo htmlspecialchars($dbRole); ?>" readonly>
                                     </div>
                                 </form>
@@ -198,22 +218,36 @@ mysqli_close($conn);
                 </div>
             </div>
         </div>
+
+        <!-- Optional: Custom CSS to ensure the image is responsive -->
+        <style>
+            .profile-img {
+                width: 100%;
+                max-width: 300px;
+                height: auto;
+            }
+
+            @media (max-width: 576px) {
+                .profile-img {
+                    max-width: 100%;
+                }
+            }
+        </style>
+
+        <!-- JavaScript for toggling password visibility -->
+        <script>
+            const togglePassword = document.querySelector('#togglePassword');
+            const passwordField = document.querySelector('#Password');
+
+            togglePassword.addEventListener('click', function () {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        </script>
+
     </div>
-
-    <!-- JavaScript for toggling password visibility -->
-    <script>
-        const togglePassword = document.querySelector('#togglePassword');
-        const passwordField = document.querySelector('#Password');
-
-        togglePassword.addEventListener('click', function () {
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-            this.classList.toggle('bi-eye');
-            this.classList.toggle('bi-eye-slash');
-        });
-    </script>
-
-</div>
-<?php
-include '../officer/footer.php';
-?>
+    <?php
+    include '../officer/footer.php';
+    ?>

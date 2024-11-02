@@ -6,7 +6,7 @@ if (isset($_POST['officerID'])) {
 
     $sql = "SELECT o.OfficerID, o.FirstName, o.MiddleInitial, o.LastName, o.Position, o.Gender, o.CityAddress, 
             o.MobileNo, o.EmailAddress AS OfficerEmail, o.College, o.Program, o.YearGraduated, 
-            ua.UserID, ua.Username, ua.ActivationStatus, ua.EmailAddress AS UserEmail
+            ua.UserID, ua.Username, ua.ActivationStatus, ua.EmailAddress AS UserEmail, ua.UserImage
             FROM officers o
             JOIN useraccounts ua ON o.OfficerID = ua.officerID
             WHERE o.OfficerID = ?";
@@ -17,8 +17,13 @@ if (isset($_POST['officerID'])) {
     if ($result->num_rows > 0) {
         $officer = $result->fetch_assoc();
 
-        // Remove the password from the response for security
-        // Password is not selected in the query, so no need to unset it
+        // Handle the UserImage binary data
+        if (!empty($officer['UserImage'])) {
+            // Base64-encode the binary data for JSON transmission
+            $officer['UserImage'] = base64_encode($officer['UserImage']);
+        } else {
+            $officer['UserImage'] = null;
+        }
 
         echo json_encode(['success' => true, 'officer' => $officer]);
     } else {

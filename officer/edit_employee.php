@@ -22,6 +22,8 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
+header('Content-Type: application/json'); // Return JSON response
+
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve and sanitize form data
@@ -44,6 +46,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if reset password is requested
     $resetPassword = isset($_POST['resetPassword']) ? $_POST['resetPassword'] === 'true' : false;
 
+    // Handle profile picture upload
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    $maxSize = 800 * 1024; // 800KB
+    $profileImage = null;
+
+    if (isset($_FILES['profilePicture']) && $_FILES['profilePicture']['error'] == 0) {
+        $fileTmpPath = $_FILES['profilePicture']['tmp_name'];
+        $fileType = mime_content_type($fileTmpPath);
+        $fileSize = $_FILES['profilePicture']['size'];
+
+        if (in_array($fileType, $allowedTypes)) {
+            if ($fileSize <= $maxSize) {
+                // Read the file content into a variable
+                $profileImage = file_get_contents($fileTmpPath);
+            } else {
+                // File size exceeds limit
+                echo json_encode(['success' => false, 'message' => 'Profile picture size exceeds the maximum allowed size of 800KB.']);
+                exit();
+            }
+        } else {
+            // Invalid file type
+            echo json_encode(['success' => false, 'message' => 'Invalid file type for profile picture. Allowed types are JPG, PNG, GIF.']);
+            exit();
+        }
+    }
+
     // Begin a transaction to ensure data integrity
     $conn->begin_transaction();
 
@@ -63,12 +91,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_employee->close();
 
         // Then, update the useraccounts table
-        $sql_user = "UPDATE useraccounts SET Username = ?, EmailAddress = ?, ActivationStatus = ? WHERE EmployeeID = ?";
-        $stmt_user = $conn->prepare($sql_user);
-        if ($stmt_user === false) {
-            throw new Exception('Error preparing user account update statement: ' . $conn->error);
+        if ($profileImage !== null) {
+            // Update with new profile image
+            $sql_user = "UPDATE useraccounts SET Username = ?, EmailAddress = ?, ActivationStatus = ?, UserImage = ? WHERE employeeID = ?";
+            $stmt_user = $conn->prepare($sql_user);
+            if ($stmt_user === false) {
+                throw new Exception('Error preparing user account update statement: ' . $conn->error);
+            }
+            $stmt_user->bind_param('sssbi', $username, $emailAddress, $activationStatus, $null, $employeeID);
+            $null = NULL; // Placeholder for blob data
+            $stmt_user->send_long_data(3, $profileImage);
+        } else {
+            // Update without changing the profile image
+            $sql_user = "UPDATE useraccounts SET Username = ?, EmailAddress = ?, ActivationStatus = ? WHERE employeeID = ?";
+            $stmt_user = $conn->prepare($sql_user);
+            if ($stmt_user === false) {
+                throw new Exception('Error preparing user account update statement: ' . $conn->error);
+            }
+            $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
         }
-        $stmt_user->bind_param('sssi', $username, $emailAddress, $activationStatus, $employeeID);
+
         if (!$stmt_user->execute()) {
             throw new Exception('Error updating user account: ' . $stmt_user->error);
         }
@@ -103,12 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Server settings
                 // $mail->SMTPDebug = 2; // Enable verbose debug output (disable in production)
                 $mail->isSMTP();
-                $mail->Host       = $_ENV['SMTP_HOST'];
-                $mail->SMTPAuth   = true;
-                $mail->Username   = $_ENV['SMTP_USERNAME'];
-                $mail->Password   = $_ENV['SMTP_PASSWORD'];
+                $mail->Host = $_ENV['SMTP_HOST'];
+                $mail->SMTPAuth = true;
+                $mail->Username = $_ENV['SMTP_USERNAME'];
+                $mail->Password = $_ENV['SMTP_PASSWORD'];
                 $mail->SMTPSecure = $_ENV['SMTP_ENCRYPTION'];
-                $mail->Port       = $_ENV['SMTP_PORT'];
+                $mail->Port = $_ENV['SMTP_PORT'];
 
                 // Recipients
                 $mail->setFrom($_ENV['FROM_EMAIL'], $_ENV['FROM_NAME']);
@@ -117,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Content
                 $mail->isHTML(true);
                 $mail->Subject = 'Reset Your Password';
-                $mail->Body    = "Dear $firstName,<br><br>
+                $mail->Body = "Dear $firstName,<br><br>
                                   Your password has been reset. Please click the link below to activate your account and set your new password:<br><br>
                                   <a href='$activationLink'>Reset Password</a><br><br>
                                   If you did not request this, please contact support immediately.<br><br>
@@ -164,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => true, 'message' => 'Employee details updated successfully!']);
         } else {
             // If commit fails, return error message
-            echo json_encode(['success' => false, 'message' => 'Transaction failed.']);
+            echo json_encode(['success' => false, 'message' => 'Transaction failed during commit.']);
         }
     } catch (Exception $e) {
         // Rollback the transaction if something goes wrong
@@ -175,3 +217,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Close the database connection
     $conn->close();
 }
+?>
