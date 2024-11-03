@@ -25,7 +25,8 @@ function round_up_kgs($kgs)
         return 1000;
     }
     if ($kgs <= 4199) {
-        return ceil($kgs / 1000) * 1000;
+        $rounded_kgs = ceil($kgs / 1000) * 1000;
+        return $rounded_kgs > 4000 ? 4000 : $rounded_kgs; // Cap at 4000 if exceeded
     }
     return 4000; // Cap at 4000
 }
@@ -276,17 +277,27 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                             Outlet Name does not exist.
                                         </div>
                                     </div>
+                                    <!-- DR No -->
+                                    <div class="col-md-2">
+                                        <label for="input-dr-no" class="form-label">DR No</label>
+                                        <input type="number" class="form-control" id="input-dr-no" placeholder="DR No"
+                                            step="1" min="1">
+                                        <!-- Validation Feedback -->
+                                        <div class="invalid-feedback" id="dr-no-error">
+                                            DR No already exists.
+                                        </div>
+                                    </div>
                                     <!-- Quantity -->
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label for="input-quantity" class="form-label">Quantity</label>
                                         <input type="number" class="form-control" id="input-quantity"
-                                            placeholder="Quantity" step="0.01">
+                                            placeholder="Quantity" step="0.01" min="0">
                                     </div>
                                     <!-- KGs -->
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label for="input-kgs" class="form-label">KGs</label>
                                         <input type="number" class="form-control" id="input-kgs" placeholder="KGs"
-                                            step="0.01">
+                                            step="0.01" min="0">
                                     </div>
                                     <!-- Add Transaction Button -->
                                     <div class="col-md-2">
@@ -303,8 +314,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                         id="transactions-table">
                                         <thead>
                                             <tr>
-                                                <th>DR No</th>
                                                 <th>Outlet Name</th>
+                                                <th>DR No</th>
                                                 <th>Quantity</th>
                                                 <th>KGs</th>
                                                 <th>Actions</th>
@@ -329,13 +340,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                             <div class="col-md-6">
                                 <label for="fuel-liters" class="form-label">Liters</label>
                                 <input type="number" class="form-control" id="fuel-liters" name="fuel_liters"
-                                    placeholder="Enter liters" step="0.01">
+                                    placeholder="Enter liters" step="0.01" min="0">
                             </div>
                             <!-- Unit Price -->
                             <div class="col-md-6">
                                 <label for="fuel-unit-price" class="form-label">Unit Price</label>
                                 <input type="number" class="form-control" id="fuel-unit-price" name="fuel_unit_price"
-                                    placeholder="Enter price per liter" step="0.01">
+                                    placeholder="Enter price per liter" step="0.01" min="0">
                             </div>
                         </div>
 
@@ -449,6 +460,17 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             <div class="modal-body">
                 <!-- Edit Transaction Form -->
                 <form id="edit-transaction-form">
+                    <!-- DR No -->
+                    <div class="mb-3">
+                        <label for="edit-dr-no" class="form-label">DR No</label>
+                        <input type="number" class="form-control" id="edit-dr-no" placeholder="DR No" step="1" min="1"
+                            required>
+                        <!-- Validation Feedback -->
+                        <div class="invalid-feedback" id="edit-dr-no-error">
+                            DR No already exists.
+                        </div>
+                    </div>
+                    <!-- Outlet Name with Autocomplete and Validation -->
                     <div class="mb-3 position-relative">
                         <label for="edit-outlet-name" class="form-label">Outlet Name</label>
                         <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name"
@@ -460,11 +482,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                             Outlet Name does not exist.
                         </div>
                     </div>
+                    <!-- Quantity -->
                     <div class="mb-3">
                         <label for="edit-quantity" class="form-label">Quantity</label>
                         <input type="number" class="form-control" id="edit-quantity" placeholder="Quantity" step="0.01"
                             required>
                     </div>
+                    <!-- KGs -->
                     <div class="mb-3">
                         <label for="edit-kgs" class="form-label">KGs</label>
                         <input type="number" class="form-control" id="edit-kgs" placeholder="KGs" step="0.01" required>
@@ -489,7 +513,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
     $(document).ready(function () {
         // Variables to store data
         let transactions = <?php echo json_encode($_SESSION['transactions'] ?? []); ?>;
-        let drCounter = <?php echo json_encode($last_dr_no + 1); ?>;
         let editingIndex = -1;
 
         // Function to sanitize HTML to prevent XSS
@@ -504,26 +527,20 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const tbody = $('#transactions-body');
             tbody.empty();
 
-            // Reassign DR Nos
-            let currentDRNo = drCounter;
-            transactions.forEach((txn, index) => {
-                txn.drNo = currentDRNo++;
-            });
-
-            // Now render transactions
+            // Render transactions
             transactions.forEach((txn, index) => {
                 const row = `
-                <tr>
-                    <td>${txn.drNo}</td>
+                    <tr>
                     <td>${sanitizeHTML(txn.outletName)}</td>
-                    <td>${txn.quantity}</td>
-                    <td>${txn.kgs}</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-primary me-1" onclick="editTransaction(${index})">Edit</button>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction(${index})">Delete</button>
-                    </td>
-                </tr>
-            `;
+                        <td>${txn.drNo}</td>
+                        <td>${txn.quantity}</td>
+                        <td>${txn.kgs}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary me-1" onclick="editTransaction(${index})">Edit</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
                 tbody.append(row);
             });
 
@@ -534,13 +551,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             // Append total row
             const totalRow = `
-            <tr>
-                <td colspan="2"><strong>Total Transactions: ${totalTransactions}</strong></td>
-                <td><strong>${totalQuantity.toFixed(2)}</strong></td>
-                <td><strong>${totalKGs.toFixed(2)}</strong></td>
-                <td></td>
-            </tr>
-        `;
+                <tr>
+                    <td colspan="2"><strong>Total Transactions: ${totalTransactions}</strong></td>
+                    <td><strong>${totalQuantity.toFixed(2)}</strong></td>
+                    <td><strong>${totalKGs.toFixed(2)}</strong></td>
+                    <td></td>
+                </tr>
+            `;
             tbody.append(totalRow);
 
             // Update hidden input field
@@ -553,24 +570,36 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         // Function to clear transaction input fields
         function clearTransactionInputs() {
             $('#input-outlet-name').val('');
+            $('#input-dr-no').val('');
             $('#input-quantity').val('');
             $('#input-kgs').val('');
             $('#outlet-suggestions').empty();
             $('#input-outlet-name').removeClass('is-invalid');
+            $('#input-dr-no').removeClass('is-invalid');
         }
 
         // Add Transaction Button Click Event
         $('#add-transaction-btn').click(function () {
             const outletName = $('#input-outlet-name').val().trim();
+            const drNo = parseInt($('#input-dr-no').val());
             const quantity = parseFloat($('#input-quantity').val());
             const kgs = parseFloat($('#input-kgs').val());
 
             // Reset validation state
             $('#input-outlet-name').removeClass('is-invalid');
+            $('#input-dr-no').removeClass('is-invalid');
 
             // Validate inputs
-            if (outletName === '' || isNaN(quantity) || isNaN(kgs)) {
+            if (outletName === '' || isNaN(drNo) || isNaN(quantity) || isNaN(kgs)) {
                 alert('Please enter valid transaction details.');
+                return;
+            }
+
+            // Check for duplicate DR No within current transactions
+            const duplicateDR = transactions.some(txn => txn.drNo === drNo);
+            if (duplicateDR) {
+                $('#input-dr-no').addClass('is-invalid');
+                $('#dr-no-error').text('DR No already exists in current transactions.');
                 return;
             }
 
@@ -578,22 +607,36 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const addBtn = $(this);
             addBtn.prop('disabled', true).text('Validating...');
 
-            // Validate Outlet Name via AJAX
+            // First, validate Outlet Name via AJAX
             $.getJSON(`../includes/validate_outlet.php`, { outlet_name: outletName }, function (data) {
                 if (data.exists) {
-                    // Outlet exists, add transaction
-                    const transaction = { outletName: outletName, quantity: quantity, kgs: kgs };
-                    transactions.push(transaction);
-                    updateTransactionsTable();
-                    clearTransactionInputs();
+                    // Outlet exists, now validate DR No against database
+                    $.getJSON(`validate_dr_no.php`, { dr_no: drNo }, function (drData) {
+                        if (drData.exists) {
+                            // DR No already exists in database, show error
+                            $('#input-dr-no').addClass('is-invalid');
+                            $('#dr-no-error').text('DR No already exists in the database.');
+                            addBtn.prop('disabled', false).text('Add Transaction');
+                        } else {
+                            // DR No is unique, proceed to add transaction
+                            const transaction = { drNo: drNo, outletName: outletName, quantity: quantity, kgs: kgs };
+                            transactions.push(transaction);
+                            updateTransactionsTable();
+                            clearTransactionInputs();
+                            addBtn.prop('disabled', false).text('Add Transaction');
+                        }
+                    }).fail(function () {
+                        alert('Error validating DR No.');
+                        addBtn.prop('disabled', false).text('Add Transaction');
+                    });
                 } else {
                     // Outlet does not exist, show error
                     $('#input-outlet-name').addClass('is-invalid');
+                    $('#outlet-error').text('Outlet Name does not exist.');
+                    addBtn.prop('disabled', false).text('Add Transaction');
                 }
             }).fail(function () {
                 alert('Error validating outlet name.');
-            }).always(function () {
-                // Re-enable button
                 addBtn.prop('disabled', false).text('Add Transaction');
             });
         });
@@ -610,24 +653,38 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         window.editTransaction = function (index) {
             editingIndex = index;
             const transaction = transactions[index];
+            $('#edit-dr-no').val(transaction.drNo);
             $('#edit-outlet-name').val(transaction.outletName);
             $('#edit-quantity').val(transaction.quantity);
             $('#edit-kgs').val(transaction.kgs);
+            $('#edit-outlet-suggestions').empty();
+            $('#edit-outlet-name').removeClass('is-invalid');
+            $('#edit-dr-no').removeClass('is-invalid');
             $('#editTransactionModal').modal('show');
         };
 
         // Save Edited Transaction
         $('#save-edit-btn').click(function () {
+            const drNo = parseInt($('#edit-dr-no').val());
             const outletName = $('#edit-outlet-name').val().trim();
             const quantity = parseFloat($('#edit-quantity').val());
             const kgs = parseFloat($('#edit-kgs').val());
 
             // Reset validation state
             $('#edit-outlet-name').removeClass('is-invalid');
+            $('#edit-dr-no').removeClass('is-invalid');
 
             // Validate inputs
-            if (outletName === '' || isNaN(quantity) || isNaN(kgs)) {
+            if (outletName === '' || isNaN(drNo) || isNaN(quantity) || isNaN(kgs)) {
                 alert('Please enter valid transaction details.');
+                return;
+            }
+
+            // Check for duplicate DR No within current transactions, excluding the one being edited
+            const duplicateDR = transactions.some((txn, idx) => txn.drNo === drNo && idx !== editingIndex);
+            if (duplicateDR) {
+                $('#edit-dr-no').addClass('is-invalid');
+                $('#edit-dr-no-error').text('DR No already exists in current transactions.');
                 return;
             }
 
@@ -638,22 +695,52 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             // Validate Outlet Name via AJAX
             $.getJSON(`../includes/validate_outlet.php`, { outlet_name: outletName }, function (data) {
                 if (data.exists) {
-                    // Outlet exists, update transaction
-                    transactions[editingIndex] = {
-                        outletName: outletName,
-                        quantity: quantity,
-                        kgs: kgs
-                    };
-                    updateTransactionsTable();
-                    $('#editTransactionModal').modal('hide');
+                    // Outlet exists, now validate DR No against database if changed
+                    const originalDrNo = transactions[editingIndex].drNo;
+                    if (drNo !== originalDrNo) {
+                        // DR No has changed, validate uniqueness in database
+                        $.getJSON(`validate_dr_no.php`, { dr_no: drNo }, function (drData) {
+                            if (drData.exists) {
+                                // DR No already exists in database, show error
+                                $('#edit-dr-no').addClass('is-invalid');
+                                $('#edit-dr-no-error').text('DR No already exists in the database.');
+                                saveBtn.prop('disabled', false).text('Save changes');
+                            } else {
+                                // DR No is unique, proceed to update transaction
+                                transactions[editingIndex] = {
+                                    drNo: drNo,
+                                    outletName: outletName,
+                                    quantity: quantity,
+                                    kgs: kgs
+                                };
+                                updateTransactionsTable();
+                                $('#editTransactionModal').modal('hide');
+                                saveBtn.prop('disabled', false).text('Save changes');
+                            }
+                        }).fail(function () {
+                            alert('Error validating DR No.');
+                            saveBtn.prop('disabled', false).text('Save changes');
+                        });
+                    } else {
+                        // DR No hasn't changed, proceed to update
+                        transactions[editingIndex] = {
+                            drNo: drNo,
+                            outletName: outletName,
+                            quantity: quantity,
+                            kgs: kgs
+                        };
+                        updateTransactionsTable();
+                        $('#editTransactionModal').modal('hide');
+                        saveBtn.prop('disabled', false).text('Save changes');
+                    }
                 } else {
                     // Outlet does not exist, show error
                     $('#edit-outlet-name').addClass('is-invalid');
+                    $('#edit-outlet-error').text('Outlet Name does not exist.');
+                    saveBtn.prop('disabled', false).text('Save changes');
                 }
             }).fail(function () {
                 alert('Error validating outlet name.');
-            }).always(function () {
-                // Re-enable button
                 saveBtn.prop('disabled', false).text('Save changes');
             });
         });
@@ -684,44 +771,40 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         });
 
         // Outlet Name Autocomplete for Edit Transaction
-        document.getElementById('edit-outlet-name').addEventListener('input', function () {
-            const searchQuery = this.value;
+        $('#edit-outlet-name').on('input', function () {
+            const searchQuery = $(this).val();
             if (searchQuery.length >= 1) {
-                fetch(`search_outlets.php?query=${encodeURIComponent(searchQuery)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const suggestionsList = document.getElementById('edit-outlet-suggestions');
-                        suggestionsList.innerHTML = ''; // Clear previous suggestions
-
-                        data.forEach(outlet => {
-                            const suggestionItem = document.createElement('a');
-                            suggestionItem.classList.add('list-group-item', 'list-group-item-action');
-                            suggestionItem.textContent = outlet.CustomerName;
-                            suggestionItem.href = '#';
-                            suggestionItem.addEventListener('click', function (e) {
+                $.getJSON('search_outlets.php', { query: searchQuery }, function (data) {
+                    const suggestionsList = $('#edit-outlet-suggestions');
+                    suggestionsList.empty();
+                    data.forEach(outlet => {
+                        const suggestionItem = $('<a></a>')
+                            .addClass('list-group-item list-group-item-action')
+                            .text(outlet.CustomerName)
+                            .attr('href', '#')
+                            .click(function (e) {
                                 e.preventDefault();
-                                document.getElementById('edit-outlet-name').value = outlet.CustomerName;
-                                suggestionsList.innerHTML = ''; // Clear suggestions after selection
+                                $('#edit-outlet-name').val(outlet.CustomerName);
+                                suggestionsList.empty();
                             });
-                            suggestionsList.appendChild(suggestionItem);
-                        });
-                    })
-                    .catch(error => console.error('Error fetching outlet suggestions:', error));
+                        suggestionsList.append(suggestionItem);
+                    });
+                });
             } else {
-                document.getElementById('edit-outlet-suggestions').innerHTML = ''; // Clear if query is too short
+                $('#edit-outlet-suggestions').empty();
             }
         });
 
         // Hide suggestions when clicking outside for Add Transaction and Edit Transaction
-        document.addEventListener('click', function (event) {
-            const isClickInsideAdd = document.getElementById('input-outlet-name').contains(event.target) || document.getElementById('outlet-suggestions').contains(event.target);
+        $(document).on('click', function (event) {
+            const isClickInsideAdd = $('#input-outlet-name').is(event.target) || $('#outlet-suggestions').has(event.target).length > 0;
             if (!isClickInsideAdd) {
-                document.getElementById('outlet-suggestions').innerHTML = '';
+                $('#outlet-suggestions').empty();
             }
 
-            const isClickInsideEdit = document.getElementById('edit-outlet-name').contains(event.target) || document.getElementById('edit-outlet-suggestions').contains(event.target);
+            const isClickInsideEdit = $('#edit-outlet-name').is(event.target) || $('#edit-outlet-suggestions').has(event.target).length > 0;
             if (!isClickInsideEdit) {
-                document.getElementById('edit-outlet-suggestions').innerHTML = '';
+                $('#edit-outlet-suggestions').empty();
             }
         });
 
@@ -773,7 +856,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
             // Transactions Summary
             summaryHtml += '<h6>Transactions</h6>';
-            summaryHtml += '<table class=" table-responsive table table-striped table-bordered text-nowrap align-middle text-center">';
+            summaryHtml += '<table class="table table-bordered">';
             summaryHtml += '<thead><tr><th>DR No</th><th>Outlet Name</th><th>Quantity</th><th>KGs</th></tr></thead><tbody>';
             let total_kgs = 0;
             transactions.forEach(txn => {
@@ -933,7 +1016,19 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         });
     });
 
+    // Function to edit a transaction (Global Scope)
+    function editTransaction(index) {
+        // The function is already defined within $(document).ready in the above script
+        // No action needed here
+    }
 </script>
+
+<!-- Ensure the following PHP scripts exist and are correctly implemented:
+     - validate_dr_no.php
+     - validate_outlet.php
+     - search_outlets.php
+     - get_cluster_rate.php
+-->
 
 <?php
 include '../officer/footer.php';

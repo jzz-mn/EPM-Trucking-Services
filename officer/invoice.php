@@ -302,7 +302,7 @@ include '../officer/header.php';
               $invoicesResult = $conn->query($invoicesQuery);
               ?>
 
-              <div class="table-responsive mt-3">
+              <div class="table-responsive mt-3 px-4">
                 <?php if ($invoicesResult->num_rows > 0): ?>
                   <table class="table table-striped table-bordered text-nowrap align-middle text-center"
                     id="invoiceTable">
@@ -320,29 +320,59 @@ include '../officer/header.php';
                     <tbody id="invoiceTableBody">
                       <?php while ($invoice = $invoicesResult->fetch_assoc()): ?>
                         <tr>
-                          <td><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?></td>
+                          <td><?php echo 'SOA#' . htmlspecialchars($invoice['BillingInvoiceNo']) . '-E'; ?></td>
                           <td><?php echo htmlspecialchars($invoice['ServiceNo']); ?></td>
-                          <td><?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
+                          <td>
+                            <?php echo htmlspecialchars($invoice['BillingStartDate']); ?> -
                             <?php echo htmlspecialchars($invoice['BillingEndDate']); ?>
                           </td>
                           <td><?php echo htmlspecialchars($invoice['BilledTo']); ?></td>
                           <td><?php echo number_format($invoice['GrossAmount'], 2); ?></td>
                           <td><?php echo number_format($invoice['NetAmount'], 2); ?></td>
                           <td>
-                            <!-- Print PDF Button -->
-                            <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
-                              <input type="hidden" name="BillingInvoiceNo"
-                                value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
-                              <input type="hidden" name="format" value="pdf">
-                              <button type="submit" class="btn btn-primary btn-sm">Print PDF</button>
-                            </form>
-                            <!-- Export Excel Button -->
-                            <form action="print_invoice.php" method="post" target="_blank" style="display:inline;">
-                              <input type="hidden" name="BillingInvoiceNo"
-                                value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
-                              <input type="hidden" name="format" value="excel">
-                              <button type="submit" class="btn btn-success btn-sm">Export Excel</button>
-                            </form>
+                            <!-- Dropdown Button -->
+                            <div class="dropdown">
+                              <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
+                                id="actionMenu<?php echo $invoice['BillingInvoiceNo']; ?>" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Actions
+                              </button>
+                              <ul class="dropdown-menu"
+                                aria-labelledby="actionMenu<?php echo $invoice['BillingInvoiceNo']; ?>">
+                                <li>
+                                  <!-- Print PDF Option -->
+                                  <form action="print_invoice.php" method="post" target="_blank"
+                                    class="dropdown-item p-0 m-0">
+                                    <input type="hidden" name="BillingInvoiceNo"
+                                      value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
+                                    <input type="hidden" name="format" value="pdf">
+                                    <button type="submit" class="btn btn-link dropdown-item"
+                                      style="text-decoration: none;">Print PDF</button>
+                                  </form>
+                                </li>
+                                <li>
+                                  <!-- Export Excel Option -->
+                                  <form action="print_invoice.php" method="post" target="_blank"
+                                    class="dropdown-item p-0 m-0">
+                                    <input type="hidden" name="BillingInvoiceNo"
+                                      value="<?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>">
+                                    <input type="hidden" name="format" value="excel">
+                                    <button type="submit" class="btn btn-link dropdown-item"
+                                      style="text-decoration: none;">Export Excel</button>
+                                  </form>
+                                </li>
+                                <li>
+                                  <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                  <!-- Edit Invoice Option -->
+                                  <a href="edit_invoice.php?BillingInvoiceNo=<?php echo urlencode($invoice['BillingInvoiceNo']); ?>"
+                                    class="dropdown-item">
+                                    Edit Invoice
+                                  </a>
+                                </li>
+                              </ul>
+                            </div>
                           </td>
                         </tr>
                       <?php endwhile; ?>
@@ -353,7 +383,8 @@ include '../officer/header.php';
                 <?php endif; ?>
               </div>
 
-              <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row p-3">
+              <div
+                class="pagination-controls d-flex justify-content-between align-items-center my-3 flex-column flex-md-row p-3">
                 <div class="order-2 order-md-1 mt-3 mt-md-0">
                   Number of pages: <span id="totalPages"></span>
                 </div>
@@ -363,8 +394,6 @@ include '../officer/header.php';
                   </ul>
                 </nav>
               </div>
-
-
             </div>
           </div>
         </div>
@@ -462,8 +491,8 @@ $conn->close();
 ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function() {
-    $('#btn-add-invoice').click(function() {
+  $(document).ready(function () {
+    $('#btn-add-invoice').click(function () {
       // Get form data
       var billingStartDate = $('#billingStartDate').val();
       var billingEndDate = $('#billingEndDate').val();
@@ -485,7 +514,7 @@ $conn->close();
           billingEndDate: billingEndDate
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
           if (response.success) {
             // Populate the modal with the data
             $('#selectedRecordsTable tbody').html(response.html);
@@ -497,7 +526,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while fetching the records.');
         }
@@ -505,7 +534,7 @@ $conn->close();
     });
 
     // Handle invoice confirmation
-    $('#confirmGenerateInvoice').click(function() {
+    $('#confirmGenerateInvoice').click(function () {
       // Send AJAX request to generate the invoice
       $.ajax({
         url: 'invoice.php',
@@ -517,7 +546,7 @@ $conn->close();
           billedTo: $('#billedTo').val()
         },
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
           if (response.success) {
             alert('Invoice generated successfully.');
             // Reload the page to show the new invoice
@@ -526,7 +555,7 @@ $conn->close();
             alert(response.message);
           }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           console.error(xhr.responseText);
           alert('An error occurred while generating the invoice.');
         }

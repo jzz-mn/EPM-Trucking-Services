@@ -49,7 +49,7 @@ if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = 
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Favicon icon-->
+  <!-- Icon-->
   <link rel="shortcut icon" type="image/png" href="../assetsEPM/logos/epm-logo.png" />
 
   <!-- Core Css -->
@@ -65,17 +65,12 @@ if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = 
   <div id="main-wrapper">
     <!-- Sidebar Start -->
     <aside class="left-sidebar with-vertical">
-      <!-- ---------------------------------- -->
-      <!-- Start Vertical Layout Sidebar -->
-      <!-- ---------------------------------- -->
-
       <div>
-
         <div class="brand-logo d-flex align-items-center">
           <a href="../officer/home.php" class="text-nowrap logo-img">
-            <img src="../assets/images/logos/epm-logo-no-bg.png" alt="Logo" />
+            <img src="../assetsEPM/logos/epm-logo-no-bg1.png" alt="Logo" class="img-fluid"
+              style="max-width: 146px; height: auto;">
           </a>
-
         </div>
 
         <!-- ---------------------------------- -->
@@ -218,11 +213,14 @@ if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = 
                   <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-6"></iconify-icon>
                 </a>
               </li>
-              
+
             </ul>
 
             <div class="d-block d-lg-none py-9 py-xl-0">
-              <img src="../assets/images/logos/epm-logo-no-bg.png" alt="matdash-img" />
+              <a href="../officer/home.php" class="text-nowrap logo-img">
+                <img src="../assetsEPM/logos/epm-logo-no-bg.png" alt="Logo" class="img-fluid"
+                  style="max-width: 146px; height: auto;">
+              </a>
             </div>
             <a class="navbar-toggler p-0 border-0 nav-icon-hover-bg rounded-circle" href="javascript:void(0)"
               data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
@@ -300,9 +298,11 @@ if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = 
                               <?php echo $username; ?>
                               <span class="text-success fs-11"><?php echo $role; ?></span>
                             </h5>
-                            <p class="mb-0 text-dark">
+                            <p class="mb-0 text-dark"
+                              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
                               <?php echo $email; ?>
                             </p>
+
                           </div>
                         </div>
                         <div class="message-body">

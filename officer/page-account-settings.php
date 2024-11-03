@@ -246,8 +246,8 @@ mysqli_close($conn);
                 this.classList.toggle('bi-eye-slash');
             });
         </script>
-
     </div>
-    <?php
-    include '../officer/footer.php';
-    ?>
+</div>
+<?php
+include '../officer/footer.php';
+?>

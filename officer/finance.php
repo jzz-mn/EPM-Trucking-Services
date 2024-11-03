@@ -30,7 +30,7 @@ include '../includes/db_connection.php';
     </div>
     <?php
     // Include the database connection
-
+    
 
     // Get the last ExpenseID
     $query = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC LIMIT 1";
@@ -168,7 +168,8 @@ include '../includes/db_connection.php';
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="searchBar" class="form-control" placeholder="Search..." onkeyup="filterTable()" />
+                    <input type="text" id="searchBar" class="form-control" placeholder="Search..."
+                      onkeyup="filterTable()" />
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
                     <select id="rowsPerPage" class="form-select w-auto d-inline" onchange="changeRowsPerPage()">
@@ -179,7 +180,7 @@ include '../includes/db_connection.php';
                   </div>
                 </div>
               </div>
-              <div class="py-3">
+              <div class="py-3 pb-0">
                 <div class="table-responsive">
                   <table id="expenseTable" class="table text-center table-striped table-bordered">
                     <thead>
@@ -228,7 +229,8 @@ include '../includes/db_connection.php';
                     </tbody>
                   </table>
                 </div>
-                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                <div
+                  class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                   <div class="order-2 order-md-1 mt-3 mt-md-0">
                     Number of pages: <span id="totalPages"></span>
                   </div>
@@ -436,7 +438,8 @@ include '../includes/db_connection.php';
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="fuelSearchBar" class="form-control" placeholder="Search..." onkeyup="filterFuelTable()">
+                    <input type="text" id="fuelSearchBar" class="form-control" placeholder="Search..."
+                      onkeyup="filterFuelTable()">
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
                     <select id="fuelRowsPerPage" class="form-select w-auto d-inline" onchange="changeFuelRowsPerPage()">
@@ -447,9 +450,9 @@ include '../includes/db_connection.php';
                   </div>
                 </div>
               </div>
-              <div class="py-3">
+              <div class="py-3 pb-0 mb-0">
                 <div class="table-responsive">
-                  <table id="fuelTable" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="fuelTable" class="table text-center table-striped table-bordered">
                     <thead>
                       <tr>
                         <th onclick="sortFuelTable(0)">Fuel ID</th>
@@ -499,7 +502,8 @@ include '../includes/db_connection.php';
 
 
               <!-- Edit Fuel Modal -->
-              <div class="modal fade" id="editFuelModal" tabindex="-1" role="dialog" aria-labelledby="editFuelModalTitle" aria-hidden="true">
+              <div class="modal fade" id="editFuelModal" tabindex="-1" role="dialog"
+                aria-labelledby="editFuelModalTitle" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                   <div class="modal-content">
                     <div class="modal-header d-flex align-items-center bg-primary">
@@ -518,7 +522,8 @@ include '../includes/db_connection.php';
                                   <div class="col-lg-4">
                                     <div class="mb-3">
                                       <label for="updateFuelID" class="form-label">Fuel ID</label>
-                                      <input type="text" class="form-control" id="updateFuelID" name="updateFuelID" readonly>
+                                      <input type="text" class="form-control" id="updateFuelID" name="updateFuelID"
+                                        readonly>
                                     </div>
                                   </div>
                                   <!-- Date -->
@@ -532,14 +537,16 @@ include '../includes/db_connection.php';
                                   <div class="col-lg-4">
                                     <div class="mb-3">
                                       <label for="updateLiters" class="form-label">Liters</label>
-                                      <input type="number" class="form-control" id="updateLiters" name="updateLiters" step="0.01" oninput="computeFuelAmount()">
+                                      <input type="number" class="form-control" id="updateLiters" name="updateLiters"
+                                        step="0.01" oninput="computeFuelAmount()">
                                     </div>
                                   </div>
                                   <!-- Unit Price -->
                                   <div class="col-lg-4">
                                     <div class="mb-3">
                                       <label for="updateUnitPrice" class="form-label">Unit Price</label>
-                                      <input type="number" class="form-control" id="updateUnitPrice" name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
+                                      <input type="number" class="form-control" id="updateUnitPrice"
+                                        name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
                                     </div>
                                   </div>
                                   <!-- Fuel Type -->
@@ -556,12 +563,14 @@ include '../includes/db_connection.php';
                                   <div class="col-lg-6">
                                     <div class="mb-3">
                                       <label for="updateAmount" class="form-label">Amount</label>
-                                      <input type="number" class="form-control" id="updateAmount" name="updateAmount" step="0.01" readonly>
+                                      <input type="number" class="form-control" id="updateAmount" name="updateAmount"
+                                        step="0.01" readonly>
                                     </div>
                                   </div>
                                   <div class="col-12">
                                     <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                                      <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                                      <button class="btn bg-danger-subtle text-danger"
+                                        data-bs-dismiss="modal">Cancel</button>
                                       <button type="submit" class="btn btn-primary">Save</button>
                                     </div>
                                   </div>
@@ -576,7 +585,8 @@ include '../includes/db_connection.php';
                 </div>
               </div>
 
-              <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+              <div
+                class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                 <div class="order-2 order-md-1 mt-3 mt-md-0">
                   Number of pages: <span id="totalFuelPages"></span>
                 </div>
@@ -937,7 +947,7 @@ include '../includes/db_connection.php';
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-
-  <?php
-  include '../officer/footer.php';
-  ?>
+</div>
+<?php
+include '../officer/footer.php';
+?>

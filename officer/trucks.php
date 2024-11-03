@@ -315,7 +315,8 @@ include '../officer/header.php';
                         <div class="col-lg-6">
                           <div class="mb-3">
                             <label for="transactionDate" class="form-label">Transaction Date</label>
-                            <input type="date" class="form-control" id="transactionDate" name="transactionDate" required>
+                            <input type="date" class="form-control" id="transactionDate" name="transactionDate"
+                              required>
                           </div>
                         </div>
 
@@ -354,7 +355,8 @@ include '../officer/header.php';
                         <!-- Submit and Cancel Buttons -->
                         <div class="col-12">
                           <div class="d-flex justify-content-end mt-4 gap-3">
-                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn bg-danger-subtle text-danger"
+                              data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                           </div>
                         </div>
@@ -410,14 +412,15 @@ include '../officer/header.php';
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="truckBrand" class="form-label">Truck Brand</label>
-                            <input type="text" class="form-control" id="truckBrand"
-                              name="truckBrand" placeholder="Enter Truck Brand">
+                            <input type="text" class="form-control" id="truckBrand" name="truckBrand"
+                              placeholder="Enter Truck Brand">
                           </div>
                         </div>
                         <!-- Submit and Cancel Buttons -->
                         <div class="col-12">
                           <div class="d-flex justify-content-end mt-4 gap-3">
-                            <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn bg-danger-subtle text-danger"
+                              data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                           </div>
                         </div>
@@ -469,10 +472,12 @@ include '../officer/header.php';
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search..." onkeyup="filterMaintenanceTable()">
+                    <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search..."
+                      onkeyup="filterMaintenanceTable()">
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
-                    <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline" onchange="changeMaintenanceRowsPerPage()">
+                    <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline"
+                      onchange="changeMaintenanceRowsPerPage()">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
                       <option value="20">20 rows</option>
@@ -489,7 +494,8 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="maintenanceTable" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="maintenanceTable"
+                    class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
                         <th onclick="sortMaintenanceTable(0)">Maintenance ID</th>
@@ -526,12 +532,14 @@ include '../officer/header.php';
                     </tbody>
                   </table>
                 </div>
-                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                <div
+                  class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                   <div class="order-2 order-md-1 mt-3 mt-md-0">
                     <span>Number of pages: <span id="totalPagesMaintenance"></span></span>
                   </div>
                   <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
-                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="maintenancePaginationNumbers">
+                    <ul class="pagination justify-content-center justify-content-md-end mb-0"
+                      id="maintenancePaginationNumbers">
                       <!-- Pagination buttons will be dynamically generated here -->
                     </ul>
                   </nav>
@@ -548,10 +556,12 @@ include '../officer/header.php';
               <div class="table-controls mb-3">
                 <div class="row align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTransactionsTable()" />
+                    <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..."
+                      onkeyup="filterTransactionsTable()" />
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
-                    <select id="transactionsRowsPerPage" class="form-select w-auto d-inline" onchange="changeTransactionsRowsPerPage()">
+                    <select id="transactionsRowsPerPage" class="form-select w-auto d-inline"
+                      onchange="changeTransactionsRowsPerPage()">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
                       <option value="20">20 rows</option>
@@ -568,7 +578,8 @@ include '../officer/header.php';
                 $result = $conn->query($query);
                 ?>
                 <div class="table-responsive">
-                  <table id="transactionsTable" class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="transactionsTable"
+                    class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
                         <th onclick="sortTransactionsTable(0)">Transaction ID</th>
@@ -606,14 +617,16 @@ include '../officer/header.php';
                 </div>
 
                 <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-                  <button id="transactionsPrevBtn" class="btn btn-primary me-2" onclick="prevTransactionsPage()">Previous</button>
+                  <button id="transactionsPrevBtn" class="btn btn-primary me-2"
+                    onclick="prevTransactionsPage()">Previous</button>
 
                   <!-- Pagination Numbers -->
                   <nav>
                     <ul class="pagination mb-0" id="transactionsPaginationNumbers"></ul>
                   </nav>
 
-                  <button id="transactionsNextBtn" class="btn btn-primary ms-2" onclick="nextTransactionsPage()">Next</button>
+                  <button id="transactionsNextBtn" class="btn btn-primary ms-2"
+                    onclick="nextTransactionsPage()">Next</button>
                 </div>
 
               </div>
@@ -624,7 +637,8 @@ include '../officer/header.php';
                 <div class="row align-items-center">
                   <div class="col-md-4">
                     <!-- Search Bar -->
-                    <input type="text" id="trucksSearchBar" class="form-control" placeholder="Search..." onkeyup="filterTrucksTable()" />
+                    <input type="text" id="trucksSearchBar" class="form-control" placeholder="Search..."
+                      onkeyup="filterTrucksTable()" />
                   </div>
                   <div class="col-md-4 offset-md-4 text-end">
                   </div>
@@ -674,96 +688,94 @@ include '../officer/header.php';
               </div>
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
-  </div>
-  <script>
-    // Function to populate the Edit Maintenance modal with the selected record data
-    function populateEditMaintenanceForm(maintenance) {
-      // Map month names to numbers
-      const monthMap = {
-        'January': '1',
-        'February': '2',
-        'March': '3',
-        'April': '4',
-        'May': '5',
-        'June': '6',
-        'July': '7',
-        'August': '8',
-        'September': '9',
-        'October': '10',
-        'November': '11',
-        'December': '12'
-      };
 
-      let monthValue = maintenance.Month;
+    <script>
+      // Function to populate the Edit Maintenance modal with the selected record data
+      function populateEditMaintenanceForm(maintenance) {
+        // Map month names to numbers
+        const monthMap = {
+          'January': '1',
+          'February': '2',
+          'March': '3',
+          'April': '4',
+          'May': '5',
+          'June': '6',
+          'July': '7',
+          'August': '8',
+          'September': '9',
+          'October': '10',
+          'November': '11',
+          'December': '12'
+        };
 
-      // If the month is a name, map it to its numeric value
-      if (isNaN(monthValue)) {
-        monthValue = monthMap[monthValue];
+        let monthValue = maintenance.Month;
+
+        // If the month is a name, map it to its numeric value
+        if (isNaN(monthValue)) {
+          monthValue = monthMap[monthValue];
+        }
+
+        // Set values in the modal based on the selected maintenance row
+        document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+        document.getElementById("maintenanceYear").value = maintenance.Year;
+        document.getElementById("maintenanceMonth").value = monthValue; // Set month
+        document.getElementById("maintenanceCategory").value = maintenance.Category;
+        document.getElementById("maintenanceDescription").value = maintenance.Description;
+        document.getElementById("maintenanceAmount").value = maintenance.Amount;
       }
 
-      // Set values in the modal based on the selected maintenance row
-      document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-      document.getElementById("maintenanceYear").value = maintenance.Year;
-      document.getElementById("maintenanceMonth").value = monthValue; // Set month
-      document.getElementById("maintenanceCategory").value = maintenance.Category;
-      document.getElementById("maintenanceDescription").value = maintenance.Description;
-      document.getElementById("maintenanceAmount").value = maintenance.Amount;
-    }
-
-    // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
-    function attachMaintenanceEditButtons() {
-      const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-      editButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
-          populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
-          $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+      // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
+      function attachMaintenanceEditButtons() {
+        const editButtons = document.querySelectorAll('.edit-maintenance-btn');
+        editButtons.forEach(button => {
+          button.addEventListener('click', function () {
+            const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
+            populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
+            $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+          });
         });
-      });
-    }
+      }
 
-    // Execute this function when the document is fully loaded
-    document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
-  </script>
-  <script>
-    // Function to populate the Edit Transaction modal with the selected record data1
-    function populateEditTransactionForm(transaction) {
-      // Set values in the modal based on the selected transaction
-      document.getElementById("transactionId").value = transaction.TransactionID;
-      document.getElementById("transactionDate").value = transaction.TransactionDate;
-      document.getElementById("drNo").value = transaction.DRno;
-      document.getElementById("outletName").value = transaction.OutletName;
-      document.getElementById("qty").value = transaction.Qty;
-      document.getElementById("kgs").value = transaction.KGs;
-    }
+      // Execute this function when the document is fully loaded
+      document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
+    </script>
+    <script>
+      // Function to populate the Edit Transaction modal with the selected record data1
+      function populateEditTransactionForm(transaction) {
+        // Set values in the modal based on the selected transaction
+        document.getElementById("transactionId").value = transaction.TransactionID;
+        document.getElementById("transactionDate").value = transaction.TransactionDate;
+        document.getElementById("drNo").value = transaction.DRno;
+        document.getElementById("outletName").value = transaction.OutletName;
+        document.getElementById("qty").value = transaction.Qty;
+        document.getElementById("kgs").value = transaction.KGs;
+      }
 
-    // Attach the 'populateEditTransactionForm' function to the edit button in your table
-    function attachTransactionEditButtons() {
-      const editButtons = document.querySelectorAll('.edit-transaction-btn');
-      editButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
-          populateEditTransactionForm(transactionData); // Populate modal with transaction data
-          $('#editTransactionModal').modal('show'); // Show the modal
+      // Attach the 'populateEditTransactionForm' function to the edit button in your table
+      function attachTransactionEditButtons() {
+        const editButtons = document.querySelectorAll('.edit-transaction-btn');
+        editButtons.forEach(button => {
+          button.addEventListener('click', function () {
+            const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
+            populateEditTransactionForm(transactionData); // Populate modal with transaction data
+            $('#editTransactionModal').modal('show'); // Show the modal
+          });
         });
-      });
-    }
+      }
 
-    // Execute this function when the document is fully loaded
-    document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
-  </script>
-</div>
+      // Execute this function when the document is fully loaded
+      document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
+    </script>
+  </div>
 </div>
 
 <script>
   // Listen for clicks on edit buttons
   document.querySelectorAll('.edit-truck-btn').forEach(button => {
-    button.addEventListener('click', function(event) {
+    button.addEventListener('click', function (event) {
       event.preventDefault();
 
       // Get TruckID from the data-transaction attribute
@@ -949,7 +961,7 @@ include '../officer/header.php';
   function attachMaintenanceEditButtons() {
     const editButtons = document.querySelectorAll('.edit-maintenance-btn');
     editButtons.forEach(button => {
-      button.addEventListener('click', function() {
+      button.addEventListener('click', function () {
         const maintenanceData = JSON.parse(this.dataset.maintenance);
         populateEditMaintenanceForm(maintenanceData);
         $('#updateMaintenanceRecordModal').modal('show');
@@ -960,7 +972,7 @@ include '../officer/header.php';
   function attachTransactionEditButtons() {
     const editButtons = document.querySelectorAll('.edit-transaction-btn');
     editButtons.forEach(button => {
-      button.addEventListener('click', function() {
+      button.addEventListener('click', function () {
         const transactionData = JSON.parse(this.dataset.transaction);
         populateEditTransactionForm(transactionData);
         $('#editTransactionModal').modal('show');

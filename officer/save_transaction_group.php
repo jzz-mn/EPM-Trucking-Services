@@ -45,7 +45,6 @@ function round_up_kgs($kgs)
     return 4000; // Cap at 4000
 }
 
-
 // Check if the user submitted the form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Collect data from $_POST
@@ -80,6 +79,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header("Location: add_data.php?error=invalid_transactions");
         exit();
     }
+
+    // Server-Side Validation: Prevent Duplicate DR Nos Within Current Transactions
+    $drNos = array_column($transactions, 'drNo');
+    $unique_drNos = array_unique($drNos);
+    if (count($drNos) !== count($unique_drNos)) {
+        // Duplicate DR Nos found within the submitted transactions
+        header("Location: add_data.php?error=duplicate_drnos_within_transactions");
+        exit();
+    }
+
+    // Server-Side Validation: Prevent Duplicate DR Nos Against Database
+    // Prepare a statement with placeholders based on the number of DR Nos
+    $placeholders = implode(',', array_fill(0, count($unique_drNos), '?'));
+    $types = str_repeat('i', count($unique_drNos)); // Assuming DR No is integer
+    $stmt_check = $conn->prepare("SELECT DRno FROM transactions WHERE DRno IN ($placeholders)");
+    if (!$stmt_check) {
+        // Handle prepare error
+        header("Location: add_data.php?error=server_error");
+        exit();
+    }
+
+    // Bind parameters dynamically
+    $stmt_check->bind_param($types, ...$unique_drNos);
+    if (!$stmt_check->execute()) {
+        // Handle execution error
+        $stmt_check->close();
+        header("Location: add_data.php?error=server_error");
+        exit();
+    }
+
+    $result_check = $stmt_check->get_result();
+    if ($result_check->num_rows > 0) {
+        // Some DR Nos already exist in the database
+        $existing_drNos = [];
+        while ($row = $result_check->fetch_assoc()) {
+            $existing_drNos[] = $row['DRno'];
+        }
+        $stmt_check->close();
+        // Optionally, you can redirect with specific DR Nos that are duplicates
+        header("Location: add_data.php?error=duplicate_drnos_database&duplicates=" . implode(',', $existing_drNos));
+        exit();
+    }
+    $stmt_check->close();
 
     // Start a database transaction
     $conn->begin_transaction();
@@ -217,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $toll_fee_amount,                   // "d" - double (decimal)
             $rate_amount,                       // "d" - double (decimal)
             $final_amount,                      // "d" - double (decimal)
-            $total_kgs,                 // "i" - integer (Rounded Total KGs)
+            $rounded_total_kgs,                 // "i" - integer (Rounded Total KGs)
             $expense_id                         // "i" - integer (ExpenseID)
         );
         if (!$stmt->execute()) {
@@ -246,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $transaction_date,             // "s" - string (date)
                 $drNo,                         // "i" - integer
                 $outletName,                   // "s" - string
-                $quantity,                     // "d" - double
+                $quantity,                     // "s" - string (assuming Qty is string based on table schema)
                 $kgs                           // "d" - double
             );
             if (!$stmt->execute()) {
