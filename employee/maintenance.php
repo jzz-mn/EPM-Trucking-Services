@@ -5,7 +5,7 @@ include '../includes/db_connection.php';
 
 // Fetch truck details for display
 if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
-  $truck_query = "SELECT PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
+  $truck_query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
   $stmt = $conn->prepare($truck_query);
   $stmt->bind_param("i", $_SESSION['truck_id']);
   $stmt->execute();
@@ -13,7 +13,6 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
   $truck_display = $truck_result_display->fetch_assoc();
   $stmt->close();
 }
-
 ?>
 
 <div class="body-wrapper">
@@ -23,7 +22,6 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
         <div class="col-12">
           <div class="d-sm-flex align-items-center justify-space-between">
             <h4 class="mb-4 mb-sm-0 card-title">Maintenance</h4>
-            <!-- Removed Sidebar -->
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
@@ -32,19 +30,16 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                   </a>
                 </li>
                 <li class="breadcrumb-item" aria-current="page">
-                  <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
-                    Trucks
-                  </span>
+                  <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">Trucks</span>
                 </li>
               </ol>
-            </nav><!-- Sidebar End -->
+            </nav>
           </div>
         </div>
       </div>
     </div>
 
     <div class="widget-content searchable-container list">
-
       <!-- Add Maintenance Modal -->
       <div class="modal fade" id="addMaintenanceRecordModal" tabindex="-1" role="dialog"
         aria-labelledby="addMaintenanceRecordModalTitle" aria-hidden="true">
@@ -80,13 +75,13 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                           <div class="col-md-6">
                             <label for="truck-select" class="form-label">Select Truck</label>
                             <select class="form-select" id="truck-select" name="truck_id" required>
-                              <option value="" disabled <?php echo isset($_SESSION['truck_id']) ? '' : 'selected'; ?>>
-                                Select a truck</option>
+                              <option value="" disabled selected>Select a truck</option>
                               <?php
+                              $truck_query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+                              $truck_result = $conn->query($truck_query);
                               if ($truck_result->num_rows > 0) {
                                 while ($truck = $truck_result->fetch_assoc()) {
-                                  $selected = (isset($_SESSION['truck_id']) && $_SESSION['truck_id'] == $truck['TruckID']) ? 'selected' : '';
-                                  echo '<option value="' . $truck['TruckID'] . '" ' . $selected . '>' . $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . '</option>';
+                                  echo '<option value="' . $truck['TruckID'] . '">' . $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . '</option>';
                                 }
                               } else {
                                 echo '<option value="">No trucks available</option>';
@@ -111,16 +106,23 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                                 name="maintenanceDescription" placeholder="Enter Description" required>
                             </div>
                           </div>
+                          <div class="col-lg-6 d-none">
+                            <div class="mb-3">
+                              <label for="loggedBy" class="form-label">Logged By</label>
+                              <input type="hidden" id="loggedBy" name="loggedBy" value="<?php echo $_SESSION['user_id']; ?>">
+
+                            </div>
+                          </div>
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
-                              <!-- Trigger the confirmation modal on click -->
                               <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                 data-bs-target="#confirmationModal" onclick="reviewData()">Save</button>
                             </div>
                           </div>
                         </div>
                       </form>
+
                     </div>
                   </div>
                 </div>
@@ -129,8 +131,6 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
           </div>
         </div>
       </div>
-
-
 
       <!-- Confirmation Modal -->
       <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
@@ -157,83 +157,71 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
         </div>
       </div>
 
-
-
       <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
       <div class="card">
         <div class="card-body p-0">
-          <div class>
-
-            <!-- Tab panes -->
-            <div class="tab-content p-4">
-              <div class="tab-pane active" id="home" role="tabpanel">
-                <div class="row mt-3">
-                  <div class="col-md-4 col-xl-3">
-                    <form class="position-relative">
-                      <input type="text" class="form-control product-search" id="input-search" placeholder="Search" />
-                      <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
-                    </form>
-                  </div>
-                  <div
-                    class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                    <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                      data-bs-target="#addMaintenanceRecordModal">
-                      <i class="ti ti-users text-white me-1 fs-5"></i> Add Maintenance Record
-                    </a>
-                  </div>
+          <div class="tab-content p-4">
+            <div class="tab-pane active" id="home" role="tabpanel">
+              <div class="row mt-3">
+                <div class="col-md-4 col-xl-3">
+                  <form class="position-relative">
+                    <input type="text" class="form-control product-search" id="input-search" placeholder="Search" />
+                    <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
+                  </form>
                 </div>
-                <div class="py-3">
-                  <!-- Maintenance Table -->
-                  <?php
-                  include '../includes/db_connection.php';
+                <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+                  <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                    data-bs-target="#addMaintenanceRecordModal">
+                    <i class="ti ti-users text-white me-1 fs-5"></i> Add Maintenance Record
+                  </a>
+                </div>
+              </div>
+              <div class="py-3">
+                <!-- Maintenance Table -->
+                <?php
+                include '../includes/db_connection.php';
 
-                  // Query to fetch data from truckmaintenance table
-                  $query = "SELECT MaintenanceID, Year, Month, Category, Description FROM truckmaintenance";
-                  $result = $conn->query($query);
-                  ?>
-                  <div class="table-responsive">
-                    <table id="" class="table table-striped table-bordered text-nowrap align-middle text-center">
-                      <thead>
-                        <!-- start row -->
-                        <tr>
-                          <th>Maintenance ID</th>
-                          <th>Year</th>
-                          <th>Month</th>
-                          <th>Category</th>
-                          <th>Description</th>
-                        </tr>
-                        <!-- end row -->
-                      </thead>
-                      <tbody>
-                        <?php
-                        // Check if the query returned any results
-                        if ($result->num_rows > 0) {
-                          // Output data of each row
-                          while ($row = $result->fetch_assoc()) {
-                            echo "<tr>";
-                            echo "<td>" . $row['MaintenanceID'] . "</td>";
-                            echo "<td>" . $row['Year'] . "</td>";
-                            echo "<td>" . $row['Month'] . "</td>";
-                            echo "<td>" . $row['Category'] . "</td>";
-                            echo "<td>" . $row['Description'] . "</td>";
-                            echo "<td>";
-
-                            echo "</tr>";
-                          }
-                        } else {
-                          echo "<tr><td colspan='5'>No records found</td></tr>";
+                // Query to fetch data from truckmaintenance table
+                $query = "SELECT MaintenanceID, Year, Month, Category, Description, TruckID FROM truckmaintenance";
+                $result = $conn->query($query);
+                ?>
+                <div class="table-responsive">
+                  <table class="table table-striped table-bordered text-nowrap align-middle text-center">
+                    <thead>
+                      <tr>
+                        <th>Maintenance ID</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Truck ID</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php
+                      if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                          echo "<tr>";
+                          echo "<td>" . $row['MaintenanceID'] . "</td>";
+                          echo "<td>" . $row['Year'] . "</td>";
+                          echo "<td>" . $row['Month'] . "</td>";
+                          echo "<td>" . $row['TruckID'] . "</td>";
+                          echo "<td>" . $row['Category'] . "</td>";
+                          echo "<td>" . $row['Description'] . "</td>";
+                          echo "</tr>";
                         }
-                        ?>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <?php
-                  // Close the database connection
-                  $conn->close();
-                  ?>
-
+                      } else {
+                        echo "<tr><td colspan='6'>No records found</td></tr>";
+                      }
+                      ?>
+                    </tbody>
+                  </table>
                 </div>
+
+                <?php
+                // Close the database connection
+                $conn->close();
+                ?>
               </div>
             </div>
           </div>
@@ -242,7 +230,6 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
     </div>
   </div>
 </div>
-
 
 <script>
   // Function to review data before submitting
@@ -258,7 +245,7 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
   }
 
   // Submit form if user confirms
-  document.getElementById('confirmSubmit').addEventListener('click', function () {
+  document.getElementById('confirmSubmit').addEventListener('click', function() {
     document.getElementById('addMaintenanceForm').submit(); // Submit the form
   });
 </script>
