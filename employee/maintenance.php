@@ -109,10 +109,11 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                           <div class="col-lg-6 d-none">
                             <div class="mb-3">
                               <label for="loggedBy" class="form-label">Logged By</label>
-                              <input type="hidden" id="loggedBy" name="loggedBy" value="<?php echo $_SESSION['user_id']; ?>">
-
-                            </div>
+                              <!-- Hidden field not necessary; directly use session -->
+                              <input type="hidden" id="loggedBy" name="loggedBy" value="<?php echo $_SESSION['UserID']; ?>">
+                              </div>
                           </div>
+
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                               <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>

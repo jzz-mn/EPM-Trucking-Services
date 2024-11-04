@@ -8,15 +8,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $truckId = $_POST['truck_id'];
     $category = $_POST['maintenanceCategory'];
     $description = $_POST['maintenanceDescription'];
-    $loggedBy = $_POST['loggedBy']; // Captures the employeeID
+
+    // Directly use the session variable for loggedBy
+    $loggedBy = $_SESSION['UserID'];
 
     // Extract Year and Month from the maintenanceDate
     $year = date('Y', strtotime($maintenanceDate)); // Ensure data type matches your DB schema
     $month = date('F', strtotime($maintenanceDate));
-
-    // Debugging statements
-    echo "LoggedBy (from POST): " . $loggedBy . "<br>";
-    echo "Session User ID: " . $_SESSION['user_id'] . "<br>";
 
     // Prepare the SQL insert query
     $sql = "INSERT INTO truckmaintenance (MaintenanceID, TruckID, Year, Month, Category, Description, LoggedBy) 
@@ -42,3 +40,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Close the database connection
     $conn->close();
 }
+?>
