@@ -616,18 +616,17 @@ include '../officer/header.php';
                   </table>
                 </div>
 
-                <div class="pagination-controls d-flex justify-content-end align-items-center mt-3">
-                  <button id="transactionsPrevBtn" class="btn btn-primary me-2"
-                    onclick="prevTransactionsPage()">Previous</button>
-
-                  <!-- Pagination Numbers -->
-                  <nav>
-                    <ul class="pagination mb-0" id="transactionsPaginationNumbers"></ul>
+                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                  <div class="order-2 order-md-1 mt-3 mt-md-0">
+                    <span>Number of pages: <span id="totalPagesTransactions"></span></span>
+                  </div>
+                  <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="transactionsPaginationNumbers">
+                      <!-- Pagination buttons will be dynamically generated here -->
+                    </ul>
                   </nav>
-
-                  <button id="transactionsNextBtn" class="btn btn-primary ms-2"
-                    onclick="nextTransactionsPage()">Next</button>
                 </div>
+
 
               </div>
             </div>
@@ -731,7 +730,7 @@ include '../officer/header.php';
       function attachMaintenanceEditButtons() {
         const editButtons = document.querySelectorAll('.edit-maintenance-btn');
         editButtons.forEach(button => {
-          button.addEventListener('click', function () {
+          button.addEventListener('click', function() {
             const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
             populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
             $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
@@ -758,7 +757,7 @@ include '../officer/header.php';
       function attachTransactionEditButtons() {
         const editButtons = document.querySelectorAll('.edit-transaction-btn');
         editButtons.forEach(button => {
-          button.addEventListener('click', function () {
+          button.addEventListener('click', function() {
             const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
             populateEditTransactionForm(transactionData); // Populate modal with transaction data
             $('#editTransactionModal').modal('show'); // Show the modal
@@ -775,7 +774,7 @@ include '../officer/header.php';
 <script>
   // Listen for clicks on edit buttons
   document.querySelectorAll('.edit-truck-btn').forEach(button => {
-    button.addEventListener('click', function (event) {
+    button.addEventListener('click', function(event) {
       event.preventDefault();
 
       // Get TruckID from the data-transaction attribute
@@ -961,7 +960,7 @@ include '../officer/header.php';
   function attachMaintenanceEditButtons() {
     const editButtons = document.querySelectorAll('.edit-maintenance-btn');
     editButtons.forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const maintenanceData = JSON.parse(this.dataset.maintenance);
         populateEditMaintenanceForm(maintenanceData);
         $('#updateMaintenanceRecordModal').modal('show');
@@ -972,7 +971,7 @@ include '../officer/header.php';
   function attachTransactionEditButtons() {
     const editButtons = document.querySelectorAll('.edit-transaction-btn');
     editButtons.forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const transactionData = JSON.parse(this.dataset.transaction);
         populateEditTransactionForm(transactionData);
         $('#editTransactionModal').modal('show');
@@ -1038,14 +1037,15 @@ include '../officer/header.php';
     const paginationNumbers = document.getElementById("maintenancePaginationNumbers");
     paginationNumbers.innerHTML = ''; // Clear existing pagination numbers
 
+    const isMobileView = window.innerWidth <= 768; // Check if the current view is mobile (width <= 768px)
+    const maxVisiblePages = isMobileView ? 3 : 5; // Show 3 pages in mobile view, 5 pages otherwise
+
     if (totalPages > 1) {
-      // Create the '<<' button
+      // Create the '<<' and '<' buttons
       paginationNumbers.appendChild(createPaginationItem('«', maintenanceCurrentPage === 1, () => {
         maintenanceCurrentPage = 1;
         updateMaintenanceTable();
       }));
-
-      // Create the '<' button
       paginationNumbers.appendChild(createPaginationItem('‹', maintenanceCurrentPage === 1, () => {
         if (maintenanceCurrentPage > 1) {
           maintenanceCurrentPage--;
@@ -1053,8 +1053,16 @@ include '../officer/header.php';
         }
       }));
 
-      // Create pagination numbers
-      for (let i = 1; i <= totalPages; i++) {
+      // Display a maximum number of pages at a time based on the view
+      let startPage = Math.max(1, maintenanceCurrentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      // Adjust startPage if the total number of pages is less than maxVisiblePages
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
         const pageItem = document.createElement("li");
         pageItem.classList.add("page-item");
         if (i === maintenanceCurrentPage) {
@@ -1064,7 +1072,7 @@ include '../officer/header.php';
         const pageLink = document.createElement("a");
         pageLink.classList.add("page-link");
         pageLink.textContent = i;
-        pageLink.style.cursor = 'pointer'; // Ensure the cursor shows as a pointer
+        pageLink.style.cursor = 'pointer';
         pageLink.addEventListener('click', () => {
           maintenanceCurrentPage = i;
           updateMaintenanceTable();
@@ -1074,15 +1082,13 @@ include '../officer/header.php';
         paginationNumbers.appendChild(pageItem);
       }
 
-      // Create the '>' button
+      // Create the '>' and '>>' buttons
       paginationNumbers.appendChild(createPaginationItem('›', maintenanceCurrentPage === totalPages, () => {
         if (maintenanceCurrentPage < totalPages) {
           maintenanceCurrentPage++;
           updateMaintenanceTable();
         }
       }));
-
-      // Create the '>>' button
       paginationNumbers.appendChild(createPaginationItem('»', maintenanceCurrentPage === totalPages, () => {
         maintenanceCurrentPage = totalPages;
         updateMaintenanceTable();
@@ -1098,6 +1104,11 @@ include '../officer/header.php';
       paginationNumbers.appendChild(singlePageItem);
     }
   }
+
+  // Add event listener to detect window resize and update pagination accordingly
+  window.addEventListener('resize', () => {
+    updateMaintenancePaginationNumbers(Math.ceil(filteredMaintenanceRows.length / maintenanceRowsPerPage) || 1);
+  });
 
   function createPaginationItem(label, isDisabled, onClick) {
     const pageItem = document.createElement("li");
@@ -1126,6 +1137,14 @@ include '../officer/header.php';
 <script>
   let transactionsCurrentPage = 1;
   let transactionsRowsPerPage = 5;
+  let allTransactionsRows = [];
+  let filteredTransactionsRows = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    allTransactionsRows = Array.from(document.querySelectorAll('#transactionsTable tbody tr'));
+    filteredTransactionsRows = [...allTransactionsRows]; // Start with all rows as filtered
+    updateTransactionsTable();
+  });
 
   function changeTransactionsRowsPerPage() {
     transactionsRowsPerPage = parseInt(document.getElementById("transactionsRowsPerPage").value);
@@ -1133,62 +1152,114 @@ include '../officer/header.php';
     updateTransactionsTable();
   }
 
+  function filterTransactionsTable() {
+    const input = document.getElementById("transactionsSearchBar").value.toLowerCase();
+    filteredTransactionsRows = allTransactionsRows.filter(row => row.innerText.toLowerCase().includes(input));
+
+    transactionsCurrentPage = 1; // Reset to the first page after filtering
+    updateTransactionsTable();
+
+    // Display "No data found" row if necessary
+    const noDataRow = document.getElementById("noTransactionsDataRow");
+    if (noDataRow) {
+      noDataRow.style.display = filteredTransactionsRows.length === 0 ? '' : 'none';
+    }
+
+    // Update pagination for the filtered rows
+    updateTransactionsPaginationNumbers(Math.ceil(filteredTransactionsRows.length / transactionsRowsPerPage) || 1);
+  }
+
   function updateTransactionsTable() {
-    let table = document.getElementById("transactionsTable");
-    let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-    let totalRows = rows.length;
-    let totalPages = Math.ceil(totalRows / transactionsRowsPerPage);
+    const totalRows = filteredTransactionsRows.length;
+    const totalPages = Math.ceil(totalRows / transactionsRowsPerPage) || 1;
+    document.getElementById("totalPagesTransactions").textContent = totalPages;
 
-    let startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
-    let endIndex = startIndex + transactionsRowsPerPage;
+    const startIndex = (transactionsCurrentPage - 1) * transactionsRowsPerPage;
+    const endIndex = startIndex + transactionsRowsPerPage;
 
-    rows.forEach((row, index) => {
-      row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+    allTransactionsRows.forEach(row => row.style.display = 'none'); // Hide all rows initially
+
+    // Display only the rows for the current page
+    filteredTransactionsRows.slice(startIndex, endIndex).forEach(row => {
+      row.style.display = '';
     });
 
-    // Update pagination buttons
-    document.getElementById("transactionsPrevBtn").disabled = transactionsCurrentPage === 1;
-    document.getElementById("transactionsNextBtn").disabled = transactionsCurrentPage === totalPages;
-
-    // Generate pagination numbers
     updateTransactionsPaginationNumbers(totalPages);
   }
 
   function updateTransactionsPaginationNumbers(totalPages) {
     const paginationNumbers = document.getElementById("transactionsPaginationNumbers");
-    paginationNumbers.innerHTML = ''; // Clear existing numbers
+    paginationNumbers.innerHTML = ''; // Clear existing pagination numbers
 
-    for (let i = 1; i <= totalPages; i++) {
-      const pageItem = document.createElement("li");
-      pageItem.classList.add("page-item");
-      if (i === transactionsCurrentPage) {
-        pageItem.classList.add("active");
-      }
-      const pageLink = document.createElement("a");
-      pageLink.classList.add("page-link");
-      pageLink.textContent = i;
-      pageLink.addEventListener('click', () => {
-        transactionsCurrentPage = i;
+    const isMobileView = window.innerWidth <= 768; // Check if the current view is mobile
+    const maxVisiblePages = isMobileView ? 3 : 5; // Show 3 pages in mobile view, 5 pages otherwise
+
+    if (totalPages > 1) {
+      paginationNumbers.appendChild(createPaginationItem('«', transactionsCurrentPage === 1, () => {
+        transactionsCurrentPage = 1;
         updateTransactionsTable();
-      });
+      }));
 
-      pageItem.appendChild(pageLink);
-      paginationNumbers.appendChild(pageItem);
+      paginationNumbers.appendChild(createPaginationItem('‹', transactionsCurrentPage === 1, () => {
+        if (transactionsCurrentPage > 1) {
+          transactionsCurrentPage--;
+          updateTransactionsTable();
+        }
+      }));
+
+      let startPage = Math.max(1, transactionsCurrentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const pageItem = document.createElement("li");
+        pageItem.classList.add("page-item");
+        if (i === transactionsCurrentPage) {
+          pageItem.classList.add("active");
+        }
+
+        const pageLink = document.createElement("a");
+        pageLink.classList.add("page-link");
+        pageLink.textContent = i;
+        pageLink.style.cursor = 'pointer';
+        pageLink.addEventListener('click', () => {
+          transactionsCurrentPage = i;
+          updateTransactionsTable();
+        });
+
+        pageItem.appendChild(pageLink);
+        paginationNumbers.appendChild(pageItem);
+      }
+
+      paginationNumbers.appendChild(createPaginationItem('›', transactionsCurrentPage === totalPages, () => {
+        if (transactionsCurrentPage < totalPages) {
+          transactionsCurrentPage++;
+          updateTransactionsTable();
+        }
+      }));
+
+      paginationNumbers.appendChild(createPaginationItem('»', transactionsCurrentPage === totalPages, () => {
+        transactionsCurrentPage = totalPages;
+        updateTransactionsTable();
+      }));
+    } else {
+      const singlePageItem = document.createElement("li");
+      singlePageItem.classList.add("page-item", "active");
+      const singlePageLink = document.createElement("a");
+      singlePageLink.classList.add("page-link");
+      singlePageLink.textContent = "1";
+      singlePageItem.appendChild(singlePageLink);
+      paginationNumbers.appendChild(singlePageItem);
     }
   }
 
-  function nextTransactionsPage() {
-    transactionsCurrentPage++;
-    updateTransactionsTable();
-  }
-
-  function prevTransactionsPage() {
-    transactionsCurrentPage--;
-    updateTransactionsTable();
-  }
-
-  // Call this on page load
-  document.addEventListener('DOMContentLoaded', updateTransactionsTable);
+  // Add event listener to detect window resize and update pagination accordingly
+  window.addEventListener('resize', () => {
+    updateTransactionsPaginationNumbers(Math.ceil(filteredTransactionsRows.length / transactionsRowsPerPage) || 1);
+  });
 </script>
 
 
@@ -1279,6 +1350,36 @@ include '../officer/header.php';
     /* Center text vertically */
     justify-content: center;
     /* Center text horizontally */
+  }
+
+  @media (max-width: 768px) {
+    .pagination .page-item .page-link {
+      font-size: 12px;
+      /* Reduce font size for mobile */
+      padding: 0.5rem;
+      /* Adjust padding */
+    }
+
+    .pagination .page-item.active .page-link {
+      width: 30px;
+      /* Adjust width for smaller screen */
+      height: 30px;
+      /* Adjust height for smaller screen */
+      font-size: 12px;
+      /* Reduce font size for active page */
+    }
+
+    .pagination-controls {
+      flex-direction: column;
+      /* Stack elements vertically on mobile */
+      align-items: center;
+      /* Center align items */
+    }
+
+    .pagination-controls .order-2 {
+      margin-top: 10px;
+      /* Add space between elements */
+    }
   }
 
   .pagination .page-link:hover {
