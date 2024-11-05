@@ -238,14 +238,15 @@ include '../includes/db_connection.php';
       const pageLink = document.createElement("button");
       pageLink.classList.add('page-link', 'border-0');
       pageLink.textContent = i;
-      pageLink.style.minWidth = '40px';
-      pageLink.style.height = '40px';
+      pageLink.style.minWidth = '35px';
+      pageLink.style.height = '35px';
       pageLink.style.display = 'flex';
       pageLink.style.justifyContent = 'center';
       pageLink.style.alignItems = 'center';
 
       if (i === currentPage) {
-        pageLink.classList.add('active', 'rounded-circle', 'bg-primary', 'text-white');
+        pageLink.classList.add('active', 'rounded-circle', 'text-white');
+        pageLink.style.backgroundColor = '#0d6efd';
         pageLink.classList.remove('border-0'); // Remove border-0 for the active button
       }
 
@@ -278,8 +279,8 @@ include '../includes/db_connection.php';
     const pageLink = document.createElement("button");
     pageLink.classList.add('page-link', 'border-0');
     pageLink.textContent = label;
-    pageLink.style.minWidth = '40px';
-    pageLink.style.height = '40px';
+    pageLink.style.minWidth = '35px';
+    pageLink.style.height = '35px';
     pageLink.style.display = 'flex';
     pageLink.style.justifyContent = 'center';
     pageLink.style.alignItems = 'center';
@@ -347,13 +348,14 @@ include '../includes/db_connection.php';
   }
 
   .pagination .page-item .page-link {
-    min-width: 40px;
-    height: 40px;
+    min-width: 35px;
+    height: 35px;
     display: flex;
     justify-content: center;
     align-items: center;
     border: none;
     color: #000;
+    margin: 0 2px;
   }
 
   .pagination .page-item.active .page-link {

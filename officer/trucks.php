@@ -1340,7 +1340,7 @@ include '../officer/header.php';
     /* White text for the active page */
     border-radius: 50%;
     /* Make the active page a circle */
-    width: 35px;
+    min-width: 35px;
     /* Set width for the circle */
     height: 35px;
     /* Set height for the circle */
@@ -1361,9 +1361,9 @@ include '../officer/header.php';
     }
 
     .pagination .page-item.active .page-link {
-      width: 30px;
+      min-width: 35px;
       /* Adjust width for smaller screen */
-      height: 30px;
+      height: 35px;
       /* Adjust height for smaller screen */
       font-size: 12px;
       /* Reduce font size for active page */

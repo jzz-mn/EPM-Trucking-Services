@@ -772,13 +772,14 @@ $conn->close();
   }
 
   .pagination .page-item .page-link {
-    min-width: 40px;
-    height: 40px;
+    min-width: 35px;
+    height: 35px;
     display: flex;
     justify-content: center;
     align-items: center;
     border: none;
     color: #000;
+    margin: 0 2px;
   }
 
   .pagination .page-item.active .page-link {
