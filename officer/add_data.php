@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             empty($_SESSION['transactions']) ||
             empty($_SESSION['fuel_data']) ||
             empty($_SESSION['expenses_data']) ||
-            empty($_SESSION['toll_fee_amount'])
+            !isset($_SESSION['toll_fee_amount']) // Changed from empty() to isset()
         ) {
             $errors[] = "Please complete all sections of the form.";
         } else {
@@ -404,21 +404,51 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                         </div>
                     </section>
 
-                    <!-- Toll Fee Input -->
-                    <section id="toll-fee-entry" class="mb-5">
+                    <!-- Modified Step 5: Toll Fee Entry -->
+                    <section id="toll-fee-entry" class="mb-0">
                         <h5 class="border-bottom py-2 mb-4">Toll Fee Amount</h5>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="toll-fee-amount" class="form-label">Toll Fee Amount</label>
-                                <input type="number" class="form-control" id="toll-fee-amount" name="toll_fee_amount"
-                                    placeholder="Enter toll fee" step="0.01" min="0" required>
+                        <div class="row g-3 align-items-end">
+                            <!-- Individual Toll Fee Input -->
+                            <div class="col-md-10">
+                                <label for="toll-fee-input" class="form-label">Toll Fee Amount</label>
+                                <input type="number" class="form-control" id="toll-fee-input"
+                                    placeholder="Enter toll fee" step="0.01" min="0">
+                            </div>
+                            <!-- Add Toll Button -->
+                            <div class="col-md-2">
+                                <button type="button" id="add-toll-btn" class="btn w-100 btn-primary">Add Toll</button>
+                            </div>
+                            <!-- Toll Fees Table -->
+                            <div class="col-md-12">
+                                <table class="table table-striped table-bordered text-nowrap align-middle text-center"
+                                    id="toll-fees-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No.</th>
+                                            <th>Toll Fee Amount</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Toll fee entries will be appended here -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="1"><strong>Total</strong></td>
+                                            <td><strong id="toll-fees-total">0.00</strong></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </div>
+                        <!-- Hidden input to store the total toll fee amount -->
+                        <input type="hidden" name="toll_fee_amount" id="toll_fee_amount" value="0">
                     </section>
                 </div>
                 <!-- Final Submission Button -->
                 <div class="d-flex justify-content-end">
-                    <button type="button" id="review-submit-btn" class="btn m-4 btn-primary">Submit Data</button>
+                    <button type="button" id="review-submit-btn" class="w-25 btn m-4 btn-success">Submit Data</button>
                 </div>
             </div>
 
@@ -515,6 +545,9 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         let transactions = <?php echo json_encode($_SESSION['transactions'] ?? []); ?>;
         let editingIndex = -1;
 
+        // Toll Fees Array to store individual toll fee amounts
+        let tollFees = [];
+
         // Function to sanitize HTML to prevent XSS
         function sanitizeHTML(str) {
             const temp = document.createElement('div');
@@ -531,7 +564,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             transactions.forEach((txn, index) => {
                 const row = `
                     <tr>
-                    <td>${sanitizeHTML(txn.outletName)}</td>
+                        <td>${sanitizeHTML(txn.outletName)}</td>
                         <td>${txn.drNo}</td>
                         <td>${txn.quantity}</td>
                         <td>${txn.kgs}</td>
@@ -841,8 +874,60 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
         $('#expenses-salary, #expenses-mobile-fee, #expenses-other-amount').on('input', calculateTotalExpense);
 
-        // Update transactions table on page load
-        updateTransactionsTable();
+        // Function to add Toll Fee to the table
+        $('#add-toll-btn').click(function () {
+            const tollFee = parseFloat($('#toll-fee-input').val());
+
+            // Validate input
+            if (isNaN(tollFee) || tollFee < 0) {
+                alert('Please enter a valid toll fee amount.');
+                return;
+            }
+
+            // Add toll fee to the tollFees array
+            tollFees.push(tollFee);
+
+            // Update the toll fees table
+            updateTollFeesTable();
+
+            // Clear the toll fee input field
+            $('#toll-fee-input').val('');
+        });
+
+        // Function to update the Toll Fees Table and Total
+        function updateTollFeesTable() {
+            const tbody = $('#toll-fees-table tbody');
+            tbody.empty();
+
+            // Render toll fees
+            tollFees.forEach((fee, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${fee.toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteTollFee(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            // Calculate total toll fees
+            const totalTollFees = tollFees.reduce((sum, fee) => sum + fee, 0);
+            $('#toll-fees-total').text(totalTollFees.toFixed(2));
+
+            // Set the total in the hidden input field
+            $('#toll_fee_amount').val(totalTollFees.toFixed(2));
+        }
+
+        // Function to delete a Toll Fee from the table
+        window.deleteTollFee = function (index) {
+            if (confirm('Are you sure you want to delete this toll fee?')) {
+                tollFees.splice(index, 1);
+                updateTollFeesTable();
+            }
+        };
 
         // Generate Summary Function
         function generateSummary() {
@@ -912,7 +997,7 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             summaryHtml += '<p><strong>Total Expenses (Including Fuel):</strong> ' + expensesTotal.toFixed(2) + '</p>';
 
             // Toll Fee Amount
-            const tollFeeAmount = parseFloat($('#toll-fee-amount').val()) || 0;
+            const tollFeeAmount = parseFloat($('#toll_fee_amount').val()) || 0;
 
             // Calculated Totals
             summaryHtml += '<h6>Calculated Totals</h6>';
@@ -989,9 +1074,9 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 return;
             }
 
-            const tollFeeAmount = $('#toll-fee-amount').val();
+            const tollFeeAmount = $('#toll_fee_amount').val();
             if (tollFeeAmount === '') {
-                alert('Please enter the Toll Fee Amount.');
+                alert('Please add at least one toll fee amount.');
                 return;
             }
 

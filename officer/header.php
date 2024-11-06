@@ -1,6 +1,4 @@
 <?php
-// Header.php
-
 // Start the session if it's not already started
 if (session_status() == PHP_SESSION_NONE) {
   session_start();
@@ -22,18 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if ($action === 'mark_seen') {
     if (isset($_POST['last_seen_logid'])) {
-      $new_last_seen_logid = intval($_POST['last_seen_logid']);
-      $userID = intval($_SESSION['UserID']);
-
-      // Update LastSeenLogID in the database
-      $update_stmt = $conn->prepare("UPDATE useraccounts SET LastSeenLogID = ? WHERE UserID = ?");
-      $update_stmt->bind_param("ii", $new_last_seen_logid, $userID);
-      if ($update_stmt->execute()) {
-        echo json_encode(['status' => 'success']);
-      } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to update']);
-      }
-      $update_stmt->close();
+      $_SESSION['last_seen_logid'] = intval($_POST['last_seen_logid']);
+      echo json_encode(['status' => 'success']);
       exit();
     }
   }
@@ -70,17 +58,11 @@ if ($stmt = $conn->prepare("SELECT UserImage FROM useraccounts WHERE Username = 
   $stmt->close();
 }
 
-// Fetch LastSeenLogID from the database
-$stmt = $conn->prepare("SELECT LastSeenLogID FROM useraccounts WHERE UserID = ?");
-$stmt->bind_param("i", $userID);
-$stmt->execute();
-$stmt->bind_result($last_seen_logid_db);
-$stmt->fetch();
-$stmt->close();
-
-$last_seen_logid = $last_seen_logid_db ?? 0;
+// Get last_seen_logid from session
+$last_seen_logid = isset($_SESSION['last_seen_logid']) ? intval($_SESSION['last_seen_logid']) : 0;
 
 // Fetch new notifications for badge count
+// Only fetch notifications from the last 10 days and exclude user's own actions
 $stmt = $conn->prepare("
     SELECT al.LogID, al.Action, al.TimeStamp, ua.Username 
     FROM activitylogs al
@@ -101,7 +83,6 @@ if ($new_notification_count > 0) {
   $max_logid = max(array_column($notifications, 'LogID'));
 }
 $stmt->close();
-
 
 // Fetch all notifications for display in dropdown (last 10 days), excluding user's own actions
 $stmt = $conn->prepare("
@@ -143,7 +124,6 @@ $stmt->close();
   <!-- Preloader -->
 
   <div id="main-wrapper">
-    <!-- Sidebar Start -->
     <!-- Sidebar Start -->
     <aside class="left-sidebar with-vertical">
       <div>
@@ -266,7 +246,7 @@ $stmt->close();
         </nav>
       </div>
     </aside>
-    <!-- Sidebar End -->
+    <!--  Sidebar End -->
 
     <style>
       /* Override visited and active link styles */
@@ -298,20 +278,8 @@ $stmt->close();
 
       /* Adjust timestamp font size */
       .notification-time {
-        font-size: 1.5rem;
-        /* Equivalent to fs-2 */
-      }
-
-      /* Indicator for viewed notifications */
-      .text-black-muted {
-        color: #6c757d;
-        /* Bootstrap muted color */
-      }
-
-      /* Indicator for new notifications */
-      .text-black {
-        color: #000000;
-        /* Black color */
+        font-size: 0.8rem;
+        /* Small font size */
       }
 
       /* Style the notification icon uniformly */
@@ -320,14 +288,25 @@ $stmt->close();
         /* Remove any additional icons if present */
       }
 
-      /* Additional styling as needed */
+      /* Indicator for viewed notifications */
+      .notification-viewed {
+        color: #6c757d;
+        /* Bootstrap secondary color */
+      }
+
+      /* Indicator for new notifications */
+      .notification-new {
+        color: #000000;
+        /* Bootstrap primary color */
+        font-weight: bold;
+      }
     </style>
 
     <div class="page-wrapper">
-      <!-- Header Start -->
+      <!--  Header Start -->
       <header class="topbar">
-        <!-- Vertical Layout Header -->
         <div class="with-vertical">
+          <!-- Start Vertical Layout Header -->
           <nav class="navbar navbar-expand-lg p-0">
             <ul class="navbar-nav">
               <li class="nav-item nav-icon-hover-bg rounded-circle d-flex">
@@ -335,6 +314,7 @@ $stmt->close();
                   <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-6"></iconify-icon>
                 </a>
               </li>
+
             </ul>
 
             <div class="d-block d-lg-none py-9 py-xl-0">
@@ -363,7 +343,6 @@ $stmt->close();
                       <iconify-icon icon="solar:sort-line-duotone" class="fs-6"></iconify-icon>
                     </a>
                   </li>
-                  <!----Light and Dark Mode Toggle---->
                   <li class="nav-item">
                     <a class="nav-link moon dark-layout nav-icon-hover-bg rounded-circle" href="javascript:void(0)">
                       <iconify-icon icon="solar:moon-line-duotone" class="moon fs-6"></iconify-icon>
@@ -381,7 +360,7 @@ $stmt->close();
                   </li>
 
                   <!-- ------------------------------- -->
-                  <!-- Start Notification Dropdown -->
+                  <!-- start notification Dropdown -->
                   <!-- ------------------------------- -->
                   <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
                     <a class="nav-link position-relative notification-icon" href="javascript:void(0)"
@@ -392,7 +371,6 @@ $stmt->close();
                           class="badge bg-primary rounded-pill notification-badge"><?php echo $new_notification_count; ?></span>
                       <?php endif; ?>
                     </a>
-
                     <div class="dropdown-menu content-dd dropdown-menu-end dropdown-menu-animate-up"
                       aria-labelledby="notificationDropdown">
                       <div class="d-flex align-items-center justify-content-between py-3 px-7">
@@ -417,7 +395,7 @@ $stmt->close();
                                   <?php
                                   // Determine if the notification is viewed
                                   $is_viewed = ($notification['LogID'] <= $last_seen_logid);
-                                  $notification_class = $is_viewed ? 'text-black-muted' : 'text-black';
+                                  $notification_class = $is_viewed ? 'notification-viewed' : 'notification-new';
                                   ?>
                                   <h6 class="mb-1 fw-semibold <?php echo $notification_class; ?>">
                                     <?php echo htmlspecialchars($notification['Username'], ENT_QUOTES, 'UTF-8'); ?>
@@ -450,10 +428,10 @@ $stmt->close();
                     </div>
                   </li>
                   <!-- ------------------------------- -->
-                  <!-- End Notification Dropdown -->
+                  <!-- end notification Dropdown -->
                   <!-- ------------------------------- -->
 
-                  <!-- User Profile Dropdown -->
+                  <!-- Mini Profile -->
                   <li class="nav-item dropdown">
                     <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
@@ -479,6 +457,7 @@ $stmt->close();
                               style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
                               <?php echo $email; ?>
                             </p>
+
                           </div>
                         </div>
                         <div class="message-body">
@@ -492,15 +471,14 @@ $stmt->close();
                       </div>
                     </div>
                   </li>
-                  <!-- End User Profile Dropdown -->
+
                 </ul>
               </div>
             </div>
           </nav>
           <!-- End Vertical Layout Header -->
-        </div>
 
-        <!-- Horizontal Layout Header -->
+        </div>
         <div class="app-header with-horizontal">
           <nav class="navbar navbar-expand-xl container-fluid p-0">
             <ul class="navbar-nav align-items-center">
@@ -512,7 +490,7 @@ $stmt->close();
               </li>
               <li class="nav-item d-none d-xl-flex align-items-center">
                 <a href="../horizontal/home.php" class="text-nowrap nav-link">
-                  <img src="../assets/images/logos/logo.svg" alt="Logo" />
+                  <img src="../assets/images/logos/logo.svg" alt="matdash-img" />
                 </a>
               </li>
               <li class="nav-item d-none d-xl-flex align-items-center nav-icon-hover-bg rounded-circle">
@@ -530,26 +508,27 @@ $stmt->close();
             </ul>
             <div class="d-block d-xl-none">
               <a href="../main/home.php" class="text-nowrap nav-link">
-                <img src="../assets/images/logos/logo.svg" alt="Logo" />
+                <img src="../assets/images/logos/logo.svg" alt="matdash-img" />
               </a>
             </div>
             <a class="navbar-toggler nav-icon-hover p-0 border-0 nav-icon-hover-bg rounded-circle"
-              href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNavHorizontal"
-              aria-controls="navbarNavHorizontal" aria-expanded="false" aria-label="Toggle navigation">
-              <iconify-icon icon="solar:menu-dots-bold-duotone" class="fs-6"></iconify-icon>
+              href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav"
+              aria-expanded="false" aria-label="Toggle navigation">
+              <span class="p-2">
+                <i class="ti ti-dots fs-7"></i>
+              </span>
             </a>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNavHorizontal">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
               <div class="d-flex align-items-center justify-content-between px-0 px-xl-8">
                 <ul class="navbar-nav flex-row mx-auto ms-lg-auto align-items-center justify-content-center">
                   <li class="nav-item dropdown">
                     <a href="javascript:void(0)"
                       class="nav-link nav-icon-hover-bg rounded-circle d-flex d-lg-none align-items-center justify-content-center"
-                      type="button" data-bs-toggle="offcanvas" data-bs-target="#mobilenavbarHorizontal"
+                      type="button" data-bs-toggle="offcanvas" data-bs-target="#mobilenavbar"
                       aria-controls="offcanvasWithBothOptions">
                       <iconify-icon icon="solar:sort-line-duotone" class="fs-6"></iconify-icon>
                     </a>
                   </li>
-                  <!----Light and Dark Mode Toggle---->
                   <li class="nav-item">
                     <a class="nav-link nav-icon-hover-bg rounded-circle moon dark-layout" href="javascript:void(0)">
                       <iconify-icon icon="solar:moon-line-duotone" class="moon fs-6"></iconify-icon>
@@ -567,7 +546,7 @@ $stmt->close();
                   </li>
 
                   <!-- ------------------------------- -->
-                  <!-- Start Notification Dropdown -->
+                  <!-- start notification Dropdown -->
                   <!-- ------------------------------- -->
                   <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
                     <a class="nav-link position-relative notification-icon" href="javascript:void(0)"
@@ -602,7 +581,7 @@ $stmt->close();
                                   <?php
                                   // Determine if the notification is viewed
                                   $is_viewed = ($notification['LogID'] <= $last_seen_logid);
-                                  $notification_class = $is_viewed ? 'text-black-muted' : 'text-black';
+                                  $notification_class = $is_viewed ? 'notification-viewed' : 'notification-new';
                                   ?>
                                   <h6 class="mb-1 fw-semibold <?php echo $notification_class; ?>">
                                     <?php echo htmlspecialchars($notification['Username'], ENT_QUOTES, 'UTF-8'); ?>
@@ -635,428 +614,27 @@ $stmt->close();
                     </div>
                   </li>
                   <!-- ------------------------------- -->
-                  <!-- End Notification Dropdown -->
+                  <!-- end notification Dropdown -->
                   <!-- ------------------------------- -->
 
-                  <!-- User Profile Dropdown -->
+                  <!-- start profile Dropdown -->
                   <li class="nav-item dropdown">
-                    <a class="nav-link" href="javascript:void(0)" id="drop1Horizontal" aria-expanded="false">
+                    <a class="nav-link" href="javascript:void(0)" id="drop1" aria-expanded="false">
                       <div class="d-flex align-items-center gap-2 lh-base">
-                        <!-- User's profile picture -->
+                        <!-- Placeholder image; update dynamically if image data becomes available -->
                         <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="35" height="35"
-                          alt="user-img" />
+                          alt="matdash-img" />
                         <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
                       </div>
                     </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1Horizontal">
-                      <div class="position-relative px-4 pt-3 pb-2">
-                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <!-- User's profile picture -->
-                          <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="56" height="56"
-                            alt="user-img" />
-                          <div>
-                            <h5 class="mb-0 fs-12">
-                              <?php echo $username; ?>
-                              <span class="text-success fs-11"><?php echo $role; ?></span>
-                            </h5>
-                            <p class="mb-0 text-dark"
-                              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
-                              <?php echo $email; ?>
-                            </p>
-                          </div>
-                        </div>
-                        <div class="message-body">
-                          <a href="../officer/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
-                            My Profile
-                          </a>
-                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
-                            Sign Out
-                          </a>
-                        </div>
-                      </div>
-                    </div>
                   </li>
-                  <!-- End User Profile Dropdown -->
                 </ul>
               </div>
             </div>
           </nav>
           <!-- End Vertical Layout Header -->
+
         </div>
-
-        <!-- Horizontal Layout Header -->
-        <div class="app-header with-horizontal">
-          <nav class="navbar navbar-expand-xl container-fluid p-0">
-            <ul class="navbar-nav align-items-center">
-              <li class="nav-item d-flex d-xl-none">
-                <a class="nav-link sidebartoggler nav-icon-hover-bg rounded-circle" id="sidebarCollapse"
-                  href="javascript:void(0)">
-                  <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-7"></iconify-icon>
-                </a>
-              </li>
-              <li class="nav-item d-none d-xl-flex align-items-center">
-                <a href="../horizontal/home.php" class="text-nowrap nav-link">
-                  <img src="../assets/images/logos/logo.svg" alt="Logo" />
-                </a>
-              </li>
-              <li class="nav-item d-none d-xl-flex align-items-center nav-icon-hover-bg rounded-circle">
-                <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                  <iconify-icon icon="solar:magnifer-linear" class="fs-6"></iconify-icon>
-                </a>
-              </li>
-              <li class="nav-item d-none d-lg-flex align-items-center dropdown nav-icon-hover-bg rounded-circle">
-                <div class="hover-dd">
-                  <a class="nav-link" id="drop2Horizontal" href="javascript:void(0)" aria-haspopup="true"
-                    aria-expanded="false">
-                    <iconify-icon icon="solar:widget-3-line-duotone" class="fs-6"></iconify-icon>
-                  </a>
-                </div>
-              </li>
-            </ul>
-            <div class="d-block d-xl-none">
-              <a href="../main/home.php" class="text-nowrap nav-link">
-                <img src="../assets/images/logos/logo.svg" alt="Logo" />
-              </a>
-            </div>
-            <a class="navbar-toggler nav-icon-hover p-0 border-0 nav-icon-hover-bg rounded-circle"
-              href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNavHorizontal"
-              aria-controls="navbarNavHorizontal" aria-expanded="false" aria-label="Toggle navigation">
-              <iconify-icon icon="solar:menu-dots-bold-duotone" class="fs-6"></iconify-icon>
-            </a>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNavHorizontal">
-              <div class="d-flex align-items-center justify-content-between px-0 px-xl-8">
-                <ul class="navbar-nav flex-row mx-auto ms-lg-auto align-items-center justify-content-center">
-                  <li class="nav-item dropdown">
-                    <a href="javascript:void(0)"
-                      class="nav-link nav-icon-hover-bg rounded-circle d-flex d-lg-none align-items-center justify-content-center"
-                      type="button" data-bs-toggle="offcanvas" data-bs-target="#mobilenavbarHorizontal"
-                      aria-controls="offcanvasWithBothOptions">
-                      <iconify-icon icon="solar:sort-line-duotone" class="fs-6"></iconify-icon>
-                    </a>
-                  </li>
-                  <!----Light and Dark Mode Toggle---->
-                  <li class="nav-item">
-                    <a class="nav-link nav-icon-hover-bg rounded-circle moon dark-layout" href="javascript:void(0)">
-                      <iconify-icon icon="solar:moon-line-duotone" class="moon fs-6"></iconify-icon>
-                    </a>
-                    <a class="nav-link nav-icon-hover-bg rounded-circle sun light-layout" href="javascript:void(0)"
-                      style="display: none">
-                      <iconify-icon icon="solar:sun-2-line-duotone" class="sun fs-6"></iconify-icon>
-                    </a>
-                  </li>
-                  <li class="nav-item d-block d-xl-none">
-                    <a class="nav-link nav-icon-hover-bg rounded-circle" href="javascript:void(0)"
-                      data-bs-toggle="modal" data-bs-target="#exampleModal">
-                      <iconify-icon icon="solar:magnifer-line-duotone" class="fs-6"></iconify-icon>
-                    </a>
-                  </li>
-
-                  <!-- ------------------------------- -->
-                  <!-- Start Notification Dropdown -->
-                  <!-- ------------------------------- -->
-                  <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
-                    <a class="nav-link position-relative notification-icon" href="javascript:void(0)"
-                      id="notificationDropdownHorizontal" aria-expanded="false">
-                      <iconify-icon icon="solar:bell-bing-line-duotone" class="fs-6"></iconify-icon>
-                      <?php if ($new_notification_count > 0): ?>
-                        <span
-                          class="badge bg-primary rounded-pill notification-badge"><?php echo $new_notification_count; ?></span>
-                      <?php endif; ?>
-                    </a>
-                    <div class="dropdown-menu content-dd dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="notificationDropdownHorizontal">
-                      <div class="d-flex align-items-center justify-content-between py-3 px-7">
-                        <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
-                        <?php if ($new_notification_count > 0): ?>
-                          <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">
-                            <?php echo $new_notification_count; ?> new
-                          </span>
-                        <?php endif; ?>
-                      </div>
-                      <div class="message-body" data-simplebar style="max-height: 300px;">
-                        <?php if ($all_notifications_count > 0): ?>
-                          <?php foreach ($all_notifications as $notification): ?>
-                            <a href="../officer/activity-logs.php"
-                              class="notification-item d-flex align-items-center px-7 py-3 border-bottom">
-                              <span
-                                class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                                <iconify-icon icon="solar:bell-bing-line-duotone"></iconify-icon>
-                              </span>
-                              <div class="w-75 d-inline-block ms-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                  <?php
-                                  // Determine if the notification is viewed
-                                  $is_viewed = ($notification['LogID'] <= $last_seen_logid);
-                                  $notification_class = $is_viewed ? 'text-black-muted' : 'text-black';
-                                  ?>
-                                  <h6 class="mb-1 fw-semibold <?php echo $notification_class; ?>">
-                                    <?php echo htmlspecialchars($notification['Username'], ENT_QUOTES, 'UTF-8'); ?>
-                                  </h6>
-                                  <span
-                                    class="d-block fs-2 notification-time"><?php echo date("h:i A", strtotime($notification['TimeStamp'])); ?></span>
-                                </div>
-                                <span
-                                  class="d-block text-truncate notification-action fs-11 <?php echo $notification_class; ?>">
-                                  <?php echo htmlspecialchars($notification['Action'], ENT_QUOTES, 'UTF-8'); ?>
-                                </span>
-                              </div>
-                            </a>
-                          <?php endforeach; ?>
-                        <?php else: ?>
-                          <div class="py-6 px-7 d-flex align-items-center justify-content-center">
-                            <span class="text-muted">No notifications</span>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                      <?php if ($all_notifications_count > 0): ?>
-                        <div class="py-3 px-7 mb-1">
-                          <a href="../officer/activity-logs.php" class="btn btn-primary w-100">See All Notifications</a>
-                        </div>
-                      <?php else: ?>
-                        <div class="py-6 px-7 mb-1">
-                          <a href="../officer/activity-logs.php" class="btn btn-primary w-100">See All Notifications</a>
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  </li>
-                  <!-- ------------------------------- -->
-                  <!-- End Notification Dropdown -->
-                  <!-- ------------------------------- -->
-
-                  <!-- User Profile Dropdown -->
-                  <li class="nav-item dropdown">
-                    <a class="nav-link" href="javascript:void(0)" id="drop1Horizontal" aria-expanded="false">
-                      <div class="d-flex align-items-center gap-2 lh-base">
-                        <!-- User's profile picture -->
-                        <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="35" height="35"
-                          alt="user-img" />
-                        <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
-                      </div>
-                    </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1Horizontal">
-                      <div class="position-relative px-4 pt-3 pb-2">
-                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <!-- User's profile picture -->
-                          <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="56" height="56"
-                            alt="user-img" />
-                          <div>
-                            <h5 class="mb-0 fs-12">
-                              <?php echo $username; ?>
-                              <span class="text-success fs-11"><?php echo $role; ?></span>
-                            </h5>
-                            <p class="mb-0 text-dark"
-                              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
-                              <?php echo $email; ?>
-                            </p>
-                          </div>
-                        </div>
-                        <div class="message-body">
-                          <a href="../officer/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
-                            My Profile
-                          </a>
-                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
-                            Sign Out
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                  <!-- End User Profile Dropdown -->
-                </ul>
-              </div>
-            </div>
-          </nav>
-          <!-- End Vertical Layout Header -->
-        </div>
-
-        <!-- Horizontal Layout Header -->
-        <div class="app-header with-horizontal">
-          <nav class="navbar navbar-expand-xl container-fluid p-0">
-            <ul class="navbar-nav align-items-center">
-              <li class="nav-item d-flex d-xl-none">
-                <a class="nav-link sidebartoggler nav-icon-hover-bg rounded-circle" id="sidebarCollapse"
-                  href="javascript:void(0)">
-                  <iconify-icon icon="solar:hamburger-menu-line-duotone" class="fs-7"></iconify-icon>
-                </a>
-              </li>
-              <li class="nav-item d-none d-xl-flex align-items-center">
-                <a href="../horizontal/home.php" class="text-nowrap nav-link">
-                  <img src="../assets/images/logos/logo.svg" alt="Logo" />
-                </a>
-              </li>
-              <li class="nav-item d-none d-xl-flex align-items-center nav-icon-hover-bg rounded-circle">
-                <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                  <iconify-icon icon="solar:magnifer-linear" class="fs-6"></iconify-icon>
-                </a>
-              </li>
-              <li class="nav-item d-none d-lg-flex align-items-center dropdown nav-icon-hover-bg rounded-circle">
-                <div class="hover-dd">
-                  <a class="nav-link" id="drop2Horizontal" href="javascript:void(0)" aria-haspopup="true"
-                    aria-expanded="false">
-                    <iconify-icon icon="solar:widget-3-line-duotone" class="fs-6"></iconify-icon>
-                  </a>
-                </div>
-              </li>
-            </ul>
-            <div class="d-block d-xl-none">
-              <a href="../main/home.php" class="text-nowrap nav-link">
-                <img src="../assets/images/logos/logo.svg" alt="Logo" />
-              </a>
-            </div>
-            <a class="navbar-toggler nav-icon-hover p-0 border-0 nav-icon-hover-bg rounded-circle"
-              href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#navbarNavHorizontal"
-              aria-controls="navbarNavHorizontal" aria-expanded="false" aria-label="Toggle navigation">
-              <iconify-icon icon="solar:menu-dots-bold-duotone" class="fs-6"></iconify-icon>
-            </a>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNavHorizontal">
-              <div class="d-flex align-items-center justify-content-between px-0 px-xl-8">
-                <ul class="navbar-nav flex-row mx-auto ms-lg-auto align-items-center justify-content-center">
-                  <li class="nav-item dropdown">
-                    <a href="javascript:void(0)"
-                      class="nav-link nav-icon-hover-bg rounded-circle d-flex d-lg-none align-items-center justify-content-center"
-                      type="button" data-bs-toggle="offcanvas" data-bs-target="#mobilenavbarHorizontal"
-                      aria-controls="offcanvasWithBothOptions">
-                      <iconify-icon icon="solar:sort-line-duotone" class="fs-6"></iconify-icon>
-                    </a>
-                  </li>
-                  <!----Light and Dark Mode Toggle---->
-                  <li class="nav-item">
-                    <a class="nav-link nav-icon-hover-bg rounded-circle moon dark-layout" href="javascript:void(0)">
-                      <iconify-icon icon="solar:moon-line-duotone" class="moon fs-6"></iconify-icon>
-                    </a>
-                    <a class="nav-link nav-icon-hover-bg rounded-circle sun light-layout" href="javascript:void(0)"
-                      style="display: none">
-                      <iconify-icon icon="solar:sun-2-line-duotone" class="sun fs-6"></iconify-icon>
-                    </a>
-                  </li>
-                  <li class="nav-item d-block d-xl-none">
-                    <a class="nav-link nav-icon-hover-bg rounded-circle" href="javascript:void(0)"
-                      data-bs-toggle="modal" data-bs-target="#exampleModal">
-                      <iconify-icon icon="solar:magnifer-line-duotone" class="fs-6"></iconify-icon>
-                    </a>
-                  </li>
-
-                  <!-- ------------------------------- -->
-                  <!-- Start Notification Dropdown -->
-                  <!-- ------------------------------- -->
-                  <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
-                    <a class="nav-link position-relative notification-icon" href="javascript:void(0)"
-                      id="notificationDropdownHorizontal" aria-expanded="false">
-                      <iconify-icon icon="solar:bell-bing-line-duotone" class="fs-6"></iconify-icon>
-                      <?php if ($new_notification_count > 0): ?>
-                        <span
-                          class="badge bg-primary rounded-pill notification-badge"><?php echo $new_notification_count; ?></span>
-                      <?php endif; ?>
-                    </a>
-                    <div class="dropdown-menu content-dd dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="notificationDropdownHorizontal">
-                      <div class="d-flex align-items-center justify-content-between py-3 px-7">
-                        <h5 class="mb-0 fs-5 fw-semibold">Notifications</h5>
-                        <?php if ($new_notification_count > 0): ?>
-                          <span class="badge text-bg-primary rounded-4 px-3 py-1 lh-sm">
-                            <?php echo $new_notification_count; ?> new
-                          </span>
-                        <?php endif; ?>
-                      </div>
-                      <div class="message-body" data-simplebar style="max-height: 300px;">
-                        <?php if ($all_notifications_count > 0): ?>
-                          <?php foreach ($all_notifications as $notification): ?>
-                            <a href="../officer/activity-logs.php"
-                              class="notification-item d-flex align-items-center px-7 py-3 border-bottom">
-                              <span
-                                class="flex-shrink-0 bg-primary-subtle rounded-circle round d-flex align-items-center justify-content-center fs-6 text-primary">
-                                <iconify-icon icon="solar:bell-bing-line-duotone"></iconify-icon>
-                              </span>
-                              <div class="w-75 d-inline-block ms-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                  <?php
-                                  // Determine if the notification is viewed
-                                  $is_viewed = ($notification['LogID'] <= $last_seen_logid);
-                                  $notification_class = $is_viewed ? 'text-black-muted' : 'text-black';
-                                  ?>
-                                  <h6 class="mb-1 fw-semibold <?php echo $notification_class; ?>">
-                                    <?php echo htmlspecialchars($notification['Username'], ENT_QUOTES, 'UTF-8'); ?>
-                                  </h6>
-                                  <span
-                                    class="d-block fs-2 notification-time"><?php echo date("h:i A", strtotime($notification['TimeStamp'])); ?></span>
-                                </div>
-                                <span
-                                  class="d-block text-truncate notification-action fs-11 <?php echo $notification_class; ?>">
-                                  <?php echo htmlspecialchars($notification['Action'], ENT_QUOTES, 'UTF-8'); ?>
-                                </span>
-                              </div>
-                            </a>
-                          <?php endforeach; ?>
-                        <?php else: ?>
-                          <div class="py-6 px-7 d-flex align-items-center justify-content-center">
-                            <span class="text-muted">No notifications</span>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                      <?php if ($all_notifications_count > 0): ?>
-                        <div class="py-3 px-7 mb-1">
-                          <a href="../officer/activity-logs.php" class="btn btn-primary w-100">See All Notifications</a>
-                        </div>
-                      <?php else: ?>
-                        <div class="py-6 px-7 mb-1">
-                          <a href="../officer/activity-logs.php" class="btn btn-primary w-100">See All Notifications</a>
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  </li>
-                  <!-- ------------------------------- -->
-                  <!-- End Notification Dropdown -->
-                  <!-- ------------------------------- -->
-
-                  <!-- User Profile Dropdown -->
-                  <li class="nav-item dropdown">
-                    <a class="nav-link" href="javascript:void(0)" id="drop1Horizontal" aria-expanded="false">
-                      <div class="d-flex align-items-center gap-2 lh-base">
-                        <!-- User's profile picture -->
-                        <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="35" height="35"
-                          alt="user-img" />
-                        <iconify-icon icon="solar:alt-arrow-down-bold" class="fs-2"></iconify-icon>
-                      </div>
-                    </a>
-                    <div class="dropdown-menu profile-dropdown dropdown-menu-end dropdown-menu-animate-up"
-                      aria-labelledby="drop1Horizontal">
-                      <div class="position-relative px-4 pt-3 pb-2">
-                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom gap-6">
-                          <!-- User's profile picture -->
-                          <img src="<?php echo $userImageSrc; ?>" class="rounded-circle" width="56" height="56"
-                            alt="user-img" />
-                          <div>
-                            <h5 class="mb-0 fs-12">
-                              <?php echo $username; ?>
-                              <span class="text-success fs-11"><?php echo $role; ?></span>
-                            </h5>
-                            <p class="mb-0 text-dark"
-                              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
-                              <?php echo $email; ?>
-                            </p>
-                          </div>
-                        </div>
-                        <div class="message-body">
-                          <a href="../officer/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
-                            My Profile
-                          </a>
-                          <a href="../login/logout.php" class="p-2 dropdown-item h6 rounded-1">
-                            Sign Out
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                  <!-- End User Profile Dropdown -->
-                </ul>
-              </div>
-            </div>
-          </nav>
-          <!-- End Horizontal Layout Header -->
-        </div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
           document.addEventListener('DOMContentLoaded', function () {
             // Function to mark notifications as seen
@@ -1071,55 +649,15 @@ $stmt->close();
                 success: function (response) {
                   var res = JSON.parse(response);
                   if (res.status === 'success') {
-                    // Remove the badge
+                    // Hide the badge
                     $(dropdownId).find('.notification-badge').remove();
 
                     // Update notification items to viewed
-                    $(dropdownId).find('.text-black').removeClass('text-black').addClass('text-black-muted');
+                    $(dropdownId).find('.notification-new').removeClass('notification-new').addClass('notification-viewed');
                   }
-                },
-                error: function () {
-                  console.error('Failed to mark notifications as seen.');
                 }
               });
             }
-
-            // Function to fetch notifications
-            function fetchNotifications() {
-              $.ajax({
-                url: 'fetch_notifications.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function (response) {
-                  if (response.status === 'success') {
-                    // Update notification count
-                    var newCount = response.new_count;
-                    var badge = $('.notification-badge');
-                    if (newCount > 0) {
-                      if (badge.length > 0) {
-                        badge.text(newCount);
-                      } else {
-                        // Add badge to all notification icons if not present
-                        $('.notification-icon').each(function () {
-                          $(this).append('<span class="badge bg-primary rounded-pill notification-badge">' + newCount + '</span>');
-                        });
-                      }
-                    } else {
-                      badge.remove();
-                    }
-
-                    // Optionally, update the notification list dynamically
-                    // This requires more complex DOM manipulation
-                  }
-                },
-                error: function () {
-                  console.error('Failed to fetch notifications.');
-                }
-              });
-            }
-
-            // Poll every 30 seconds
-            setInterval(fetchNotifications, 30000); // 30000ms = 30s
 
             // Handle click on notification icon (Vertical Layout)
             $('#notificationDropdown').on('click', function () {
@@ -1149,8 +687,7 @@ $stmt->close();
               <?php endif; ?>
             });
 
-            // Optional: Implement WebSockets or Server-Sent Events for better real-time performance
+            // No need for delete and clear-all event handlers since they are removed
           });
-
         </script>
       </header>
