@@ -470,12 +470,12 @@ include '../officer/header.php';
             <!-- Maintenance Tab -->
             <div class="tab-pane active" id="maintenance" role="tabpanel">
               <div class="table-controls mb-3">
-                <div class="row align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
                     <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search..."
                       onkeyup="filterMaintenanceTable()">
                   </div>
-                  <div class="col-md-4 offset-md-4 text-end">
+                  <div class="col-md-4 text-end">
                     <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline"
                       onchange="changeMaintenanceRowsPerPage()">
                       <option value="5">5 rows</option>
@@ -554,12 +554,12 @@ include '../officer/header.php';
             <!-- Transactions Tab -->
             <div class="tab-pane" id="transactions" role="tabpanel">
               <div class="table-controls mb-3">
-                <div class="row align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
                     <input type="text" id="transactionsSearchBar" class="form-control" placeholder="Search..."
                       onkeyup="filterTransactionsTable()" />
                   </div>
-                  <div class="col-md-4 offset-md-4 text-end">
+                  <div class="col-md-4 text-end">
                     <select id="transactionsRowsPerPage" class="form-select w-auto d-inline"
                       onchange="changeTransactionsRowsPerPage()">
                       <option value="5">5 rows</option>
@@ -1358,6 +1358,7 @@ include '../officer/header.php';
       /* Reduce font size for mobile */
       padding: 0.5rem;
       /* Adjust padding */
+      
     }
 
     .pagination .page-item.active .page-link {

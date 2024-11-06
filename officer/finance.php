@@ -30,7 +30,7 @@ include '../includes/db_connection.php';
     </div>
     <?php
     // Include the database connection
-    
+
 
     // Get the last ExpenseID
     $query = "SELECT ExpenseID FROM expenses ORDER BY ExpenseID DESC LIMIT 1";
@@ -166,12 +166,12 @@ include '../includes/db_connection.php';
 
               <!-- Expense Table -->
               <div class="table-controls mb-3">
-                <div class="row align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
                     <input type="text" id="searchBar" class="form-control" placeholder="Search..."
                       onkeyup="filterTable()" />
                   </div>
-                  <div class="col-md-4 offset-md-4 text-end">
+                  <div class="col-md-4 text-end">
                     <select id="rowsPerPage" class="form-select w-auto d-inline" onchange="changeRowsPerPage()">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
@@ -247,8 +247,8 @@ include '../includes/db_connection.php';
                   let rowsPerPage = 5;
                   let totalRows = 0;
                   let totalPages = 0;
-                  let filteredRows = []; // Array to hold the filtered rows
-                  let allRows = []; // Array to hold all the rows initially
+                  let filteredRows = [];
+                  let allRows = [];
 
                   document.addEventListener('DOMContentLoaded', () => {
                     initializeTable();
@@ -262,38 +262,37 @@ include '../includes/db_connection.php';
                     }
                     allRows = Array.from(tableBody.getElementsByTagName("tr"));
                     filteredRows = [...allRows]; // Initialize with all rows
-                    totalRows = filteredRows.length;
-                    totalPages = Math.ceil(totalRows / rowsPerPage);
+                    updateTotalRowsAndPages();
                     updateTable();
                   }
 
                   function changeRowsPerPage() {
                     rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
                     currentPage = 1;
+                    updateTotalRowsAndPages();
                     updateTable();
                   }
 
                   function filterTable() {
                     const input = document.getElementById("searchBar").value.toLowerCase();
                     filteredRows = allRows.filter(row => row.innerText.toLowerCase().includes(input));
+                    updateTotalRowsAndPages();
 
-                    // Update total rows and pages after filtering
-                    totalRows = filteredRows.length;
-                    totalPages = Math.ceil(totalRows / rowsPerPage);
-
+                    // Show or hide "No data found" row
                     const noDataRow = document.getElementById("noDataRow");
-                    if (filteredRows.length === 0) {
-                      if (noDataRow) {
-                        noDataRow.style.display = "";
-                      }
-                    } else {
-                      if (noDataRow) {
-                        noDataRow.style.display = "none";
-                      }
+                    if (filteredRows.length === 0 && noDataRow) {
+                      noDataRow.style.display = "";
+                    } else if (noDataRow) {
+                      noDataRow.style.display = "none";
                     }
 
-                    currentPage = 1; // Reset to the first page after filtering
+                    currentPage = 1;
                     updateTable();
+                  }
+
+                  function updateTotalRowsAndPages() {
+                    totalRows = filteredRows.length;
+                    totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
                   }
 
                   function updateTable() {
@@ -303,12 +302,11 @@ include '../includes/db_connection.php';
                     allRows.forEach(row => row.style.display = "none"); // Hide all rows initially
                     filteredRows.forEach((row, index) => {
                       if (index >= startIndex && index < endIndex) {
-                        row.style.display = ""; // Display only rows that fit in the current page range
+                        row.style.display = ""; // Display rows within the current page range
                       }
                     });
 
                     document.getElementById("totalPages").textContent = totalPages;
-
                     updatePaginationNumbers();
                   }
 
@@ -332,7 +330,7 @@ include '../includes/db_connection.php';
                       console.error("Pagination container not found");
                       return;
                     }
-                    paginationNumbers.innerHTML = ''; // Clear existing pagination numbers
+                    paginationNumbers.innerHTML = '';
 
                     const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5;
                     const halfVisible = Math.floor(maxVisiblePages / 2);
@@ -395,7 +393,7 @@ include '../includes/db_connection.php';
                     pageLink.classList.add("page-link");
                     pageLink.textContent = label;
 
-                    if (onClick) pageLink.onclick = onClick;
+                    if (!isDisabled) pageLink.onclick = onClick;
 
                     pageItem.appendChild(pageLink);
                     return pageItem;
@@ -438,12 +436,12 @@ include '../includes/db_connection.php';
 
 
               <div class="table-controls mb-3">
-                <div class="row align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
                     <input type="text" id="fuelSearchBar" class="form-control" placeholder="Search..."
                       onkeyup="filterFuelTable()">
                   </div>
-                  <div class="col-md-4 offset-md-4 text-end">
+                  <div class="col-md-4 text-end">
                     <select id="fuelRowsPerPage" class="form-select w-auto d-inline" onchange="changeFuelRowsPerPage()">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
@@ -620,15 +618,15 @@ include '../includes/db_connection.php';
                     return;
                   }
                   allFuelRows = Array.from(fuelTableBody.getElementsByTagName("tr"));
-                  filteredFuelRows = [...allFuelRows]; // Initialize with all rows
-                  totalFuelRows = filteredFuelRows.length;
-                  totalFuelPages = Math.ceil(totalFuelRows / fuelRowsPerPage);
+                  filteredFuelRows = [...allFuelRows]; // Start with all rows as filtered
+                  updateTotalFuelRowsAndPages();
                   updateFuelTable();
                 }
 
                 function changeFuelRowsPerPage() {
                   fuelRowsPerPage = parseInt(document.getElementById("fuelRowsPerPage").value);
                   fuelCurrentPage = 1;
+                  updateTotalFuelRowsAndPages();
                   updateFuelTable();
                 }
 
@@ -636,23 +634,22 @@ include '../includes/db_connection.php';
                   const input = document.getElementById("fuelSearchBar").value.toLowerCase();
                   filteredFuelRows = allFuelRows.filter(row => row.innerText.toLowerCase().includes(input));
 
-                  // Update total rows and pages after filtering
-                  totalFuelRows = filteredFuelRows.length;
-                  totalFuelPages = Math.ceil(totalFuelRows / fuelRowsPerPage);
-
+                  // Show or hide "No data found" row
                   const noFuelDataRow = document.getElementById("noFuelDataRow");
-                  if (filteredFuelRows.length === 0) {
-                    if (noFuelDataRow) {
-                      noFuelDataRow.style.display = "";
-                    }
-                  } else {
-                    if (noFuelDataRow) {
-                      noFuelDataRow.style.display = "none";
-                    }
+                  if (filteredFuelRows.length === 0 && noFuelDataRow) {
+                    noFuelDataRow.style.display = "";
+                  } else if (noFuelDataRow) {
+                    noFuelDataRow.style.display = "none";
                   }
 
                   fuelCurrentPage = 1; // Reset to the first page after filtering
+                  updateTotalFuelRowsAndPages();
                   updateFuelTable();
+                }
+
+                function updateTotalFuelRowsAndPages() {
+                  totalFuelRows = filteredFuelRows.length;
+                  totalFuelPages = Math.ceil(totalFuelRows / fuelRowsPerPage) || 1;
                 }
 
                 function updateFuelTable() {
@@ -660,10 +657,8 @@ include '../includes/db_connection.php';
                   const endIndex = startIndex + fuelRowsPerPage;
 
                   allFuelRows.forEach(row => row.style.display = "none"); // Hide all rows initially
-                  filteredFuelRows.forEach((row, index) => {
-                    if (index >= startIndex && index < endIndex) {
-                      row.style.display = ""; // Display only rows that fit in the current page range
-                    }
+                  filteredFuelRows.slice(startIndex, endIndex).forEach(row => {
+                    row.style.display = ""; // Display rows within the current page range
                   });
 
                   document.getElementById("totalFuelPages").textContent = totalFuelPages;
@@ -753,7 +748,7 @@ include '../includes/db_connection.php';
                   pageLink.classList.add("page-link");
                   pageLink.textContent = label;
 
-                  if (onClick) pageLink.onclick = onClick;
+                  if (!isDisabled) pageLink.onclick = onClick;
 
                   pageItem.appendChild(pageLink);
                   return pageItem;
