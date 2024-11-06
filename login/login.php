@@ -121,6 +121,11 @@ function loginUser($userData, $conn)
   $_SESSION['Role'] = $userData['Role'];
   $_SESSION['EmailAddress'] = $userData['EmailAddress'];
 
+  // **NEW CODE STARTS HERE**
+  // Store last_seen_logid in session
+  $_SESSION['last_seen_logid'] = isset($userData['last_seen_logid']) ? intval($userData['last_seen_logid']) : 0;
+  // **NEW CODE ENDS HERE**
+
   // Update LastLogin timestamp
   $current_timestamp = date("Y-m-d H:i:s");
   $update_sql = "UPDATE useraccounts SET LastLogin = ? WHERE UserID = ?";
