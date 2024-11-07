@@ -127,18 +127,35 @@ if (isset($_GET['token'])) {
                                     <p class="mb-4">Please enter your new password below.</p>
 
                                     <form method="POST" action="">
-                                        <div class="mb-3">
+                                        <div class="mb-3 position-relative">
                                             <label for="Password" class="form-label">New Password</label>
-                                            <input type="password" class="form-control" id="Password" name="Password"
-                                                required>
+                                            <input type="password" class="form-control pe-5" id="Password" name="Password" required>
+                                            <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;">
+                                                <iconify-icon id="toggleNewPassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
+                                            </span>
                                         </div>
-                                        <div class="mb-3">
+                                        <div class="mb-3 position-relative">
                                             <label for="ConfirmPassword" class="form-label">Confirm New Password</label>
-                                            <input type="password" class="form-control" id="ConfirmPassword"
-                                                name="ConfirmPassword" required>
+                                            <input type="password" class="form-control pe-5" id="ConfirmPassword" name="ConfirmPassword" required>
+                                            <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;">
+                                                <iconify-icon id="toggleConfirmPassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
+                                            </span>
                                         </div>
                                         <button type="submit" class="btn btn-muted w-100 py-8 mb-3">Reset Password</button>
                                     </form>
+                                    <style>
+                                        .form-control {
+                                            padding-right: 2.5rem;
+                                        }
+
+                                        #toggleNewPassword, #toggleConfirmPassword {
+                                            color: #6c757d;
+                                            /* Adjust color to match the style */
+                                            margin-top: 30px;
+                                            display: flex;
+                                            align-items: center;
+                                        }
+                                    </style>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -164,6 +181,33 @@ if (isset($_GET['token'])) {
             </div>
         </div>
     </div>
+
+    <script>
+        const toggleNewPassword = document.querySelector("#toggleNewPassword");
+        const newPassword = document.querySelector("#Password");
+
+        const toggleConfirmPassword = document.querySelector("#toggleConfirmPassword");
+        const confirmPassword = document.querySelector("#ConfirmPassword");
+
+        toggleNewPassword.addEventListener("click", function() {
+            // Toggle new password visibility
+            const type = newPassword.getAttribute("type") === "password" ? "text" : "password";
+            newPassword.setAttribute("type", type);
+
+            // Change icon
+            this.setAttribute("icon", type === "password" ? "mdi:eye-off" : "mdi:eye");
+        });
+
+        toggleConfirmPassword.addEventListener("click", function() {
+            // Toggle confirm password visibility
+            const type = confirmPassword.getAttribute("type") === "password" ? "text" : "password";
+            confirmPassword.setAttribute("type", type);
+
+            // Change icon
+            this.setAttribute("icon", type === "password" ? "mdi:eye-off" : "mdi:eye");
+        });
+    </script>
+
 
     <!-- Import Js Files -->
     <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

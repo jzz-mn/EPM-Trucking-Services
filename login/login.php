@@ -214,10 +214,29 @@ function loginUser($userData, $conn)
                     <label for="email" class="form-label">Email Address</label>
                     <input type="email" class="form-control" id="email" name="EmailAddress" required />
                   </div>
-                  <div class="mb-4">
+                  <div class="mb-4 position-relative">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="Password" required />
+                    <input type="password" class="form-control pe-5" id="password" name="Password" required />
+                    <span class="position-absolute" id="togglePasswordContainer" style="right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                      <iconify-icon id="togglePassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
+                    </span>
                   </div>
+                  <style>
+                    .form-control {
+                      padding-right: 2.5rem;
+                      /* Ensures enough space for the icon */
+                      border-radius: 0.5rem;
+                      /* Ensures border radius stays consistent */
+                    }
+                    #togglePasswordContainer {
+                      color: #6c757d;
+                      /* Adjust color to match the style */
+                      margin-top: 13px;
+                      display: flex;
+                      align-items: center;
+                      /* Centers icon vertically within the container */
+                    }
+                  </style>
                   <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <a class="text-danger fw-medium" href="../login/forgot_password.php">Forgot Password?</a>
                   </div>
@@ -250,6 +269,21 @@ function loginUser($userData, $conn)
   </div>
 
   <div class="dark-transparent sidebartoggler"></div>
+
+  <script>
+    const togglePassword = document.querySelector("#togglePassword");
+    const password = document.querySelector("#password");
+
+    togglePassword.addEventListener("click", function() {
+      // Toggle the type attribute
+      const type = password.getAttribute("type") === "password" ? "text" : "password";
+      password.setAttribute("type", type);
+
+      // Toggle the icon
+      this.setAttribute("icon", type === "password" ? "mdi:eye-off" : "mdi:eye");
+    });
+  </script>
+
 
   <!-- Import JS Files -->
   <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

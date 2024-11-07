@@ -38,7 +38,7 @@ include '../includes/db_connection.php';
         <div class="d-flex justify-content-between align-items-center">
           <div class="col-md-4 ">
             <form class="position-relative">
-              <input type="text" class="form-control" id="input-search" placeholder="Search..." />
+              <input type="text" class="form-control" id="input-search" placeholder="Search..." oninput="filterActivityLogs()" />
 
             </form>
           </div>
@@ -320,7 +320,23 @@ include '../includes/db_connection.php';
   });
 </script>
 
+<script>
+  // Function to filter activity logs based on search input
+  function filterActivityLogs() {
+    const searchValue = document.getElementById("input-search").value.toLowerCase();
+    const tableRows = document.querySelectorAll("#activityLogsbody tr");
 
+    tableRows.forEach((row) => {
+      const rowText = row.innerText.toLowerCase();
+      row.style.display = rowText.includes(searchValue) ? "" : "none";
+    });
+
+    // Update pagination after filtering
+    filteredRows = Array.from(tableRows).filter(row => row.style.display === "");
+    currentPage = 1;
+    updateTable();
+  }
+</script>
 
 
 <style>
