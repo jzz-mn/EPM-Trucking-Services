@@ -105,13 +105,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       // Wrap in a transaction
       $conn->begin_transaction();
       try {
-        // Query to select transactiongroup records
+        // **Step 1: Check for Overlapping Date Ranges**
+        $overlapQuery = "
+          SELECT COUNT(*) as overlap_count
+          FROM invoices
+          WHERE (BillingStartDate <= ?)
+            AND (BillingEndDate >= ?)
+        ";
+
+        $overlapStmt = $conn->prepare($overlapQuery);
+        if (!$overlapStmt) {
+          throw new Exception('Failed to prepare overlap check statement: ' . $conn->error);
+        }
+
+        // Bind parameters: new BillingEndDate and new BillingStartDate
+        $overlapStmt->bind_param('ss', $billingEndDate, $billingStartDate);
+        $overlapStmt->execute();
+        $overlapResult = $overlapStmt->get_result();
+        $overlapRow = $overlapResult->fetch_assoc();
+        $overlapCount = $overlapRow['overlap_count'];
+        $overlapStmt->close();
+
+        if ($overlapCount > 0) {
+          throw new Exception('The selected date range overlaps with an existing invoice.');
+        }
+
+        // **Step 2: Fetch TransactionGroup Records**
         $query = "
-                    SELECT tg.TransactionGroupID, tg.RateAmount, tg.TollFeeAmount
-                    FROM transactiongroup tg
-                    JOIN expenses e ON tg.ExpenseID = e.ExpenseID
-                    WHERE tg.Date BETWEEN ? AND ?
-                ";
+          SELECT tg.TransactionGroupID, tg.RateAmount, tg.TollFeeAmount
+          FROM transactiongroup tg
+          JOIN expenses e ON tg.ExpenseID = e.ExpenseID
+          WHERE tg.Date BETWEEN ? AND ?
+        ";
 
         $stmt = $conn->prepare($query);
         if (!$stmt) {
@@ -145,8 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $addTollCharges = $totalExpenses;
         $netAmount = $amountNetOfTax + $addTollCharges;
 
-        // ---- Step to Handle ServiceNo ----
-
+        // **Step 3: Handle ServiceNo**
         // Fetch the current maximum ServiceNo
         $serviceNoQuery = "SELECT MAX(ServiceNo) as MaxServiceNo FROM invoices";
         $serviceNoResult = $conn->query($serviceNoQuery);
@@ -159,11 +183,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           throw new Exception('Failed to fetch the current maximum ServiceNo.');
         }
 
-        // Insert into 'invoices' table with ServiceNo
+        // **Step 4: Insert into 'invoices' table with ServiceNo**
         $invoiceQuery = "
-                    INSERT INTO invoices (ServiceNo, BillingStartDate, BillingEndDate, BilledTo, GrossAmount, TotalAmount, VAT, EWT, AddTollCharges, AmountNetOfTax, NetAmount)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ";
+          INSERT INTO invoices (
+            ServiceNo, BillingStartDate, BillingEndDate, BilledTo,
+            GrossAmount, TotalAmount, VAT, EWT, AddTollCharges,
+            AmountNetOfTax, NetAmount
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ";
         $stmt = $conn->prepare($invoiceQuery);
         if (!$stmt) {
           throw new Exception('Failed to prepare invoice insertion statement.');
@@ -191,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $billingInvoiceNo = $stmt->insert_id;
         $stmt->close();
 
-        // Update 'transactiongroup' records to set 'BillingInvoiceNo' to the new 'BillingInvoiceNo'
+        // **Step 5: Update 'transactiongroup' Records**
         if (!empty($transactionGroupIDs)) {
           // Sanitize IDs and prepare the IN clause
           $ids = implode(',', array_map('intval', $transactionGroupIDs));
@@ -207,10 +235,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           $updateStmt->close();
         }
 
-        // Insert into 'invoices_transactions' table if exists, to link invoices and transactiongroups (if needed)
-        // Assuming such a table exists. If not, you can skip this step.
+        // **Optional Step 6: Link Invoices and TransactionGroups**
+        // If you have an 'invoices_transactions' table, you can insert records here.
+        // Skipping this step as it's optional.
 
-        // ---- Step 4: Commit the transaction ----
+        // **Step 7: Commit the Transaction**
         $conn->commit();
 
         echo json_encode(['success' => true]);
@@ -754,8 +783,6 @@ $conn->close();
     });
   }
 </script>
-
-
 
 <!-- Add the following styles to support the sorting arrows -->
 <style>
