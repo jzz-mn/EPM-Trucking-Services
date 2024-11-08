@@ -111,7 +111,7 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                               <label for="loggedBy" class="form-label">Logged By</label>
                               <!-- Hidden field not necessary; directly use session -->
                               <input type="hidden" id="loggedBy" name="loggedBy" value="<?php echo $_SESSION['UserID']; ?>">
-                              </div>
+                            </div>
                           </div>
 
                           <div class="col-12">
@@ -166,7 +166,7 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
                   <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search" placeholder="Search" />
+                    <input type="text" class="form-control product-search" id="input-search" placeholder="Search" onkeyup="searchMaintenance()" />
                     <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
                   </form>
                 </div>
@@ -249,6 +249,31 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
   document.getElementById('confirmSubmit').addEventListener('click', function() {
     document.getElementById('addMaintenanceForm').submit(); // Submit the form
   });
+</script>
+
+<script>
+  // Function to search and filter maintenance table
+  function searchMaintenance() {
+    // Get the search input and filter value
+    const searchInput = document.getElementById("input-search").value.toLowerCase();
+    const tableRows = document.querySelectorAll(".table tbody tr");
+
+    // Loop through all table rows
+    tableRows.forEach((row) => {
+      const cells = row.querySelectorAll("td");
+      let match = false;
+
+      // Check if any cell in the row contains the search term
+      cells.forEach((cell) => {
+        if (cell.innerText.toLowerCase().includes(searchInput)) {
+          match = true;
+        }
+      });
+
+      // Toggle the visibility of the row based on the match result
+      row.style.display = match ? "" : "none";
+    });
+  }
 </script>
 
 <?php
