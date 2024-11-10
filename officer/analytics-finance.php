@@ -4,19 +4,31 @@ include '../officer/header.php';
 include '../includes/db_connection.php';
 ?>
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
+  rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="body-wrapper">
   <div class="container-fluid">
+    <?php
+    // Including sidebar if it exists
+    $sidebar_path = '../officer/sidebar.php';
+    if (file_exists($sidebar_path)) {
+      include $sidebar_path;
+    } else {
+      echo "<!-- Sidebar not found at $sidebar_path -->";
+    }
+    ?>
     <div class="card card-body py-3">
       <div class="row align-items-center">
         <div class="col-12">
-          <div class="d-sm-flex align-items-center justify-space-between">
+          <div class="d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
                 <li class="breadcrumb-item d-flex align-items-center">
-                <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
-                <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
               </ol>
@@ -25,624 +37,546 @@ include '../includes/db_connection.php';
         </div>
       </div>
     </div>
+
     <h5 class="border-bottom py-2 px-4 mb-4">Finances</h5>
 
     <div class="body-wrapper">
       <div class="container-fluid p-0">
         <div class="row">
-          <div class="col-lg-6 mb-5">
-            <div class="card mb-lg-0">
-              <div class="card-body">
-                <h5 class="card-title">Weekly Stats</h5>
-                <p class="card-subtitle">Overview of Profit</p>
 
-                <div class="me-n5">
-                  <div id="weekly-stats"></div>
-                </div>
-                <div class="pt-7 mt-7 border-top">
-                  <div class="row">
-                    <div class="col-sm-6">
-                      <div class="hstack gap-6 mb-3 mb-md-0">
-                        <span class="d-flex align-items-center justify-content-center round-48 flex-shrink-0 bg-danger-subtle rounded">
-                          <iconify-icon icon="solar:course-down-linear" class="fs-7 text-danger"></iconify-icon>
-                        </span>
-                        <div>
-                          <span class="text-muted">Sales</span>
-                          <h6 class="fw-bolder mb-0">$36,850</h5>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-sm-6">
-                      <div class="hstack gap-6">
-                        <span class="d-flex align-items-center justify-content-center round-48 flex-shrink-0 bg-primary-subtle rounded">
-                          <iconify-icon icon="solar:chart-linear" class="fs-7 text-primary"></iconify-icon>
-                        </span>
-                        <div>
-                          <span class="text-muted">Expenses</span>
-                          <h6 class="fw-bolder mb-0">$4,720</h5>
-                        </div>
-                      </div>
-                    </div>
+          <!-- Monthly and Yearly Trends Card -->
+          <div class="col-lg-6 mb-5">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h5 class="card-title mb-0">Monthly and Yearly Trends</h5>
+
+                  <!-- Year Dropdown Filter in the card -->
+                  <div class="dropdown">
+                    <select id="yearFilter" class="form-select form-select-sm" onchange="fetchTrendsData()" style="width: auto;">
+                      <?php
+                      // Determine the minimum year from both the invoices and expenses tables
+                      $minYearQuery = "
+                            SELECT MIN(Year) as MinYear FROM (
+                                SELECT MIN(YEAR(BillingStartDate)) AS Year FROM invoices
+                                UNION
+                                SELECT MIN(YEAR(Date)) AS Year FROM expenses
+                            ) as YearRange";
+                      $minYearResult = $conn->query($minYearQuery);
+                      $minYearRow = $minYearResult->fetch_assoc();
+                      $minYear = $minYearRow['MinYear'] ?? date('Y');
+
+                      // Set the current year as the maximum year
+                      $currentYear = date('Y');
+
+                      // Populate dropdown from the minimum year to the current year
+                      for ($year = $minYear; $year <= $currentYear; $year++) {
+                        echo "<option value='$year'>$year</option>";
+                      }
+                      ?>
+                    </select>
                   </div>
                 </div>
+                <p class="card-subtitle mb-4">Revenue, Expenses, and Profit</p>
+                <canvas id="monthlyYearlyTrendsChart" height="120"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-6">
+
+          <script>
+            // Initialize the chart
+            let monthlyYearlyTrendsChart;
+
+            // Function to fetch data based on the selected year
+            function fetchTrendsData() {
+              const selectedYear = document.getElementById('yearFilter').value;
+
+              // AJAX request to get data for the selected year
+              const xhr = new XMLHttpRequest();
+              xhr.open('GET', `fetch_trends_data.php?year=${selectedYear}`, true);
+              xhr.onload = function() {
+                if (this.status === 200) {
+                  const data = JSON.parse(this.responseText);
+                  if (data && data.labels.length > 0) {
+                    updateChart(data.labels, data.revenues, data.expenses, data.profits);
+                  } else {
+                    alert('No data found for the selected year. Please choose another year.');
+                  }
+                } else {
+                  console.error('Failed to fetch data');
+                }
+              };
+              xhr.send();
+            }
+
+            // Function to update the chart with new data
+            function updateChart(labels, revenues, expenses, profits) {
+              if (monthlyYearlyTrendsChart) {
+                monthlyYearlyTrendsChart.destroy();
+              }
+
+              const ctx = document.getElementById('monthlyYearlyTrendsChart').getContext('2d');
+              monthlyYearlyTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: labels,
+                  datasets: [{
+                      label: 'Revenue',
+                      data: revenues,
+                      borderColor: 'rgba(54, 162, 235, 1)',
+                      fill: false,
+                      tension: 0.3
+                    },
+                    {
+                      label: 'Expenses',
+                      data: expenses,
+                      borderColor: 'rgba(255, 99, 132, 1)',
+                      fill: false,
+                      tension: 0.3
+                    },
+                    {
+                      label: 'Profit',
+                      data: profits,
+                      borderColor: 'rgba(75, 192, 192, 1)',
+                      fill: false,
+                      tension: 0.3
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  scales: {
+                    x: {
+                      beginAtZero: false,
+                      title: {
+                        display: true,
+                        text: 'Months'
+                      },
+                      ticks: {
+                        callback: function(value, index) {
+                          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                          return months[index];
+                        }
+                      }
+                    },
+                    y: {
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: 'Amount'
+                      },
+                      ticks: {
+                        callback: function(value) {
+                          return value.toLocaleString(); // Format with commas
+                        }
+                      }
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: true,
+                      position: 'top'
+                    }
+                  }
+                }
+              });
+            }
+
+            // Initial fetch for the current year's data
+            document.addEventListener('DOMContentLoaded', function() {
+              fetchTrendsData();
+            });
+          </script>
+
+          <!-- Revenue Forecast Card -->
+          <div class="col-lg-6 mb-5">
             <div class="card">
               <div class="card-body">
                 <div class="d-md-flex align-items-center justify-content-between">
                   <div>
                     <h5 class="card-title">Revenue Forecast</h5>
-                    <p class="card-subtitle mb-0">Overview of Profit</p>
+                    <p class="card-subtitle mb-0">Projected monthly revenue trends</p>
                   </div>
-
-                  <div class="hstack gap-9 mt-4 mt-md-0">
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="d-block flex-shrink-0 round-10 bg-primary rounded-circle"></span>
-                      <span class="text-nowrap text-muted">2024</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="d-block flex-shrink-0 round-10 bg-danger rounded-circle"></span>
-                      <span class="text-nowrap text-muted">2023</span>
-                    </div>
+                  <div>
+                    <select id="forecastMonths" class="form-select form-select-sm" onchange="fetchRevenueForecast()">
+                      <option value="3">Next 3 Months</option>
+                      <option value="6" selected>Next 6 Months</option>
+                      <option value="12">Next 12 Months</option>
+                    </select>
                   </div>
                 </div>
-                <div style="height: 200px;" class="me-n2 rounded-bars">
-                  <div id="revenue-forecast"></div>
-                </div>
-                <div class="row mt-4 mb-2">
-                  <div class="col-md-4">
-                    <div class="hstack gap-6 mb-3 mb-md-0">
-                      <span class="d-flex align-items-center justify-content-center round-48 bg-light rounded">
-                        <iconify-icon icon="solar:pie-chart-2-linear" class="fs-7 text-dark"></iconify-icon>
-                      </span>
-                      <div>
-                        <span>Total</span>
-                        <h5 class="mt-1 fw-medium mb-0">$96,640</h5>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="hstack gap-6 mb-3 mb-md-0">
-                      <span class="d-flex align-items-center justify-content-center round-48 bg-primary-subtle rounded">
-                        <iconify-icon icon="solar:dollar-minimalistic-linear" class="fs-7 text-primary"></iconify-icon>
-                      </span>
-                      <div>
-                        <span>Profit</span>
-                        <h5 class="mt-1 fw-medium mb-0">$48,820</h5>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="hstack gap-6">
-                      <span class="d-flex align-items-center justify-content-center round-48 bg-danger-subtle rounded">
-                        <iconify-icon icon="solar:database-linear" class="fs-7 text-danger"></iconify-icon>
-                      </span>
-                      <div>
-                        <span>Earnings</span>
-                        <h5 class="mt-1 fw-medium mb-0">$48,820</h5>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="body-wrapper m-0">
-      <div class="container-fluid p-0">
-        <div class="row">
-          <div class="col-lg-6">
-            <div class="row">
-              <div class="col-md-15">
-                <div class="card bg-secondary-subtle overflow-hidden shadow-none col-lg-15">
-                  <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-9">
-                      <div>
-                        <span class="text-dark-light fw-semibold">Customers</span>
-                        <div class="hstack gap-6">
-                          <h5 class="card-title fw-semibold mb-0 fs-7">14,872</h5>
-                          <span class="fs-11 text-dark-light fw-semibold">+6.4%</span>
-                        </div>
-                      </div>
-                      <span class="round-48 d-flex align-items-center justify-content-center bg-white rounded">
-                        <iconify-icon icon="solar:pie-chart-3-line-duotone" class="text-secondary fs-6"></iconify-icon>
-                      </span>
-                    </div>
-
-
-                  </div>
-                  <div id="users"></div>
-                </div>
+                <canvas id="revenueForecastChart" height="200"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-6">
-            <div class="row">
-              <div class="col-lg-15">
-                <div class="row">
-                  <div class="col-md-15">
-                    <div class="card bg-danger-subtle overflow-hidden shadow-none">
-                      <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-15">
-                          <div>
-                            <span class="text-dark-light fw-semibold fs-12">Projects</span>
-                            <div class="hstack gap-6">
-                              <h5 class="card-title fw-semibold mb-0 fs-7">78,298</h5>
-                              <span class="fs-11 text-dark-light fw-semibold">-12%</span>
-                            </div>
-                          </div>
-                          <span class="round-48 d-flex align-items-center justify-content-center bg-white rounded">
-                            <iconify-icon icon="solar:layers-linear" class="text-danger fs-6"></iconify-icon>
-                          </span>
-                        </div>
-                        <div class="me-n2">
-                          <div id="subscriptions" class="rounded-bars"></div>
-                        </div>
-                      </div>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              fetchRevenueForecast();
+            });
 
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            function fetchRevenueForecast() {
+              const months = document.getElementById('forecastMonths').value;
 
-          <div class="widget-content searchable-container list">
+              fetch(`https://huggingface.co/spaces/itsjazz/finance_analytics/forecast?months=${months}`)
+                .then(response => response.json())
+                .then(data => {
+                  if (data.historical && data.forecast) {
+                    const labels = data.historical.map(item => item.Month).concat(data.forecast.map(item => item.month));
+                    const historicalRevenue = data.historical.map(item => item.Revenue);
+                    const forecastedRevenue = data.forecast.map(item => item.predicted_revenue);
 
-            <!-- Modal -->
-            <div class="modal fade" id="addContactModal" tabindex="-1" role="dialog" aria-labelledby="addContactModalTitle"
-              aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                  <div class="modal-header d-flex align-items-center">
-                    <h5 class="modal-title">Contact</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="add-contact-box">
-                      <div class="add-contact-content">
-                        <form id="addContactModalTitle">
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="mb-3 contact-name">
-                                <input type="text" id="c-name" class="form-control" placeholder="Name" />
-                                <span class="validation-text text-danger"></span>
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3 contact-email">
-                                <input type="text" id="c-email" class="form-control" placeholder="Email" />
-                                <span class="validation-text text-danger"></span>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-md-6">
-                              <div class="mb-3 contact-occupation">
-                                <input type="text" id="c-occupation" class="form-control" placeholder="Occupation" />
-                              </div>
-                            </div>
-                            <div class="col-md-6">
-                              <div class="mb-3 contact-phone">
-                                <input type="text" id="c-phone" class="form-control" placeholder="Phone" />
-                                <span class="validation-text text-danger"></span>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="row">
-                            <div class="col-md-12">
-                              <div class="mb-3 contact-location">
-                                <input type="text" id="c-location" class="form-control" placeholder="Location" />
-                              </div>
-                            </div>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <div class="d-flex gap-6 m-0">
-                      <button id="btn-add" class="btn btn-success">Add</button>
-                      <button id="btn-edit" class="btn btn-success">Save</button>
-                      <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal"> Discard
-                      </button>
-                    </div>
+                    renderRevenueForecastChart(labels, historicalRevenue, forecastedRevenue);
+                  }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+            }
 
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card card-body">
-              <form class="position-relative">
-                <input type="text" class="form-control product-search ps-5 w-25" id="input-search" placeholder="Search" />
-                <i class="ti ti-search position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
-              </form>
+            function renderRevenueForecastChart(labels, historicalData, forecastData) {
+              const ctx = document.getElementById('revenueForecastChart').getContext('2d');
 
-              <div class="table-responsive">
-                <table class="table search-table align-middle text-nowrap">
-                  <thead class="header-item">
-                    <tr>
-                      <th>
-                        <div class="n-chk align-self-center text-center">
-                          <div class="form-check">
-                            <span class="new-control-indicator"></span>
-                          </div>
-                        </div>
-                      </th>
-                      <th>Transaction ID</th>
-                      <th>Date</th>
-                      <th>Plate Number</th>
-                      <th>DR Number</th>
-                      <th>Quantity (Qty)</th>
-                      <th>Weight (Kgs)</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <?php
+              if (window.revenueForecastChart) {
+                window.revenueForecastChart.destroy();
+              }
 
-                    $items_per_page = isset($_GET['items_per_page']) ? (int)$_GET['items_per_page'] : 5;
-                    $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                    $offset = ($current_page - 1) * $items_per_page;
-
-                    // Get total number of rows in the transaction table
-                    $total_rows_query = "SELECT COUNT(*) as total FROM transactions";
-                    $total_rows_result = $conn->query($total_rows_query);
-                    $total_rows = $total_rows_result->fetch_assoc()['total'];
-
-                    // Calculate total pages
-                    $total_pages = ceil($total_rows / $items_per_page);
-
-                    // Fetch data with pagination
-                    $sql = "SELECT TransactionID, Date, PlateNumber, DRNumber, Qty, Kgs FROM transactions LIMIT $offset, $items_per_page";
-                    $result = $conn->query($sql);
-                    ?>
-
-
-                  <tbody>
-                    <?php
-                    if ($result->num_rows > 0) {
-                      while ($row = $result->fetch_assoc()) {
-                        echo "<tr>";
-                        echo "<td><input type='checkbox' class='form-check-input' id='checkbox{$row['TransactionID']}' /></td>";
-                        echo "<td>{$row['TransactionID']}</td>";
-                        echo "<td>{$row['Date']}</td>";
-                        echo "<td>{$row['PlateNumber']}</td>";
-                        echo "<td>{$row['DRNumber']}</td>";
-                        echo "<td>{$row['Qty']}</td>";
-                        echo "<td>{$row['Kgs']}</td>";
-                        echo "<td>
-                        <div class='d-flex justify-content-center'>
-                            <a href='edit.php?id={$row['TransactionID']}' class='btn btn-outline-primary btn-sm me-2'><i class='bi bi-pencil'></i></a>
-                            <a href='delete.php?id={$row['TransactionID']}' class='btn btn-outline-danger btn-sm'><i class='bi bi-trash'></i></a>
-                        </div>
-                        </td>";
-                        echo "</tr>";
-                      }
-                    } else {
-                      echo "<tr><td colspan='8' class='text-center'>No transactions found</td></tr>";
+              window.revenueForecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: labels,
+                  datasets: [{
+                      label: 'Historical Revenue',
+                      data: historicalData,
+                      borderColor: 'rgba(54, 162, 235, 1)',
+                      fill: false
+                    },
+                    {
+                      label: 'Forecasted Revenue',
+                      data: Array(historicalData.length).fill(null).concat(forecastData),
+                      borderColor: 'rgba(255, 99, 132, 1)',
+                      fill: false,
+                      borderDash: [5, 5]
                     }
-                    ?>
-                  </tbody>
-                </table>
-              </div>
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  scales: {
+                    x: {
+                      title: {
+                        display: true,
+                        text: 'Months'
+                      }
+                    },
+                    y: {
+                      title: {
+                        display: true,
+                        text: 'Revenue'
+                      },
+                      beginAtZero: true
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: true,
+                      position: 'top'
+                    }
+                  }
+                }
+              });
+            }
+          </script>
 
-              <!-- Pagination -->
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <div>
-                  <label for="items-per-page" class="me-2">Items per page:</label>
-                  <select class="form-select w-auto d-inline" id="items-per-page" onchange="location = this.value;">
-                    <option value="?items_per_page=5&page=1" <?php if ($items_per_page == 5) echo 'selected'; ?>>5</option>
-                    <option value="?items_per_page=10&page=1" <?php if ($items_per_page == 10) echo 'selected'; ?>>10</option>
-                    <option value="?items_per_page=15&page=1" <?php if ($items_per_page == 15) echo 'selected'; ?>>15</option>
-                  </select>
+
+          <!-- Top Expenses Card -->
+          <div class="col-lg-6">
+            <div class="card bg-secondary-subtle overflow-hidden shadow-none">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h5 class="card-title">Top 10 Expenses</h5>
+
+                  <!-- Year Dropdown Filter for Top Expenses -->
+                  <div class="dropdown">
+                    <?php
+                    // Determine the minimum year from the expenses and fuel tables
+                    $minYearQuery = "
+            SELECT MIN(Year) as MinYear FROM (
+              SELECT MIN(YEAR(Date)) AS Year FROM expenses
+              UNION
+              SELECT MIN(YEAR(Date)) AS Year FROM fuel
+            ) as YearRange";
+                    $minYearResult = $conn->query($minYearQuery);
+                    $minYearRow = $minYearResult->fetch_assoc();
+                    $minYear = $minYearRow['MinYear'] ?? date('Y');
+
+                    // Set the current year as the maximum year
+                    $currentYear = date('Y');
+                    ?>
+                    <select id="topExpensesYearFilter" class="form-select form-select-sm" onchange="fetchTopExpensesData()" style="width: auto;">
+                      <?php
+                      // Populate dropdown from the minimum year to the current year
+                      for ($year = $minYear; $year <= $currentYear; $year++) {
+                        echo "<option value='$year'>$year</option>";
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+                <p class="card-subtitle mb-4">Overview of the highest cost drivers including fuel</p>
+                <canvas id="topExpensesChart" height="120"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            // Initialize the chart for top expenses
+            let topExpensesChart;
+
+            // Function to fetch top expenses data based on the selected year
+            function fetchTopExpensesData() {
+              const selectedYear = document.getElementById('topExpensesYearFilter').value;
+
+              // AJAX request to get data for the selected year
+              const xhr = new XMLHttpRequest();
+              xhr.open('GET', `fetch_top_expenses_data.php?year=${selectedYear}`, true);
+              xhr.onload = function() {
+                if (this.status === 200) {
+                  const data = JSON.parse(this.responseText);
+                  updateTopExpensesChart(data.labels, data.datasets);
+                } else {
+                  console.error('Failed to fetch top expenses data');
+                }
+              };
+              xhr.send();
+            }
+
+            // Function to update the top expenses chart with new data
+            function updateTopExpensesChart(labels, datasets) {
+              if (topExpensesChart) {
+                topExpensesChart.destroy();
+              }
+
+              const ctx = document.getElementById('topExpensesChart').getContext('2d');
+              topExpensesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: labels,
+                  datasets: datasets.map((dataset, index) => ({
+                    label: dataset.label,
+                    data: dataset.data,
+                    backgroundColor: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 0.6)`,
+                    borderColor: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 1)`,
+                    borderWidth: 1
+                  }))
+                },
+                options: {
+                  responsive: true,
+                  plugins: {
+                    tooltip: {
+                      callbacks: {
+                        label: function(tooltipItem) {
+                          return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toLocaleString(); // Format with commas
+                        }
+                      }
+                    },
+                    legend: {
+                      display: true,
+                      position: 'top'
+                    }
+                  },
+                  scales: {
+                    x: {
+                      stacked: true,
+                      title: {
+                        display: true,
+                        text: 'Months'
+                      }
+                    },
+                    y: {
+                      stacked: true,
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: 'Total Expense Amount'
+                      },
+                      ticks: {
+                        callback: function(value) {
+                          return value.toLocaleString(); // Add commas for readability
+                        }
+                      }
+                    }
+                  }
+                }
+              });
+            }
+
+            // Initial fetch for the current year's data
+            document.addEventListener('DOMContentLoaded', function() {
+              fetchTopExpensesData();
+            });
+          </script>
+
+          <!-- Fuel Expenses vs Revenue Card -->
+          <div class="col-lg-6">
+            <div class="card bg-danger-subtle overflow-hidden shadow-none">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h5 class="card-title mb-0">Fuel Expenses vs. Revenue</h5>
+
+                  <!-- Year Filter Dropdown -->
+                  <div>
+                    <select id="fuelRevenueYearFilter" class="form-select form-select-sm" onchange="fetchFuelRevenueData()" style="width: auto;">
+                      <?php
+                      // Determine the minimum year from the fuel and invoices tables
+                      $minYearQuery = "
+                  SELECT MIN(Year) as MinYear FROM (
+                    SELECT MIN(YEAR(Date)) AS Year FROM fuel
+                    UNION
+                    SELECT MIN(YEAR(BillingStartDate)) AS Year FROM invoices
+                  ) as YearRange";
+                      $minYearResult = $conn->query($minYearQuery);
+                      $minYearRow = $minYearResult->fetch_assoc();
+                      $minYear = $minYearRow['MinYear'] ?? date('Y');
+                      $currentYear = date('Y');
+
+                      // Populate dropdown from the minimum year to the current year
+                      for ($year = $minYear; $year <= $currentYear; $year++) {
+                        echo "<option value='$year'>$year</option>";
+                      }
+                      ?>
+                    </select>
+                  </div>
                 </div>
 
-                <nav>
-                  <ul class="pagination mb-0">
-                    <li class="page-item <?php if ($current_page <= 1) echo 'disabled'; ?>">
-                      <a class="page-link" href="?items_per_page=<?php echo $items_per_page; ?>&page=<?php echo max(1, $current_page - 1); ?>">Previous</a>
-                    </li>
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                      <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
-                        <a class="page-link" href="?items_per_page=<?php echo $items_per_page; ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                      </li>
-                    <?php endfor; ?>
-                    <li class="page-item <?php if ($current_page >= $total_pages) echo 'disabled'; ?>">
-                      <a class="page-link" href="?items_per_page=<?php echo $items_per_page; ?>&page=<?php echo min($total_pages, $current_page + 1); ?>">Next</a>
-                    </li>
-                  </ul>
-                </nav>
+                <p class="card-subtitle">Analyze the relationship between fuel expenses and revenue over time.</p>
+                <canvas id="fuelRevenueCorrelationChart" height="120"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal for No Data -->
+          <div class="modal fade" id="noDataModal" tabindex="-1" aria-labelledby="noDataModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="noDataModalLabel">No Data Available</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  No data is available for the selected year. Please choose a different year.
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <script>
+        // Function to fetch data for the selected year
+        function fetchFuelRevenueData() {
+          const selectedYear = document.getElementById('yearFilter').value;
+
+          fetch(`fetch_fuel_revenue_data.php?year=${selectedYear}`)
+            .then(response => response.json())
+            .then(data => {
+              console.log('Fetched Data:', data); // Debugging log
+              if (data.fuelExpenses.length > 0 && data.revenues.length > 0) {
+                renderFuelRevenueChart(data.months, data.fuelExpenses, data.revenues);
+              } else {
+                alert("No data available for the selected year.");
+                if (window.fuelRevenueChart) {
+                  window.fuelRevenueChart.destroy();
+                }
+              }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Function to render the chart
+        function renderFuelRevenueChart(months, fuelExpenses, revenues) {
+          const ctx = document.getElementById('fuelRevenueCorrelationChart').getContext('2d');
+          if (window.fuelRevenueChart) {
+            window.fuelRevenueChart.destroy();
+          }
+
+          window.fuelRevenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: months,
+              datasets: [{
+                  label: 'Fuel Expenses (PHP)',
+                  data: fuelExpenses,
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  fill: false
+                },
+                {
+                  label: 'Revenue (PHP)',
+                  data: revenues,
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                  fill: false
+                }
+              ]
+            },
+            options: {
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Months'
+                  }
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Amount (PHP)'
+                  },
+                  ticks: {
+                    callback: function(value) {
+                      return value.toLocaleString(); // Format with commas for readability
+                    }
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return `${context.dataset.label}: PHP ${context.raw.toLocaleString()}`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Initial fetch when the page loads
+        document.addEventListener('DOMContentLoaded', fetchFuelRevenueData);
+      </script>
 
 
-    <div class="offcanvas customizer offcanvas-end" tabindex="-1" id="offcanvasExample"
-      aria-labelledby="offcanvasExampleLabel">
-      <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-        <h4 class="offcanvas-title fw-semibold" id="offcanvasExampleLabel">
-          Settings
-        </h4>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body" data-simplebar style="height: calc(100vh - 80px)">
-        <h6 class="fw-semibold fs-4 mb-2">Theme</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check light-layout" name="theme-layout" id="light-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="light-layout">
-            <i class="icon ti ti-brightness-up fs-7 me-2"></i>Light
-          </label>
-
-          <input type="radio" class="btn-check dark-layout" name="theme-layout" id="dark-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="dark-layout">
-            <i class="icon ti ti-moon fs-7 me-2"></i>Dark
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Direction</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="direction-l" id="ltr-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="ltr-layout">
-            <i class="icon ti ti-text-direction-ltr fs-7 me-2"></i>LTR
-          </label>
-
-          <input type="radio" class="btn-check" name="direction-l" id="rtl-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="rtl-layout">
-            <i class="icon ti ti-text-direction-rtl fs-7 me-2"></i>RTL
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Theme Colors</h6>
-
-        <div class="d-flex flex-row flex-wrap gap-3 customizer-box color-pallete" role="group">
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Blue_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Blue_Theme')" for="Blue_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="BLUE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-1">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Aqua_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Aqua_Theme')" for="Aqua_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="AQUA_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-2">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="Purple_Theme" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Purple_Theme')" for="Purple_Theme" data-bs-toggle="tooltip" data-bs-placement="top"
-            data-bs-title="PURPLE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-3">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="green-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Green_Theme')" for="green-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="GREEN_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-4">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="cyan-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Cyan_Theme')" for="cyan-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="CYAN_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-5">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-
-          <input type="radio" class="btn-check" name="color-theme-layout" id="orange-theme-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2 d-flex align-items-center justify-content-center"
-            onclick="handleColorTheme('Orange_Theme')" for="orange-theme-layout" data-bs-toggle="tooltip"
-            data-bs-placement="top" data-bs-title="ORANGE_THEME">
-            <div class="color-box rounded-circle d-flex align-items-center justify-content-center skin-6">
-              <i class="ti ti-check text-white d-flex icon fs-5"></i>
-            </div>
-          </label>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Layout Type</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <div>
-            <input type="radio" class="btn-check" name="page-layout" id="vertical-layout" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="vertical-layout">
-              <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Vertical
-            </label>
-          </div>
-          <div>
-            <input type="radio" class="btn-check" name="page-layout" id="horizontal-layout" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="horizontal-layout">
-              <i class="icon ti ti-layout-navbar fs-7 me-2"></i>Horizontal
-            </label>
-          </div>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Container Option</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="layout" id="boxed-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="boxed-layout">
-            <i class="icon ti ti-layout-distribute-vertical fs-7 me-2"></i>Boxed
-          </label>
-
-          <input type="radio" class="btn-check" name="layout" id="full-layout" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="full-layout">
-            <i class="icon ti ti-layout-distribute-horizontal fs-7 me-2"></i>Full
-          </label>
-        </div>
-
-        <h6 class="fw-semibold fs-4 mb-2 mt-5">Sidebar Type</h6>
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <a href="javascript:void(0)" class="fullsidebar">
-            <input type="radio" class="btn-check" name="sidebar-type" id="full-sidebar" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="full-sidebar">
-              <i class="icon ti ti-layout-sidebar-right fs-7 me-2"></i>Full
-            </label>
-          </a>
-          <div>
-            <input type="radio" class="btn-check" name="sidebar-type" id="mini-sidebar" autocomplete="off" />
-            <label class="btn p-9 btn-outline-primary rounded-2" for="mini-sidebar">
-              <i class="icon ti ti-layout-sidebar fs-7 me-2"></i>Collapse
-            </label>
-          </div>
-        </div>
-
-        <h6 class="mt-5 fw-semibold fs-4 mb-2">Card With</h6>
-
-        <div class="d-flex flex-row gap-3 customizer-box" role="group">
-          <input type="radio" class="btn-check" name="card-layout" id="card-with-border" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="card-with-border">
-            <i class="icon ti ti-border-outer fs-7 me-2"></i>Border
-          </label>
-
-          <input type="radio" class="btn-check" name="card-layout" id="card-without-border" autocomplete="off" />
-          <label class="btn p-9 btn-outline-primary rounded-2" for="card-without-border">
-            <i class="icon ti ti-border-none fs-7 me-2"></i>Shadow
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      function handleColorTheme(e) {
-        document.documentElement.setAttribute("data-color-theme", e);
-      }
-    </script>
-  </div>
-
-  <!--  Search Bar -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-bottom">
-          <input type="search" class="form-control" placeholder="Search here" id="search" />
-          <a href="javascript:void(0)" data-bs-dismiss="modal" class="lh-1">
-            <i class="ti ti-x fs-5 ms-3"></i>
-          </a>
-        </div>
-        <div class="modal-body message-body" data-simplebar="">
-          <h5 class="mb-0 fs-5 p-1">Quick Page Links</h5>
-          <ul class="list mb-0 py-2">
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Analytics</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">eCommerce</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">CRM</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard3</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Contacts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Posts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Detail</span>
-                <span
-                  class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Shop</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Modern</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard1</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Dashboard</span>
-                <span class="fs-2 d-block text-body-secondary">/dashboards/dashboard2</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Contacts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/contacts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Posts</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/blog/posts</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Detail</span>
-                <span
-                  class="fs-2 d-block text-body-secondary">/apps/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow</span>
-              </a>
-            </li>
-            <li class="p-1 mb-1 bg-hover-light-black rounded px-2">
-              <a href="javascript:void(0)">
-                <span class="text-dark fw-semibold d-block">Shop</span>
-                <span class="fs-2 d-block text-body-secondary">/apps/ecommerce/shop</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
   </div>
-
-
 </div>
-<div class="dark-transparent sidebartoggler"></div>
+</div>
+</div>
+
 <script src="../assets/js/vendor.min.js"></script>
-<!-- Import Js Files -->
 <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
 <script src="../assets/js/theme/app.init.js"></script>
 <script src="../assets/js/theme/theme.js"></script>
 <script src="../assets/js/theme/app.min.js"></script>
 <script src="../assets/js/theme/sidebarmenu-default.js"></script>
-
-<!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
 <script src="../assets/js/apps/productDetail.js"></script>
