@@ -1,5 +1,6 @@
 <?php
 session_start();
+$_SESSION['reset_theme'] = true;
 
 // Prevent caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
