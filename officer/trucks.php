@@ -435,6 +435,52 @@ include '../officer/header.php';
       </div>
     </div>
 
+    <!-- Edit Cluster Modal -->
+    <div class="modal fade" id="editClusterModal" tabindex="-1" role="dialog" aria-labelledby="editClusterModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header d-flex align-items-center bg-primary">
+            <h5 class="modal-title text-white fs-4" id="editClusterModalLabel">Edit Cluster</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editClusterForm" method="POST" action="update_cluster.php">
+              <input type="hidden" id="uniqueClusterId" name="uniqueClusterId">
+              <div class="mb-3">
+                <label for="clusterCategory" class="form-label">Cluster Category</label>
+                <input type="text" class="form-control" id="clusterCategory" name="clusterCategory" required>
+              </div>
+              <div class="mb-3">
+                <label for="locationsInCluster" class="form-label">Locations in Cluster</label>
+                <input type="text" class="form-control" id="locationsInCluster" name="locationsInCluster" required>
+              </div>
+              <div class="mb-3">
+                <label for="tonner" class="form-label">Tonner</label>
+                <input type="number" class="form-control" id="tonner" name="tonner" required>
+              </div>
+              <div class="mb-3">
+                <label for="kmRadius" class="form-label">KM Radius</label>
+                <input type="number" class="form-control" id="kmRadius" name="kmRadius" required>
+              </div>
+              <div class="mb-3">
+                <label for="fuelPrice" class="form-label">Fuel Price</label>
+                <input type="number" class="form-control" id="fuelPrice" name="fuelPrice" step="0.01" required>
+              </div>
+              <div class="mb-3">
+                <label for="rateAmount" class="form-label">Rate Amount</label>
+                <input type="number" class="form-control" id="rateAmount" name="rateAmount" step="0.01" required>
+              </div>
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary ms-2">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
 
 
 
@@ -458,6 +504,11 @@ include '../officer/header.php';
             <li class="nav-item">
               <a class="nav-link" data-bs-toggle="tab" href="#trucks" role="tab">
                 <span>Trucks</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-bs-toggle="tab" href="#clusters" role="tab">
+                <span>Clusters</span>
               </a>
             </li>
           </ul>
@@ -686,6 +737,91 @@ include '../officer/header.php';
                 </div>
               </div>
             </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-pane" id="clusters" role="tabpanel">
+              <div class="table-controls mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="col-md-4">
+                    <input type="text" id="clustersSearchBar" class="form-control" placeholder="Search..." onkeyup="filterClustersTable()" />
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <select id="clustersRowsPerPage" class="form-select w-auto d-inline" onchange="changeClustersRowsPerPage()">
+                      <option value="5">5 rows</option>
+                      <option value="10">10 rows</option>
+                      <option value="20">20 rows</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="py-3">
+                <div class="table-responsive">
+                  <table id="clustersTable" class="table text-center table-striped table-bordered display text-nowrap">
+                    <thead>
+                      <tr>
+                        <th>UniqueClusterID</th>
+                        <th>ClusterID</th>
+                        <th>ClusterCategory</th>
+                        <th>LocationsInCluster</th>
+                        <th>Tonner</th>
+                        <th>KMRADIUS</th>
+                        <th>FuelPrice</th>
+                        <th>RateAmount</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="clustersTableBody">
+                      <?php
+                      $query = "SELECT UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount FROM clusters";
+                      $result = $conn->query($query);
+                      if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                          echo "<tr>";
+                          echo "<td>" . $row['UniqueClusterID'] . "</td>";
+                          echo "<td>" . $row['ClusterID'] . "</td>";
+                          echo "<td>" . $row['ClusterCategory'] . "</td>";
+                          echo "<td>" . $row['LocationsInCluster'] . "</td>";
+                          echo "<td>" . $row['Tonner'] . "</td>";
+                          echo "<td>" . $row['KMRADIUS'] . "</td>";
+                          echo "<td>" . $row['FuelPrice'] . "</td>";
+                          echo "<td>" . $row['RateAmount'] . "</td>";
+                          echo "<td>
+                          <div class='btn-group'>
+                              <button type='button' class='btn btn-secondary btn-sm dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>
+                                  Actions
+                              </button>
+                              <ul class='dropdown-menu'>
+                                  <li><a href='#' class='dropdown-item edit-cluster-btn' data-bs-toggle='modal'>Edit Cluster</a></li>
+                                  <li><a href='#' class='dropdown-item delete-cluster-btn'>Delete Cluster</a></li>
+                              </ul>
+                          </div>
+                        </td>";
+                          echo "</tr>";
+                        }
+                      } else {
+                        echo "<tr><td colspan='8' class='text-center'>No data available</td></tr>";
+                      }
+                      ?>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                  <div class="order-2 order-md-1 mt-3 mt-md-0">
+                    <span>Number of pages: <span id="totalPagesClusters"></span></span>
+                  </div>
+                  <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="clustersPaginationNumbers">
+                      <!-- Pagination buttons generated here -->
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+
+
           </div>
         </div>
       </div>
@@ -799,6 +935,37 @@ include '../officer/header.php';
         })
         .catch(error => {
           console.error('Error fetching truck data:', error);
+        });
+    });
+  });
+</script>
+
+<script>
+  document.querySelectorAll('.edit-cluster-btn').forEach(button => {
+    button.addEventListener('click', function(event) {
+      event.preventDefault();
+      const uniqueClusterId = this.closest('tr').querySelector('td:first-child').textContent; // Assuming UniqueClusterID is in the first cell
+
+      fetch(`fetch_cluster.php?uniqueClusterId=${uniqueClusterId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.error) {
+            document.getElementById('uniqueClusterId').value = data.UniqueClusterID;
+            document.getElementById('clusterCategory').value = data.ClusterCategory;
+            document.getElementById('locationsInCluster').value = data.LocationsInCluster;
+            document.getElementById('tonner').value = data.Tonner;
+            document.getElementById('kmRadius').value = data.KMRADIUS;
+            document.getElementById('fuelPrice').value = data.FuelPrice;
+            document.getElementById('rateAmount').value = data.RateAmount;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editClusterModal'));
+            editModal.show();
+          } else {
+            alert(data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching cluster data:', error);
         });
     });
   });
@@ -1309,8 +1476,171 @@ include '../officer/header.php';
   }
 </script>
 
+<script>
+  let clustersCurrentPage = 1;
+  let clustersRowsPerPage = 5;
+  let allClustersRows = [];
+  let filteredClustersRows = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    allClustersRows = Array.from(document.querySelectorAll('#clustersTable tbody tr'));
+    filteredClustersRows = [...allClustersRows];
+    updateClustersTable();
+  });
+
+  function changeClustersRowsPerPage() {
+    clustersRowsPerPage = parseInt(document.getElementById("clustersRowsPerPage").value);
+    clustersCurrentPage = 1;
+    updateClustersTable();
+  }
+
+  function filterClustersTable() {
+    const input = document.getElementById("clustersSearchBar").value.toLowerCase();
+    filteredClustersRows = allClustersRows.filter(row => row.innerText.toLowerCase().includes(input));
+
+    clustersCurrentPage = 1;
+    updateClustersTable();
+
+    const noDataRow = document.getElementById("noClustersDataRow");
+    if (noDataRow) {
+      noDataRow.style.display = filteredClustersRows.length === 0 ? '' : 'none';
+    }
+    updateClustersPaginationNumbers(Math.ceil(filteredClustersRows.length / clustersRowsPerPage) || 1);
+  }
+
+  function updateClustersTable() {
+    const totalRows = filteredClustersRows.length;
+    const totalPages = Math.ceil(totalRows / clustersRowsPerPage) || 1;
+    document.getElementById("totalPagesClusters").textContent = totalPages;
+
+    const startIndex = (clustersCurrentPage - 1) * clustersRowsPerPage;
+    const endIndex = startIndex + clustersRowsPerPage;
+
+    allClustersRows.forEach(row => row.style.display = 'none');
+    filteredClustersRows.slice(startIndex, endIndex).forEach(row => row.style.display = '');
+    updateClustersPaginationNumbers(totalPages);
+  }
+
+  function updateClustersPaginationNumbers(totalPages) {
+    const paginationNumbers = document.getElementById("clustersPaginationNumbers");
+    paginationNumbers.innerHTML = '';
+
+    const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5;
+    let startPage = Math.max(1, clustersCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    paginationNumbers.appendChild(createPaginationItem('«', clustersCurrentPage === 1, () => {
+      clustersCurrentPage = 1;
+      updateClustersTable();
+    }));
+
+    paginationNumbers.appendChild(createPaginationItem('‹', clustersCurrentPage === 1, () => {
+      if (clustersCurrentPage > 1) {
+        clustersCurrentPage--;
+        updateClustersTable();
+      }
+    }));
+
+    for (let i = startPage; i <= endPage; i++) {
+      const pageItem = document.createElement("li");
+      pageItem.classList.add("page-item");
+      if (i === clustersCurrentPage) {
+        pageItem.classList.add("active");
+      }
+
+      const pageLink = document.createElement("a");
+      pageLink.classList.add("page-link");
+      pageLink.textContent = i;
+      pageLink.addEventListener('click', () => {
+        clustersCurrentPage = i;
+        updateClustersTable();
+      });
+
+      pageItem.appendChild(pageLink);
+      paginationNumbers.appendChild(pageItem);
+    }
+
+    paginationNumbers.appendChild(createPaginationItem('›', clustersCurrentPage === totalPages, () => {
+      if (clustersCurrentPage < totalPages) {
+        clustersCurrentPage++;
+        updateClustersTable();
+      }
+    }));
+
+    paginationNumbers.appendChild(createPaginationItem('»', clustersCurrentPage === totalPages, () => {
+      clustersCurrentPage = totalPages;
+      updateClustersTable();
+    }));
+  }
+
+  function createPaginationItem(label, isDisabled, onClick) {
+    const pageItem = document.createElement("li");
+    pageItem.classList.add("page-item");
+    if (isDisabled) {
+      pageItem.classList.add("disabled");
+    }
+
+    const pageLink = document.createElement("a");
+    pageLink.classList.add("page-link");
+    pageLink.textContent = label;
+    pageLink.style.cursor = isDisabled ? 'default' : 'pointer';
+
+    if (!isDisabled) {
+      pageLink.addEventListener('click', onClick);
+    }
+
+    pageItem.appendChild(pageLink);
+    return pageItem;
+  }
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const theme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-bs-theme", theme);
+    document.body.classList.toggle("dark-mode", theme === "dark");
+
+    document.querySelectorAll(".dark-layout").forEach((element) => {
+      element.addEventListener("click", () => {
+        localStorage.setItem("theme", "dark");
+        document.documentElement.setAttribute("data-bs-theme", "dark");
+        document.body.classList.add("dark-mode");
+      });
+    });
+
+    document.querySelectorAll(".light-layout").forEach((element) => {
+      element.addEventListener("click", () => {
+        localStorage.setItem("theme", "light");
+        document.documentElement.setAttribute("data-bs-theme", "light");
+        document.body.classList.remove("dark-mode");
+      });
+    });
+  });
+</script>
+
 
 <style>
+  .dark-mode .pagination .page-item .page-link {
+    /* Dark background for pagination items */
+    color: #fff;
+    /* Light text for readability */
+  }
+
+  .dark-mode .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    /* Highlight color for active page */
+    color: #fff;
+  }
+
+  .dark-mode .pagination .page-link:hover {
+    background-color: #555;
+    /* Slightly lighter on hover */
+  }
+
   th {
     cursor: pointer;
   }
@@ -1358,7 +1688,7 @@ include '../officer/header.php';
       /* Reduce font size for mobile */
       padding: 0.5rem;
       /* Adjust padding */
-      
+
     }
 
     .pagination .page-item.active .page-link {

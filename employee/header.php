@@ -205,5 +205,60 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
             </div>
           </nav>
           <!-- End Vertical Layout Header -->
+
+          <script>
+            // Load theme preference from localStorage
+            document.addEventListener("DOMContentLoaded", function() {
+              const savedTheme = localStorage.getItem("theme");
+              if (savedTheme) {
+                document.documentElement.setAttribute("data-bs-theme", savedTheme);
+                toggleIcons(savedTheme);
+              }
+
+              // Add click events for theme toggle buttons
+              document.querySelectorAll(".dark-layout").forEach((element) => {
+                element.addEventListener("click", () => {
+                  setTheme("dark");
+                });
+              });
+
+              document.querySelectorAll(".light-layout").forEach((element) => {
+                element.addEventListener("click", () => {
+                  setTheme("light");
+                });
+              });
+            });
+
+            // Function to set theme and save preference in localStorage
+            function setTheme(theme) {
+              document.documentElement.setAttribute("data-bs-theme", theme);
+              localStorage.setItem("theme", theme);
+              toggleIcons(theme);
+            }
+
+            // Toggle icons based on theme
+            function toggleIcons(theme) {
+              const isDark = theme === "dark";
+              document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
+              document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
+            }
+          </script>
+
+          <?php
+          // Start the session if not already started
+          if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+          }
+          ?>
+          <script>
+            <?php if (isset($_SESSION['reset_theme']) && $_SESSION['reset_theme'] === true): ?>
+              // Clear theme preference from localStorage
+              localStorage.removeItem("theme");
+              <?php $_SESSION['reset_theme'] = false; // Reset the flag 
+              ?>
+            <?php endif; ?>
+          </script>
+
+
         </div>
       </header>

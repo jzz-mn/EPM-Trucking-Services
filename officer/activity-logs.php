@@ -338,8 +338,50 @@ include '../includes/db_connection.php';
   }
 </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const theme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-bs-theme", theme);
+    document.body.classList.toggle("dark-mode", theme === "dark");
+
+    document.querySelectorAll(".dark-layout").forEach((element) => {
+      element.addEventListener("click", () => {
+        localStorage.setItem("theme", "dark");
+        document.documentElement.setAttribute("data-bs-theme", "dark");
+        document.body.classList.add("dark-mode");
+      });
+    });
+
+    document.querySelectorAll(".light-layout").forEach((element) => {
+      element.addEventListener("click", () => {
+        localStorage.setItem("theme", "light");
+        document.documentElement.setAttribute("data-bs-theme", "light");
+        document.body.classList.remove("dark-mode");
+      });
+    });
+  });
+</script>
+
 
 <style>
+  /* Dark mode pagination styles */
+  .dark-mode .pagination .page-item .page-link {
+    /* Dark background for pagination items */
+    color: #fff;
+    /* Light text for readability */
+  }
+
+  .dark-mode .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    /* Highlight color for active page */
+    color: #fff;
+  }
+
+  .dark-mode .pagination .page-link:hover {
+    background-color: #555;
+    /* Slightly lighter on hover */
+  }
+
   .sortable {
     cursor: pointer;
   }
