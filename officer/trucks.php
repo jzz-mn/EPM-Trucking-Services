@@ -481,7 +481,105 @@ include '../officer/header.php';
     </div>
 
 
+    <?php
+    $lastClusterIdQuery = "SELECT UniqueClusterID FROM clusters ORDER BY UniqueClusterID DESC LIMIT 1";
+    $lastClusterIdResult = mysqli_query($conn, $lastClusterIdQuery);
+    $lastClusterIdRow = mysqli_fetch_assoc($lastClusterIdResult);
+    $newUniqueClusterID = $lastClusterIdRow ? $lastClusterIdRow['UniqueClusterID'] + 1 : 1;
+    ?>
 
+    <div class="modal fade" id="addClusterModal" tabindex="-1" role="dialog" aria-labelledby="addClusterModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header d-flex align-items-center bg-primary">
+            <h5 class="modal-title text-white fs-4" id="addClusterModalLabel">Add Cluster</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addClusterForm" method="POST" action="add_cluster.php">
+              <!-- Display auto-incremented UniqueClusterID -->
+              <div class="mb-3">
+                <label for="uniqueClusterID" class="form-label">Unique Cluster ID</label>
+                <input type="text" class="form-control" id="uniqueClusterID" name="uniqueClusterID" value="<?php echo $newUniqueClusterID; ?>" readonly>
+              </div>
+
+              <!-- Choose Existing or New Cluster -->
+              <div class="mb-3">
+                <label for="clusterSelection" class="form-label">Choose Cluster Type</label>
+                <select class="form-select" id="clusterSelection" name="clusterSelection" required>
+                  <option value="" disabled selected>Select Cluster Type</option>
+                  <option value="existing">Existing Cluster</option>
+                  <option value="new">New Cluster</option>
+                </select>
+              </div>
+
+              <!-- Existing Cluster Fields -->
+              <div id="existingClusterFields" style="display: none;">
+                <div class="mb-3">
+                  <label for="existingClusterID" class="form-label">Select Existing Cluster ID</label>
+                  <select class="form-select" id="existingClusterID" name="existingClusterID">
+                    <option value="" disabled selected>Select Cluster ID</option>
+                    <?php
+                    // Fetch unique clusters from the database
+                    $clusterQuery = "SELECT DISTINCT ClusterID, ClusterCategory, LocationsInCluster FROM clusters";
+                    $clusterResult = mysqli_query($conn, $clusterQuery);
+                    while ($row = mysqli_fetch_assoc($clusterResult)) {
+                      echo "<option value='{$row['ClusterID']}' data-category='{$row['ClusterCategory']}' data-locations='{$row['LocationsInCluster']}'>
+                  {$row['ClusterID']}
+                  </option>";
+                    }
+                    ?>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="existingClusterCategory" class="form-label">Cluster Category</label>
+                  <input type="text" class="form-control" id="existingClusterCategory" name="existingClusterCategory" readonly>
+                </div>
+                <div class="mb-3">
+                  <label for="existingLocationsInCluster" class="form-label">Locations in Cluster</label>
+                  <input type="text" class="form-control" id="existingLocationsInCluster" name="existingLocationsInCluster" readonly>
+                </div>
+              </div>
+
+              <!-- New Cluster Fields -->
+              <div id="newClusterFields" style="display: none;">
+                <div class="mb-3">
+                  <label for="newClusterCategory" class="form-label">Cluster Category</label>
+                  <input type="text" class="form-control" id="newClusterCategory" name="newClusterCategory">
+                </div>
+                <div class="mb-3">
+                  <label for="newLocationsInCluster" class="form-label">Locations in Cluster</label>
+                  <input type="text" class="form-control" id="newLocationsInCluster" name="newLocationsInCluster">
+                </div>
+              </div>
+
+              <!-- Shared Fields -->
+              <div class="mb-3">
+                <label for="tonner" class="form-label">Tonner</label>
+                <input type="number" class="form-control" id="tonner" name="tonner" required>
+              </div>
+              <div class="mb-3">
+                <label for="kmRadius" class="form-label">KM Radius</label>
+                <input type="number" class="form-control" id="kmRadius" name="kmRadius" required>
+              </div>
+              <div class="mb-3">
+                <label for="fuelPrice" class="form-label">Fuel Price</label>
+                <input type="number" class="form-control" id="fuelPrice" name="fuelPrice" step="0.01" required>
+              </div>
+              <div class="mb-3">
+                <label for="rateAmount" class="form-label">Rate Amount</label>
+                <input type="number" class="form-control" id="rateAmount" name="rateAmount" step="0.01" required>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary ms-2">Add Cluster</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
 
@@ -741,6 +839,12 @@ include '../officer/header.php';
             <!-- Transactions Tab -->
             <div class="tab-pane" id="clusters" role="tabpanel">
               <div class="table-controls mb-3">
+                <div class="invoice-header d-flex align-items-center border-bottom pb-3">
+                  <a href="#" class="btn btn-primary d-flex align-items-center ms-auto" data-bs-toggle="modal"
+                    data-bs-target="#addClusterModal">
+                    <i class="ti ti-users text-white me-1 fs-5"></i> Add Cluster
+                  </a>
+                </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
                     <input type="text" id="clustersSearchBar" class="form-control" placeholder="Search..." onkeyup="filterClustersTable()" />
@@ -826,6 +930,22 @@ include '../officer/header.php';
         </div>
       </div>
     </div>
+
+    <script>
+      document.getElementById('clusterSelection').addEventListener('change', function() {
+        const selection = this.value;
+        document.getElementById('existingClusterFields').style.display = selection === 'existing' ? 'block' : 'none';
+        document.getElementById('newClusterFields').style.display = selection === 'new' ? 'block' : 'none';
+      });
+
+      // Populate category and locations for existing cluster
+      document.getElementById('existingClusterID').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('existingClusterCategory').value = selectedOption.getAttribute('data-category');
+        document.getElementById('existingLocationsInCluster').value = selectedOption.getAttribute('data-locations');
+      });
+    </script>
+
 
     <script>
       // Function to populate the Edit Maintenance modal with the selected record data
