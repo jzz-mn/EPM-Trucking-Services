@@ -128,7 +128,7 @@ include '../includes/db_connection.php';
 
                           <div class="col-12">
                             <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
-                              <button class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
+                              <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                               <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                           </div>
@@ -501,7 +501,7 @@ include '../includes/db_connection.php';
                           echo "<td>" . $row['FuelType'] . "</td>";
                           echo "<td>" . $row['Amount'] . "</td>";
                           echo "<td>";
-                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelModal' onclick='populateFuelEditForm(" . $fuelData . ");'><i class='fs-4 ti ti-edit'></i></a>";
+                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelModal' onclick='populateEditForm(" . $fuelData . ");'><i class='fs-4 ti ti-edit'></i></a>";
                           echo "</td>";
                           echo "</tr>";
                         }
@@ -547,7 +547,7 @@ include '../includes/db_connection.php';
                                   <div class="col-lg-4">
                                     <div class="mb-3">
                                       <label for="updateDate" class="form-label">Date</label>
-                                      <input type="date" class="form-control" id="updateDate" name="updateDate">
+                                      <input type="date" class="form-control" id="updateDate" name="updateDate" required>
                                     </div>
                                   </div>
                                   <!-- Liters -->

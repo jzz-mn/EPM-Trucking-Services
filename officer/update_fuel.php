@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Bind parameters (s = string, d = double, i = integer)
-    mysqli_stmt_bind_param($stmt, "sdddii", $date, $liters, $unitPrice, $fuelType, $amount, $fuelID);
+    mysqli_stmt_bind_param($stmt, "sddssi", $date, $liters, $unitPrice, $fuelType, $amount, $fuelID);
 
     // Execute the statement
     mysqli_stmt_execute($stmt);
