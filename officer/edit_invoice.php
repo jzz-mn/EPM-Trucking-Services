@@ -387,20 +387,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Update Transaction
         if ($_POST['action'] == 'update_transaction') {
             $transactionID = intval($_POST['TransactionID']);
-            $DRno = $_POST['DRno'] ?? '';
-            $OutletName = $_POST['OutletName'] ?? '';
+            $DRno = trim($_POST['DRno']);
+            $OutletName = trim($_POST['OutletName']);
             $Qty = floatval($_POST['Qty']);
             $KGs = floatval($_POST['KGs']);
 
             // Validation
             if (empty($DRno) || empty($OutletName)) {
-                echo json_encode(['success' => false, 'message' => 'DRno and OutletName are required.']);
+                echo json_encode(['success' => false, 'message' => 'DR No and Outlet Name are required.']);
                 exit;
             }
 
             // Begin Transaction
             $conn->begin_transaction();
             try {
+                // Check if DR No already exists (excluding current transaction)
+                $checkDRnoQuery = "SELECT COUNT(*) as count FROM transactions WHERE DRno = ? AND TransactionID != ?";
+                $stmt = $conn->prepare($checkDRnoQuery);
+                $stmt->bind_param("si", $DRno, $transactionID);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $drNoCount = $result->fetch_assoc()['count'];
+                $stmt->close();
+
+                if ($drNoCount > 0) {
+                    throw new Exception('DR No already exists. Please enter a unique DR No.');
+                }
+
                 // Update Transaction
                 $updateTransactionQuery = "
                     UPDATE transactions
@@ -421,6 +434,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $tgResult = $stmt->get_result();
                 $tgRow = $tgResult->fetch_assoc();
                 $transactionGroupID = $tgRow['TransactionGroupID'] ?? null;
+                $stmt->close();
 
                 if ($transactionGroupID) {
                     // Recalculate TotalKGs
@@ -435,6 +449,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $kgResult = $stmt->get_result();
                     $kgRow = $kgResult->fetch_assoc();
                     $TotalKGs = $kgRow['TotalKGs'] ?? 0;
+                    $stmt->close();
 
                     // Update TotalKGs in transactiongroup
                     $updateKGsQuery = "
@@ -447,6 +462,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     if (!$stmt->execute()) {
                         throw new Exception('Failed to update TotalKGs: ' . $stmt->error);
                     }
+                    $stmt->close();
 
                     // Recalculate invoice amounts
                     $billingInvoiceNo = null;
@@ -461,9 +477,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $invoiceResult = $stmt->get_result();
                     $invoiceRow = $invoiceResult->fetch_assoc();
                     $billingInvoiceNo = $invoiceRow['BillingInvoiceNo'] ?? null;
+                    $stmt->close();
 
                     if ($billingInvoiceNo) {
-                        // Fetch the current date range to accurately calculate amounts
+                        // Fetch BillingStartDate and BillingEndDate from invoices
                         $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
                         $stmt = $conn->prepare($fetchDateRangeQuery);
                         $stmt->bind_param("i", $billingInvoiceNo);
@@ -472,6 +489,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $dateRow = $dateResult->fetch_assoc();
                         $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                         $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                        $stmt->close();
 
                         // Recalculate amounts based on the updated date range
                         $amounts = calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate);
@@ -498,6 +516,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         if (!$stmt->execute()) {
                             throw new Exception('Failed to update invoice amounts: ' . $stmt->error);
                         }
+                        $stmt->close();
                     }
                 }
 
@@ -806,9 +825,14 @@ include '../officer/header.php';
                                 <input type="date" class="form-control" id="T_TransactionDate" name="TransactionDate" readonly>
                             </div>
 
+                            <!-- DR No Input with Validation Feedback -->
                             <div class="mb-3">
                                 <label for="T_DRno" class="form-label">DR No</label>
                                 <input type="text" class="form-control" id="T_DRno" name="DRno" required>
+                                <!-- Warning message placeholder -->
+                                <div id="drNoWarning" class="invalid-feedback">
+                                    DR No already exists. Please enter a unique DR No.
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -836,7 +860,6 @@ include '../officer/header.php';
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -850,325 +873,413 @@ $conn->close();
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    // Handle Invoice Form Submission
-    $('#editInvoiceForm').on('submit', function(e) {
-        e.preventDefault();
-        let formData = $(this).serialize();
+    $(document).ready(function() {
+        // Handle Invoice Form Submission
+        $('#editInvoiceForm').on('submit', function(e) {
+            e.preventDefault();
+            let formData = $(this).serialize();
 
-        // Disable the button and show loading
-        $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
+            // Disable the button and show loading
+            $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
 
-        $.ajax({
-            url: 'edit_invoice.php',
-            type: 'POST',
-            data: formData + '&action=update_invoice',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showAlert('success', response.message);
-                    // Update calculated fields
-                    $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
-                    $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
-                    $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
-                    $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
-                    $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
-                    $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
-                    $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
+            $.ajax({
+                url: 'edit_invoice.php',
+                type: 'POST',
+                data: formData + '&action=update_invoice',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        // Update calculated fields
+                        $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
+                        $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
+                        $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
+                        $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
+                        $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
+                        $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
+                        $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
 
-                    // Fetch and update Transaction Groups
-                    fetchTransactionGroups();
-                } else {
-                    showAlert('danger', response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                showAlert('danger', 'An error occurred while updating the invoice.');
-            },
-            complete: function() {
-                // Re-enable the button and reset text
-                $('#editInvoiceForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
-            }
-        });
-    });
-
-    // Function to show alerts
-    function showAlert(type, message) {
-        let alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        $('#alert-container').html(alertHtml);
-    }
-
-    // Function to fetch and update Transaction Groups
-    function fetchTransactionGroups() {
-        let billingInvoiceNo = $('#BillingInvoiceNo').val();
-        let billingStartDate = $('#BillingStartDate').val();
-        let billingEndDate = $('#BillingEndDate').val();
-
-        // Show loading indicator
-        $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
-
-        $.ajax({
-            url: 'edit_invoice.php',
-            type: 'POST',
-            data: {
-                action: 'fetch_transaction_groups',
-                BillingInvoiceNo: billingInvoiceNo,
-                BillingStartDate: billingStartDate,
-                BillingEndDate: billingEndDate
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    // Update calculated fields
-                    $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
-                    $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
-                    $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
-                    $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
-                    $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
-                    $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
-                    $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
-
-                    // Update Transaction Groups Table
-                    let tbody = $('#transactionGroupsTable tbody');
-                    tbody.empty();
-
-                    if (response.transactionGroups.length > 0) {
-                        response.transactionGroups.forEach(function(tg) {
-                            let row = `
-                                <tr id="tg-${tg.TransactionGroupID}">
-                                    <td>${tg.TransactionGroupID}</td>
-                                    <td>${tg.TruckID}</td>
-                                    <td>${tg.Date}</td>
-                                    <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.append(row);
-                        });
+                        // Fetch and update Transaction Groups
+                        fetchTransactionGroups();
                     } else {
-                        tbody.append('<tr><td colspan="8" class="text-center">No Transaction Groups found for the selected date range.</td></tr>');
+                        showAlert('danger', response.message);
                     }
-                } else {
-                    showAlert('danger', response.message);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while updating the invoice.');
+                },
+                complete: function() {
+                    // Re-enable the button and reset text
+                    $('#editInvoiceForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                showAlert('danger', 'An error occurred while fetching transaction groups.');
-            }
+            });
         });
-    }
 
-    // Event listeners for real-time updates when Billing Start Date or End Date changes
-    $('#BillingStartDate, #BillingEndDate').on('change', function() {
-        // Optionally, you can add validation here
-        fetchTransactionGroups();
-    });
+        // Function to show alerts
+        function showAlert(type, message) {
+            let alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            $('#alert-container').html(alertHtml);
+        }
 
-    // Handle Edit Transaction Group Button Click (Updated)
-    $(document).on('click', '.edit-tg-btn', function() {
-        let tgID = $(this).data('tg-id');
+        // Function to fetch and update Transaction Groups
+        function fetchTransactionGroups() {
+            let billingInvoiceNo = $('#BillingInvoiceNo').val();
+            let billingStartDate = $('#BillingStartDate').val();
+            let billingEndDate = $('#BillingEndDate').val();
 
-        // Show a loading state in the modal
-        $('#editTGModal').find('form')[0].reset();
-        $('#TG_RateAmount').val('0.00');
-        $('#TG_Amount').val('0.00');
-        $('#TG_TotalKGs').val('0.00');
-        $('#transactionsTable tbody').html('<tr><td colspan="7" class="text-center">Loading...</td></tr>');
+            // Show loading indicator
+            $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
 
-        // Fetch Transaction Group Details via AJAX
-        $.ajax({
-            url: 'fetch_transaction_group.php',
-            type: 'POST',
-            data: { TransactionGroupID: tgID },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    let tg = response.transactionGroup;
-                    let transactions = response.transactions;
+            $.ajax({
+                url: 'edit_invoice.php',
+                type: 'POST',
+                data: {
+                    action: 'fetch_transaction_groups',
+                    BillingInvoiceNo: billingInvoiceNo,
+                    BillingStartDate: billingStartDate,
+                    BillingEndDate: billingEndDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Update calculated fields
+                        $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
+                        $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
+                        $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
+                        $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
+                        $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
+                        $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
+                        $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
 
-                    // Populate the form fields
-                    $('#TransactionGroupID').val(tg.TransactionGroupID);
-                    $('#TG_TruckID').val(tg.TruckID);
-                    $('#TG_Date').val(tg.Date);
-                    $('#TG_TollFeeAmount').val(parseFloat(tg.TollFeeAmount).toFixed(2));
-                    $('#TG_RateAmount').val(parseFloat(tg.RateAmount).toFixed(2));
-                    $('#TG_Amount').val(parseFloat(tg.Amount).toFixed(2));
-                    $('#TG_TotalKGs').val(parseFloat(tg.TotalKGs).toFixed(2));
+                        // Update Transaction Groups Table
+                        let tbody = $('#transactionGroupsTable tbody');
+                        tbody.empty();
 
-                    // Populate Transactions Table
-                    let tbody = $('#transactionsTable tbody');
-                    tbody.empty();
-
-                    if (transactions.length > 0) {
-                        transactions.forEach(function(tx) {
-                            let tr = `
-                                <tr id="tx-${tx.TransactionID}">
-                                    <td>${tx.TransactionID}</td>
-                                    <td>${tx.TransactionDate}</td>
-                                    <td>${tx.DRno}</td>
-                                    <td>${tx.OutletName}</td>
-                                    <td>${tx.Qty}</td>
-                                    <td>${tx.KGs}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.append(tr);
-                        });
+                        if (response.transactionGroups.length > 0) {
+                            response.transactionGroups.forEach(function(tg) {
+                                let row = `
+                                    <tr id="tg-${tg.TransactionGroupID}">
+                                        <td>${tg.TransactionGroupID}</td>
+                                        <td>${tg.TruckID}</td>
+                                        <td>${tg.Date}</td>
+                                        <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
+                                        </td>
+                                    </tr>
+                                `;
+                                tbody.append(row);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="8" class="text-center">No Transaction Groups found for the selected date range.</td></tr>');
+                        }
                     } else {
-                        tbody.append('<tr><td colspan="7" class="text-center">No Transactions found for this Transaction Group.</td></tr>');
+                        showAlert('danger', response.message);
                     }
-
-                    // Show the modal
-                    $('#editTGModal').modal('show');
-                } else {
-                    showAlert('danger', response.message);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while fetching transaction groups.');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                showAlert('danger', 'An error occurred while fetching transaction group details.');
+            });
+        }
+
+        // Event listeners for real-time updates when Billing Start Date or End Date changes
+        $('#BillingStartDate, #BillingEndDate').on('change', function() {
+            // Optionally, you can add validation here
+            fetchTransactionGroups();
+        });
+
+        // Handle Edit Transaction Group Button Click (Updated)
+        $(document).on('click', '.edit-tg-btn', function() {
+            let tgID = $(this).data('tg-id');
+
+            // Show a loading state in the modal
+            $('#editTGModal').find('form')[0].reset();
+            $('#TG_RateAmount').val('0.00');
+            $('#TG_Amount').val('0.00');
+            $('#TG_TotalKGs').val('0.00');
+            $('#transactionsTable tbody').html('<tr><td colspan="7" class="text-center">Loading...</td></tr>');
+
+            // Fetch Transaction Group Details via AJAX
+            $.ajax({
+                url: 'fetch_transaction_group.php',
+                type: 'POST',
+                data: {
+                    TransactionGroupID: tgID
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        let tg = response.transactionGroup;
+                        let transactions = response.transactions;
+
+                        // Populate the form fields
+                        $('#TransactionGroupID').val(tg.TransactionGroupID);
+                        $('#TG_TruckID').val(tg.TruckID);
+                        $('#TG_Date').val(tg.Date);
+                        $('#TG_TollFeeAmount').val(parseFloat(tg.TollFeeAmount).toFixed(2));
+                        $('#TG_RateAmount').val(parseFloat(tg.RateAmount).toFixed(2));
+                        $('#TG_Amount').val(parseFloat(tg.Amount).toFixed(2));
+                        $('#TG_TotalKGs').val(parseFloat(tg.TotalKGs).toFixed(2));
+
+                        // Populate Transactions Table
+                        let tbody = $('#transactionsTable tbody');
+                        tbody.empty();
+
+                        if (transactions.length > 0) {
+                            transactions.forEach(function(tx) {
+                                let tr = `
+                                    <tr id="tx-${tx.TransactionID}">
+                                        <td>${tx.TransactionID}</td>
+                                        <td>${tx.TransactionDate}</td>
+                                        <td>${tx.DRno}</td>
+                                        <td>${tx.OutletName}</td>
+                                        <td>${tx.Qty}</td>
+                                        <td>${tx.KGs}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
+                                        </td>
+                                    </tr>
+                                `;
+                                tbody.append(tr);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="7" class="text-center">No Transactions found for this Transaction Group.</td></tr>');
+                        }
+
+                        // Show the modal
+                        $('#editTGModal').modal('show');
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while fetching transaction group details.');
+                }
+            });
+        });
+
+        // Handle Transaction Group Form Submission
+        $('#editTGForm').on('submit', function(e) {
+            e.preventDefault();
+            let formData = $(this).serialize();
+
+            // Disable the button and show loading
+            $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: 'edit_invoice.php',
+                type: 'POST',
+                data: formData + '&action=update_transaction_group',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        let tgID = $('#TransactionGroupID').val();
+                        // Update the table row
+                        let row = $('#tg-' + tgID);
+                        row.find('td').eq(1).text($('#TG_TruckID').val());
+                        row.find('td').eq(2).text($('#TG_Date').val());
+                        row.find('td').eq(3).text(parseFloat($('#TG_TollFeeAmount').val()).toFixed(2));
+                        row.find('td').eq(4).text(parseFloat($('#TG_RateAmount').val()).toFixed(2));
+                        row.find('td').eq(5).text(parseFloat(response.Amount).toFixed(2));
+                        row.find('td').eq(6).text(parseFloat(response.TotalKGs).toFixed(2));
+
+                        // Fetch and update Transaction Groups to refresh totals
+                        fetchTransactionGroups();
+
+                        // Close the modal
+                        $('#editTGModal').modal('hide');
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while updating the transaction group.');
+                },
+                complete: function() {
+                    // Re-enable the button and reset text
+                    $('#editTGForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
+                }
+            });
+        });
+
+        // Handle Edit Transaction Button Click
+        $(document).on('click', '.edit-tx-btn', function() {
+            let txID = $(this).data('tx-id');
+
+            // Fetch Transaction Details from the table row
+            let row = $('#tx-' + txID);
+            let TransactionDate = row.find('td').eq(1).text();
+            let DRno = row.find('td').eq(2).text();
+            let OutletName = row.find('td').eq(3).text();
+            let Qty = row.find('td').eq(4).text();
+            let KGs = row.find('td').eq(5).text();
+            let TransactionGroupID = $('#TransactionGroupID').val();
+
+            // Populate the modal fields
+            $('#TransactionID').val(txID);
+            $('#TransactionGroupID_Tx').val(TransactionGroupID);
+            $('#T_TransactionDate').val(TransactionDate);
+            $('#T_DRno').val(DRno);
+            $('#T_OutletName').val(OutletName);
+            $('#T_Qty').val(Qty);
+            $('#T_KGs').val(KGs);
+
+            // Reset validation states
+            $('#T_DRno').removeClass('is-invalid');
+            $('#drNoWarning').hide();
+
+            // Show the modal
+            $('#editTransactionModal').modal('show');
+        });
+
+        // Debounce function to limit the rate of AJAX calls
+        function debounce(func, delay) {
+            let debounceTimer;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(context, args), delay);
             }
+        }
+
+        // Function to validate DR No
+        function validateDRNo(drNo, transaction_id, callback) {
+            $.ajax({
+                url: 'validate_dr_no.php',
+                type: 'GET',
+                data: {
+                    dr_no: drNo,
+                    transaction_id: transaction_id
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.error) {
+                        console.error('Validation Error:', response.error);
+                        callback(false);
+                    } else {
+                        callback(response.exists);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error validating DR No:', error);
+                    callback(false); // Assume non-existing on error
+                }
+            });
+        }
+
+        // Event listener for DR No input field with debounce
+        $('#T_DRno').on('input', debounce(function() {
+            let drNo = $(this).val().trim();
+            let $drNoInput = $(this);
+            let $warning = $('#drNoWarning');
+            let transaction_id = $('#TransactionID').val();
+
+            if (drNo === '') {
+                // If DR No is empty, remove validation states
+                $drNoInput.removeClass('is-invalid');
+                $warning.text('DR No is required.').hide();
+                return;
+            }
+
+            // Validate DR No
+            validateDRNo(drNo, transaction_id, function(exists) {
+                if (exists) {
+                    // DR No exists - show error
+                    $drNoInput.addClass('is-invalid');
+                    $warning.text('DR No already exists. Please enter a unique DR No.').show();
+                } else {
+                    // DR No does not exist - remove error
+                    $drNoInput.removeClass('is-invalid');
+                    $warning.hide();
+                }
+            });
+        }, 500)); // 500ms debounce delay
+
+        // Handle Transaction Form Submission with DR No Validation
+        $('#editTransactionForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let drNo = $('#T_DRno').val().trim();
+            let isInvalid = $('#T_DRno').hasClass('is-invalid');
+
+            if (drNo === '') {
+                // If DR No is empty, show validation error
+                $('#T_DRno').addClass('is-invalid');
+                $('#drNoWarning').text('DR No is required.').show();
+                return;
+            }
+
+            if (isInvalid) {
+                // If DR No is invalid, prevent form submission
+                $('#drNoWarning').text('DR No already exists. Please enter a unique DR No.').show();
+                return;
+            }
+
+            // Proceed with form submission via AJAX
+            let formData = $(this).serialize();
+
+            // Disable the button and show loading
+            $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: 'edit_invoice.php',
+                type: 'POST',
+                data: formData + '&action=update_transaction',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        let txID = $('#TransactionID').val();
+                        // Update the transaction row
+                        let row = $('#tx-' + txID);
+                        row.find('td').eq(2).text($('#T_DRno').val());
+                        row.find('td').eq(3).text($('#T_OutletName').val());
+                        row.find('td').eq(4).text(parseFloat($('#T_Qty').val()).toFixed(2));
+                        row.find('td').eq(5).text(parseFloat($('#T_KGs').val()).toFixed(2));
+
+                        // Fetch and update Transaction Groups to refresh totals
+                        fetchTransactionGroups();
+
+                        // Close the modal
+                        $('#editTransactionModal').modal('hide');
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while updating the transaction.');
+                },
+                complete: function() {
+                    // Re-enable the button and reset text
+                    $('#editTransactionForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
+                }
+            });
+        });
+
+        // Update Amount fields in real-time when TollFeeAmount changes in Transaction Group Modal
+        $('#TG_TollFeeAmount').on('input', function() {
+            let TollFeeAmount = parseFloat($(this).val()) || 0;
+            let RateAmount = parseFloat($('#TG_RateAmount').val()) || 0;
+            let Amount = TollFeeAmount + RateAmount;
+            $('#TG_Amount').val(Amount.toFixed(2));
         });
     });
-
-    // Handle Transaction Group Form Submission
-    $('#editTGForm').on('submit', function(e) {
-        e.preventDefault();
-        let formData = $(this).serialize();
-
-        // Disable the button and show loading
-        $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
-
-        $.ajax({
-            url: 'edit_invoice.php',
-            type: 'POST',
-            data: formData + '&action=update_transaction_group',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showAlert('success', response.message);
-                    let tgID = $('#TransactionGroupID').val();
-                    // Update the table row
-                    let row = $('#tg-' + tgID);
-                    row.find('td').eq(1).text($('#TG_TruckID').val());
-                    row.find('td').eq(2).text($('#TG_Date').val());
-                    row.find('td').eq(3).text(parseFloat($('#TG_TollFeeAmount').val()).toFixed(2));
-                    row.find('td').eq(4).text(parseFloat($('#TG_RateAmount').val()).toFixed(2));
-                    row.find('td').eq(5).text(parseFloat(response.Amount).toFixed(2));
-                    row.find('td').eq(6).text(parseFloat(response.TotalKGs).toFixed(2));
-
-                    // Fetch and update Transaction Groups to refresh totals
-                    fetchTransactionGroups();
-
-                    // Close the modal
-                    $('#editTGModal').modal('hide');
-                } else {
-                    showAlert('danger', response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                showAlert('danger', 'An error occurred while updating the transaction group.');
-            },
-            complete: function() {
-                // Re-enable the button and reset text
-                $('#editTGForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
-            }
-        });
-    });
-
-    // Handle Edit Transaction Button Click
-    $(document).on('click', '.edit-tx-btn', function() {
-        let txID = $(this).data('tx-id');
-
-        // Fetch Transaction Details from the table row
-        let row = $('#tx-' + txID);
-        let TransactionDate = row.find('td').eq(1).text();
-        let DRno = row.find('td').eq(2).text();
-        let OutletName = row.find('td').eq(3).text();
-        let Qty = row.find('td').eq(4).text();
-        let KGs = row.find('td').eq(5).text();
-        let TransactionGroupID = $('#TransactionGroupID').val();
-
-        // Populate the modal fields
-        $('#TransactionID').val(txID);
-        $('#TransactionGroupID_Tx').val(TransactionGroupID);
-        $('#T_TransactionDate').val(TransactionDate);
-        $('#T_DRno').val(DRno);
-        $('#T_OutletName').val(OutletName);
-        $('#T_Qty').val(Qty);
-        $('#T_KGs').val(KGs);
-
-        // Show the modal
-        $('#editTransactionModal').modal('show');
-    });
-
-    // Handle Transaction Form Submission
-    $('#editTransactionForm').on('submit', function(e) {
-        e.preventDefault();
-        let formData = $(this).serialize();
-
-        // Disable the button and show loading
-        $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
-
-        $.ajax({
-            url: 'edit_invoice.php',
-            type: 'POST',
-            data: formData + '&action=update_transaction',
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showAlert('success', response.message);
-                    let txID = $('#TransactionID').val();
-                    // Update the transaction row
-                    let row = $('#tx-' + txID);
-                    row.find('td').eq(2).text($('#T_DRno').val());
-                    row.find('td').eq(3).text($('#T_OutletName').val());
-                    row.find('td').eq(4).text(parseFloat($('#T_Qty').val()).toFixed(2));
-                    row.find('td').eq(5).text(parseFloat($('#T_KGs').val()).toFixed(2));
-
-                    // Fetch and update Transaction Groups to refresh totals
-                    fetchTransactionGroups();
-
-                    // Close the modal
-                    $('#editTransactionModal').modal('hide');
-                } else {
-                    showAlert('danger', response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-                showAlert('danger', 'An error occurred while updating the transaction.');
-            },
-            complete: function() {
-                // Re-enable the button and reset text
-                $('#editTransactionForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
-            }
-        });
-    });
-
-    // Update Amount fields in real-time when TollFeeAmount changes in Transaction Group Modal
-    $('#TG_TollFeeAmount').on('input', function() {
-        let TollFeeAmount = parseFloat($(this).val()) || 0;
-        let RateAmount = parseFloat($('#TG_RateAmount').val()) || 0;
-        let Amount = TollFeeAmount + RateAmount;
-        $('#TG_Amount').val(Amount.toFixed(2));
-    });
-});
 </script>
 
 <style>
@@ -1182,7 +1293,8 @@ $(document).ready(function() {
         margin-right: 5px;
     }
 
-    .table th, .table td {
+    .table th,
+    .table td {
         vertical-align: middle;
     }
 

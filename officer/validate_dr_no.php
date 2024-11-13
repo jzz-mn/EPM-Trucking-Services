@@ -1,12 +1,31 @@
 <?php
 include '../includes/db_connection.php';
 
-if (isset($_GET['dr_no'])) {
-    $dr_no = intval($_GET['dr_no']);
+// Set header to return JSON
+header('Content-Type: application/json');
 
-    // Prepare and execute the SQL statement safely
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM transactions WHERE DRno = ?");
-    $stmt->bind_param("i", $dr_no);
+if (isset($_GET['dr_no'])) {
+    $dr_no = trim($_GET['dr_no']);
+    $transaction_id = isset($_GET['transaction_id']) ? intval($_GET['transaction_id']) : 0;
+
+    if ($transaction_id > 0) {
+        // Prepare and execute the SQL statement safely, excluding the current transaction
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM transactions WHERE DRno = ? AND TransactionID != ?");
+        if ($stmt === false) {
+            echo json_encode(['exists' => false, 'error' => 'Failed to prepare statement.']);
+            exit();
+        }
+        $stmt->bind_param("si", $dr_no, $transaction_id);
+    } else {
+        // If no transaction_id is provided, check for any existing DRno
+        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM transactions WHERE DRno = ?");
+        if ($stmt === false) {
+            echo json_encode(['exists' => false, 'error' => 'Failed to prepare statement.']);
+            exit();
+        }
+        $stmt->bind_param("s", $dr_no);
+    }
+
     $stmt->execute();
     $result = $stmt->get_result();
     $count = $result->fetch_assoc()['count'];
@@ -18,7 +37,7 @@ if (isset($_GET['dr_no'])) {
         echo json_encode(['exists' => false]);
     }
 } else {
-    echo json_encode(['exists' => false]);
+    echo json_encode(['exists' => false, 'error' => 'DR No not provided.']);
 }
 
 $conn->close();
