@@ -447,6 +447,10 @@ include '../officer/header.php';
             <form id="editClusterForm" method="POST" action="update_cluster.php">
               <input type="hidden" id="uniqueClusterId" name="uniqueClusterId">
               <div class="mb-3">
+                <label for="clusterID" class="form-label">Cluster ID</label>
+                <input type="text" class="form-control" id="clusterID" name="clusterID" required>
+              </div>
+              <div class="mb-3">
                 <label for="clusterCategory" class="form-label">Cluster Category</label>
                 <input type="text" class="form-control" id="clusterCategory" name="clusterCategory" required>
               </div>
@@ -482,10 +486,29 @@ include '../officer/header.php';
 
 
     <?php
+    // Fetch the latest UniqueClusterID for the new cluster modal
     $lastClusterIdQuery = "SELECT UniqueClusterID FROM clusters ORDER BY UniqueClusterID DESC LIMIT 1";
     $lastClusterIdResult = mysqli_query($conn, $lastClusterIdQuery);
     $lastClusterIdRow = mysqli_fetch_assoc($lastClusterIdResult);
     $newUniqueClusterID = $lastClusterIdRow ? $lastClusterIdRow['UniqueClusterID'] + 1 : 1;
+
+    // Check if we need to fetch the next ClusterID for AJAX call
+    if (isset($_GET['action']) && $_GET['action'] == 'getNextClusterID') {
+      // Query to get the maximum ClusterID from the database and increment it
+      $result = mysqli_query($conn, "SELECT MAX(ClusterID) AS maxID FROM clusters");
+      if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        $nextClusterID = $row['maxID'] + 1;
+
+        // Return the next ClusterID as JSON
+        echo json_encode(['success' => true, 'nextClusterID' => $nextClusterID]);
+      } else {
+        echo json_encode(['success' => false, 'error' => 'Failed to retrieve ClusterID']);
+      }
+      mysqli_close($conn);
+      exit();
+    }
+    ?>
     ?>
 
     <div class="modal fade" id="addClusterModal" tabindex="-1" role="dialog" aria-labelledby="addClusterModalLabel" aria-hidden="true">
@@ -516,24 +539,24 @@ include '../officer/header.php';
               <!-- Existing Cluster Fields -->
               <div id="existingClusterFields" style="display: none;">
                 <div class="mb-3">
-                  <label for="existingClusterID" class="form-label">Select Existing Cluster ID</label>
-                  <select class="form-select" id="existingClusterID" name="existingClusterID">
-                    <option value="" disabled selected>Select Cluster ID</option>
+                  <label for="existingClusterCategory" class="form-label">Select Existing Cluster Category</label>
+                  <select class="form-select" id="existingClusterCategory" name="existingClusterCategory">
+                    <option value="" disabled selected>Select Cluster Category</option>
                     <?php
                     // Fetch unique clusters from the database
                     $clusterQuery = "SELECT DISTINCT ClusterID, ClusterCategory, LocationsInCluster FROM clusters";
                     $clusterResult = mysqli_query($conn, $clusterQuery);
                     while ($row = mysqli_fetch_assoc($clusterResult)) {
-                      echo "<option value='{$row['ClusterID']}' data-category='{$row['ClusterCategory']}' data-locations='{$row['LocationsInCluster']}'>
-                  {$row['ClusterID']}
+                      echo "<option value='{$row['ClusterCategory']}' data-clusterID='{$row['ClusterID']}' data-locations='{$row['LocationsInCluster']}'>
+                  {$row['ClusterCategory']}
                   </option>";
                     }
                     ?>
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label for="existingClusterCategory" class="form-label">Cluster Category</label>
-                  <input type="text" class="form-control" id="existingClusterCategory" name="existingClusterCategory" readonly>
+                  <label for="existingClusterID" class="form-label">Cluster ID</label>
+                  <input type="text" class="form-control" id="existingClusterID" name="existingClusterID" readonly>
                 </div>
                 <div class="mb-3">
                   <label for="existingLocationsInCluster" class="form-label">Locations in Cluster</label>
@@ -543,6 +566,10 @@ include '../officer/header.php';
 
               <!-- New Cluster Fields -->
               <div id="newClusterFields" style="display: none;">
+                <div class="mb-3">
+                  <label for="newClusterID" class="form-label">Cluster ID</label>
+                  <input type="text" class="form-control" id="newClusterID" name="newClusterID" readonly>
+                </div>
                 <div class="mb-3">
                   <label for="newClusterCategory" class="form-label">Cluster Category</label>
                   <input type="text" class="form-control" id="newClusterCategory" name="newClusterCategory">
@@ -932,19 +959,41 @@ include '../officer/header.php';
     </div>
 
     <script>
+      // Handle cluster selection changes
       document.getElementById('clusterSelection').addEventListener('change', function() {
         const selection = this.value;
         document.getElementById('existingClusterFields').style.display = selection === 'existing' ? 'block' : 'none';
         document.getElementById('newClusterFields').style.display = selection === 'new' ? 'block' : 'none';
+
+        // Fetch new ClusterID if 'new' is selected
+        if (selection === 'new') {
+          fetchNewClusterID();
+        }
       });
 
-      // Populate category and locations for existing cluster
-      document.getElementById('existingClusterID').addEventListener('change', function() {
+      // Populate category and locations for existing clusters
+      document.getElementById('existingClusterCategory').addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        document.getElementById('existingClusterCategory').value = selectedOption.getAttribute('data-category');
+        document.getElementById('existingClusterID').value = selectedOption.getAttribute('data-clusterID');
         document.getElementById('existingLocationsInCluster').value = selectedOption.getAttribute('data-locations');
       });
+
+      // Fetch the next available ClusterID for a new cluster
+      function fetchNewClusterID() {
+        fetch('trucks.php?action=getNextClusterID')
+          .then(response => response.json())
+          .then(data => {
+            console.log("Fetched data:", data); // Debugging: log the response
+            if (data.success) {
+              document.getElementById('newClusterID').value = data.nextClusterID;
+            } else {
+              console.error('Failed to fetch the new ClusterID');
+            }
+          })
+          .catch(error => console.error('Error fetching ClusterID:', error));
+      }
     </script>
+
 
 
     <script>
@@ -1071,6 +1120,7 @@ include '../officer/header.php';
         .then(data => {
           if (!data.error) {
             document.getElementById('uniqueClusterId').value = data.UniqueClusterID;
+            document.getElementById('clusterID').value = data.UniqueClusterID;
             document.getElementById('clusterCategory').value = data.ClusterCategory;
             document.getElementById('locationsInCluster').value = data.LocationsInCluster;
             document.getElementById('tonner').value = data.Tonner;
