@@ -3,23 +3,39 @@ include '../includes/db_connection.php';
 
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $outlet_name = $_POST['outlet_name'] ?? '';
-    $fuel_price = $_POST['fuel_price'] ?? 0;
-    $tonner = $_POST['tonner'] ?? 0;
+$response = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $outlet_name = trim($_POST['outlet_name'] ?? '');
+    $fuel_price = floatval($_POST['fuel_price'] ?? 0);
+    $tonner = floatval($_POST['tonner'] ?? 0);
+
+    if (empty($outlet_name) || $fuel_price <= 0 || $tonner <= 0) {
+        $response['success'] = false;
+        $response['message'] = 'Outlet Name, Fuel Price, and Tonner are required and must be positive.';
+        echo json_encode($response);
+        exit();
+    }
 
     // Retrieve ClusterID using the OutletName
-    $customer_query = "SELECT CustomerID, ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?)";
+    $customer_query = "SELECT ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?) LIMIT 1";
     $stmt = $conn->prepare($customer_query);
     $stmt->bind_param("s", $outlet_name);
-    $stmt->execute();
-    $customer_result = $stmt->get_result();
-
-    if ($customer_result->num_rows > 0) {
-        $customer = $customer_result->fetch_assoc();
-        $cluster_id = $customer['ClusterID'];
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $customer = $result->fetch_assoc();
+            $cluster_id = $customer['ClusterID'];
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Outlet Name '{$outlet_name}' not found.";
+            echo json_encode($response);
+            exit();
+        }
     } else {
-        echo json_encode(['success' => false, 'message' => "The Outlet Name '{$outlet_name}' does not exist in the Customers table."]);
+        $response['success'] = false;
+        $response['message'] = "Failed to execute customer query: " . $stmt->error;
+        echo json_encode($response);
         exit();
     }
     $stmt->close();
@@ -30,24 +46,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         AND FuelPrice = ? 
                         AND Tonner = ?";
     $stmt = $conn->prepare($cluster_query);
-    if (!$stmt) {
-        echo json_encode(['success' => false, 'message' => "Database error: " . $conn->error]);
-        exit();
-    }
     $stmt->bind_param("idd", $cluster_id, $fuel_price, $tonner);
-    $stmt->execute();
-    $cluster_result = $stmt->get_result();
-
-    if ($cluster_result->num_rows > 0) {
-        $cluster = $cluster_result->fetch_assoc();
-        $rate_amount = $cluster['RateAmount'];
-        echo json_encode(['success' => true, 'cluster_id' => $cluster_id, 'rate_amount' => $rate_amount]);
+    if ($stmt->execute()) {
+        $cluster_result = $stmt->get_result();
+        if ($cluster_result->num_rows > 0) {
+            $cluster = $cluster_result->fetch_assoc();
+            $rate_amount = $cluster['RateAmount'];
+            $response['success'] = true;
+            $response['rate_amount'] = $rate_amount;
+        } else {
+            $response['success'] = false;
+            $response['message'] = "No RateAmount found for ClusterID '{$cluster_id}', FuelPrice '{$fuel_price}', and Tonner '{$tonner}'.";
+        }
     } else {
-        echo json_encode(['success' => false, 'message' => "No RateAmount found for ClusterID '{$cluster_id}', FuelPrice '{$fuel_price}', and Tonner '{$tonner}'"]);
+        $response['success'] = false;
+        $response['message'] = "Failed to execute cluster query: " . $stmt->error;
     }
     $stmt->close();
 } else {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+    $response['success'] = false;
+    $response['message'] = 'Invalid request method.';
 }
+
+echo json_encode($response);
 $conn->close();
 ?>

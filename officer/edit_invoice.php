@@ -276,39 +276,141 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 $stmt->close();
 
-                // Recalculate RateAmount (Assuming RateAmount is a fixed rate based on TruckID or other logic)
-                // For example, let's say RateAmount is determined by TruckID
-                // Replace this with your actual logic
-                $rateQuery = "SELECT Rate FROM trucksinfo WHERE TruckID = ?";
-                $stmtRate = $conn->prepare($rateQuery);
-                if (!$stmtRate) {
-                    throw new Exception('Failed to prepare rate fetch query: ' . $conn->error);
-                }
-                $stmtRate->bind_param("i", $TruckID);
-                $stmtRate->execute();
-                $rateResult = $stmtRate->get_result();
-                $rateRow = $rateResult->fetch_assoc();
-                $RateAmount = $rateRow['Rate'] ?? 0;
-                $stmtRate->close();
+                // Recalculate RateAmount and FuelPrice by calling get_fuel_price_and_rate.php
+                // Since PHP cannot make HTTP requests to itself easily, we'll implement the logic directly here
+                // Alternatively, you can use cURL or other methods to call the PHP script, but it's more efficient to handle it here
 
-                // Update RateAmount in Transaction Group
+                // Fetch the first transaction's Outlet Name and other necessary data
+                $outletQuery = "
+                    SELECT t.OutletName, tg.ExpenseID, tg.TotalKGs
+                    FROM transactions t
+                    JOIN transactiongroup tg ON t.TransactionGroupID = tg.TransactionGroupID
+                    WHERE tg.TransactionGroupID = ?
+                    LIMIT 1
+                ";
+                $stmt = $conn->prepare($outletQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare Outlet Name fetch query.');
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows == 0) {
+                    throw new Exception('No transactions found for this Transaction Group.');
+                }
+
+                $row = $result->fetch_assoc();
+                $outletName = $row['OutletName'];
+                $expenseID = $row['ExpenseID'];
+                $totalKGs = floatval($row['TotalKGs']);
+                $stmt->close();
+
+                // Round TotalKGs to determine Tonner
+                $rounded_total_kgs = 0;
+                if ($totalKGs > 0) {
+                    if ($totalKGs <= 1199) {
+                        $rounded_total_kgs = 1000;
+                    } else if ($totalKGs <= 4199) {
+                        $rounded_total_kgs = ceil($totalKGs / 1000) * 1000;
+                        if ($rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
+                            $rounded_total_kgs = 4000;
+                        }
+                    } else {
+                        $rounded_total_kgs = 4000;
+                    }
+                }
+
+                // Fetch FuelID from expenses table using ExpenseID
+                $fuelIDQuery = "SELECT FuelID FROM expenses WHERE ExpenseID = ?";
+                $stmt = $conn->prepare($fuelIDQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare FuelID fetch query.');
+                }
+                $stmt->bind_param("i", $expenseID);
+                $stmt->execute();
+                $fuelIDResult = $stmt->get_result();
+
+                if ($fuelIDResult->num_rows == 0) {
+                    throw new Exception('No FuelID found for the given ExpenseID.');
+                }
+
+                $fuelRow = $fuelIDResult->fetch_assoc();
+                $fuelID = $fuelRow['FuelID'];
+                $stmt->close();
+
+                // Fetch FuelPrice from fuel table using FuelID
+                $fuelPriceQuery = "SELECT Amount FROM fuel WHERE FuelID = ?";
+                $stmt = $conn->prepare($fuelPriceQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare FuelPrice fetch query.');
+                }
+                $stmt->bind_param("i", $fuelID);
+                $stmt->execute();
+                $fuelPriceResult = $stmt->get_result();
+
+                if ($fuelPriceResult->num_rows == 0) {
+                    throw new Exception('No FuelPrice found for the given FuelID.');
+                }
+
+                $fuelPriceRow = $fuelPriceResult->fetch_assoc();
+                $fuelPrice = floatval($fuelPriceRow['Amount']);
+                $stmt->close();
+
+                // Now, fetch ClusterID from customers table using OutletName
+                $clusterQuery = "SELECT ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?) LIMIT 1";
+                $stmt = $conn->prepare($clusterQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare ClusterID fetch query.');
+                }
+                $stmt->bind_param("s", $outletName);
+                $stmt->execute();
+                $clusterResult = $stmt->get_result();
+
+                if ($clusterResult->num_rows == 0) {
+                    throw new Exception("The Outlet Name '{$outletName}' does not exist in the Customers table.");
+                }
+
+                $clusterRow = $clusterResult->fetch_assoc();
+                $clusterID = $clusterRow['ClusterID'];
+                $stmt->close();
+
+                // Now, fetch RateAmount from clusters table using ClusterID, FuelPrice, and Tonner
+                $rateQuery = "SELECT RateAmount FROM clusters WHERE ClusterID = ? AND FuelPrice = ? AND Tonner = ? LIMIT 1";
+                $stmt = $conn->prepare($rateQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare RateAmount fetch query.');
+                }
+                $stmt->bind_param("idi", $clusterID, $fuelPrice, $rounded_total_kgs);
+                $stmt->execute();
+                $rateResult = $stmt->get_result();
+
+                if ($rateResult->num_rows == 0) {
+                    throw new Exception("No RateAmount found for ClusterID '{$clusterID}', FuelPrice '{$fuelPrice}', and Tonner '{$rounded_total_kgs}'.");
+                }
+
+                $rateRow = $rateResult->fetch_assoc();
+                $rateAmount = floatval($rateRow['RateAmount']);
+                $stmt->close();
+
+                // Update RateAmount and FuelPrice in Transaction Group
                 $updateRateQuery = "
                     UPDATE transactiongroup
-                    SET RateAmount = ?
+                    SET RateAmount = ?, FuelPrice = ?
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($updateRateQuery);
                 if (!$stmt) {
-                    throw new Exception('Failed to prepare RateAmount update query: ' . $conn->error);
+                    throw new Exception('Failed to prepare RateAmount and FuelPrice update query.');
                 }
-                $stmt->bind_param("di", $RateAmount, $transactionGroupID);
+                $stmt->bind_param("ddi", $rateAmount, $fuelPrice, $transactionGroupID);
                 if (!$stmt->execute()) {
-                    throw new Exception('Failed to update RateAmount: ' . $stmt->error);
+                    throw new Exception('Failed to update RateAmount and FuelPrice: ' . $stmt->error);
                 }
                 $stmt->close();
 
-                // Calculate Amount = TollFeeAmount + RateAmount
-                $Amount = $TollFeeAmount + $RateAmount;
+                // Update Amount = TollFeeAmount + RateAmount
+                $Amount = $TollFeeAmount + $rateAmount;
 
                 // Update Amount in Transaction Group
                 $updateAmountQuery = "
@@ -318,7 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 ";
                 $stmt = $conn->prepare($updateAmountQuery);
                 if (!$stmt) {
-                    throw new Exception('Failed to prepare Amount update query: ' . $conn->error);
+                    throw new Exception('Failed to prepare Amount update query.');
                 }
                 $stmt->bind_param("di", $Amount, $transactionGroupID);
                 if (!$stmt->execute()) {
@@ -334,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 ";
                 $stmt = $conn->prepare($kgQuery);
                 if (!$stmt) {
-                    throw new Exception('Failed to prepare TotalKGs calculation query: ' . $conn->error);
+                    throw new Exception('Failed to prepare TotalKGs calculation query.');
                 }
                 $stmt->bind_param("i", $transactionGroupID);
                 $stmt->execute();
@@ -351,7 +453,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 ";
                 $stmt = $conn->prepare($updateKGsQuery);
                 if (!$stmt) {
-                    throw new Exception('Failed to prepare TotalKGs update query: ' . $conn->error);
+                    throw new Exception('Failed to prepare TotalKGs update query.');
                 }
                 $stmt->bind_param("di", $TotalKGs, $transactionGroupID);
                 if (!$stmt->execute()) {
@@ -368,7 +470,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 ";
                 $stmt = $conn->prepare($fetchInvoiceNoQuery);
                 if (!$stmt) {
-                    throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                    throw new Exception('Failed to prepare BillingInvoiceNo fetch query.');
                 }
                 $stmt->bind_param("i", $transactionGroupID);
                 $stmt->execute();
@@ -382,7 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
                     $stmt = $conn->prepare($fetchDateRangeQuery);
                     if (!$stmt) {
-                        throw new Exception('Failed to prepare date range fetch query: ' . $conn->error);
+                        throw new Exception('Failed to prepare date range fetch query.');
                     }
                     $stmt->bind_param("i", $billingInvoiceNo);
                     $stmt->execute();
@@ -561,8 +663,173 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     $stmt->close();
 
-                    // Recalculate invoice amounts
-                    $billingInvoiceNo = null;
+                    // Recalculate RateAmount and FuelPrice
+                    // Fetch the updated TransactionGroup data
+                    $fetchTGQuery = "SELECT * FROM transactiongroup WHERE TransactionGroupID = ?";
+                    $stmt = $conn->prepare($fetchTGQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare TransactionGroup fetch query: ' . $conn->error);
+                    }
+                    $stmt->bind_param("i", $transactionGroupID);
+                    $stmt->execute();
+                    $tgResult = $stmt->get_result();
+                    if ($tgResult->num_rows == 0) {
+                        throw new Exception('Transaction Group not found.');
+                    }
+                    $tgRow = $tgResult->fetch_assoc();
+                    $TruckID = $tgRow['TruckID'];
+                    $Date = $tgRow['Date'];
+                    $TollFeeAmount = floatval($tgRow['TollFeeAmount']);
+                    $stmt->close();
+
+                    // Fetch the Outlet Name from the first transaction
+                    $outletQuery = "
+                        SELECT t.OutletName
+                        FROM transactions t
+                        WHERE t.TransactionGroupID = ?
+                        LIMIT 1
+                    ";
+                    $stmt = $conn->prepare($outletQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare Outlet Name fetch query.');
+                    }
+                    $stmt->bind_param("i", $transactionGroupID);
+                    $stmt->execute();
+                    $outletResult = $stmt->get_result();
+                    if ($outletResult->num_rows == 0) {
+                        throw new Exception('No transactions found for this Transaction Group.');
+                    }
+                    $outletRow = $outletResult->fetch_assoc();
+                    $outletName = $outletRow['OutletName'];
+                    $stmt->close();
+
+                    // Fetch ExpenseID from transactiongroup
+                    $expenseID = $tgRow['ExpenseID'];
+
+                    // Round TotalKGs to determine Tonner
+                    $rounded_total_kgs = 0;
+                    if ($TotalKGs > 0) {
+                        if ($TotalKGs <= 1199) {
+                            $rounded_total_kgs = 1000;
+                        } else if ($TotalKGs <= 4199) {
+                            $rounded_total_kgs = ceil($TotalKGs / 1000) * 1000;
+                            if ($rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
+                                $rounded_total_kgs = 4000;
+                            }
+                        } else {
+                            $rounded_total_kgs = 4000;
+                        }
+                    }
+
+                    // Fetch FuelID from expenses table using ExpenseID
+                    $fuelIDQuery = "SELECT FuelID FROM expenses WHERE ExpenseID = ?";
+                    $stmt = $conn->prepare($fuelIDQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare FuelID fetch query.');
+                    }
+                    $stmt->bind_param("i", $expenseID);
+                    $stmt->execute();
+                    $fuelIDResult = $stmt->get_result();
+
+                    if ($fuelIDResult->num_rows == 0) {
+                        throw new Exception('No FuelID found for the given ExpenseID.');
+                    }
+
+                    $fuelRow = $fuelIDResult->fetch_assoc();
+                    $fuelID = $fuelRow['FuelID'];
+                    $stmt->close();
+
+                    // Fetch FuelPrice from fuel table using FuelID
+                    $fuelPriceQuery = "SELECT Amount FROM fuel WHERE FuelID = ?";
+                    $stmt = $conn->prepare($fuelPriceQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare FuelPrice fetch query.');
+                    }
+                    $stmt->bind_param("i", $fuelID);
+                    $stmt->execute();
+                    $fuelPriceResult = $stmt->get_result();
+
+                    if ($fuelPriceResult->num_rows == 0) {
+                        throw new Exception('No FuelPrice found for the given FuelID.');
+                    }
+
+                    $fuelPriceRow = $fuelPriceResult->fetch_assoc();
+                    $fuelPrice = floatval($fuelPriceRow['Amount']);
+                    $stmt->close();
+
+                    // Now, fetch ClusterID from customers table using OutletName
+                    $clusterQuery = "SELECT ClusterID FROM customers WHERE LOWER(CustomerName) = LOWER(?) LIMIT 1";
+                    $stmt = $conn->prepare($clusterQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare ClusterID fetch query.');
+                    }
+                    $stmt->bind_param("s", $outletName);
+                    $stmt->execute();
+                    $clusterResult = $stmt->get_result();
+
+                    if ($clusterResult->num_rows == 0) {
+                        throw new Exception("The Outlet Name '{$outletName}' does not exist in the Customers table.");
+                    }
+
+                    $clusterRow = $clusterResult->fetch_assoc();
+                    $clusterID = $clusterRow['ClusterID'];
+                    $stmt->close();
+
+                    // Now, fetch RateAmount from clusters table using ClusterID, FuelPrice, and Tonner
+                    $rateQuery = "SELECT RateAmount FROM clusters WHERE ClusterID = ? AND FuelPrice = ? AND Tonner = ? LIMIT 1";
+                    $stmt = $conn->prepare($rateQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare RateAmount fetch query.');
+                    }
+                    $stmt->bind_param("idi", $clusterID, $fuelPrice, $rounded_total_kgs);
+                    $stmt->execute();
+                    $rateResult = $stmt->get_result();
+
+                    if ($rateResult->num_rows == 0) {
+                        throw new Exception("No RateAmount found for ClusterID '{$clusterID}', FuelPrice '{$fuelPrice}', and Tonner '{$rounded_total_kgs}'.");
+                    }
+
+                    $rateRow = $rateResult->fetch_assoc();
+                    $rateAmount = floatval($rateRow['RateAmount']);
+                    $stmt->close();
+
+                    // Update RateAmount and FuelPrice in Transaction Group
+                    $updateRateQuery = "
+                        UPDATE transactiongroup
+                        SET RateAmount = ?, FuelPrice = ?
+                        WHERE TransactionGroupID = ?
+                    ";
+                    $stmt = $conn->prepare($updateRateQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare RateAmount and FuelPrice update query.');
+                    }
+                    $stmt->bind_param("ddi", $rateAmount, $fuelPrice, $transactionGroupID);
+                    if (!$stmt->execute()) {
+                        throw new Exception('Failed to update RateAmount and FuelPrice: ' . $stmt->error);
+                    }
+                    $stmt->close();
+
+                    // Update Amount = TollFeeAmount + RateAmount
+                    $Amount = $TollFeeAmount + $rateAmount;
+
+                    // Update Amount in Transaction Group
+                    $updateAmountQuery = "
+                        UPDATE transactiongroup
+                        SET Amount = ?
+                        WHERE TransactionGroupID = ?
+                    ";
+                    $stmt = $conn->prepare($updateAmountQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare Amount update query.');
+                    }
+                    $stmt->bind_param("di", $Amount, $transactionGroupID);
+                    if (!$stmt->execute()) {
+                        throw new Exception('Failed to update Amount: ' . $stmt->error);
+                    }
+                    $stmt->close();
+
+                    // Recalculate invoice amounts based on updated Transaction Group
+                    // Fetch BillingInvoiceNo from the Transaction Group
                     $fetchInvoiceNoQuery = "
                         SELECT BillingInvoiceNo
                         FROM transactiongroup
@@ -570,7 +837,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     ";
                     $stmt = $conn->prepare($fetchInvoiceNoQuery);
                     if (!$stmt) {
-                        throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                        throw new Exception('Failed to prepare BillingInvoiceNo fetch query.');
                     }
                     $stmt->bind_param("i", $transactionGroupID);
                     $stmt->execute();
@@ -624,15 +891,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
                         $stmt->close();
                     }
+
                 }
 
                 // Commit Transaction
                 $conn->commit();
 
                 // Log Activity
-                insert_activity_log($conn, $userID, "Updated Transaction ID: $transactionID");
+                insert_activity_log($conn, $userID, "Updated Transaction Group ID: $transactionGroupID");
 
-                echo json_encode(['success' => true, 'message' => 'Transaction updated successfully.', 'TotalKGs' => $TotalKGs]);
+                echo json_encode(['success' => true, 'message' => 'Transaction group updated successfully.', 'Amount' => $Amount, 'TotalKGs' => $TotalKGs]);
             } catch (Exception $e) {
                 $conn->rollback();
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -780,8 +1048,9 @@ include '../officer/header.php';
                             <input type="text" class="form-control" id="NetAmount" name="NetAmount" value="<?php echo number_format($amounts['NetAmount'], 2); ?>" readonly>
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary ">Save Changes</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -846,13 +1115,19 @@ include '../officer/header.php';
 
                             <div class="row">
                                 <!-- Rate Amount (Read Only) -->
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label for="TG_RateAmount" class="form-label">Rate Amount</label>
                                     <input type="number" step="0.01" class="form-control" id="TG_RateAmount" name="RateAmount" readonly>
                                 </div>
 
+                                <!-- Fuel Price (Read Only) -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="TG_FuelPrice" class="form-label">Fuel Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="TG_FuelPrice" name="FuelPrice" readonly>
+                                </div>
+
                                 <!-- Amount (Read Only) -->
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label for="TG_Amount" class="form-label">Amount</label>
                                     <input type="number" step="0.01" class="form-control" id="TG_Amount" name="Amount" readonly>
                                 </div>
@@ -932,7 +1207,6 @@ include '../officer/header.php';
                                 <div id="outletSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
 
-
                             <div class="row">
                                 <!-- Qty -->
                                 <div class="col-md-6 mb-3">
@@ -967,57 +1241,14 @@ $conn->close();
 
 <script>
     $(document).ready(function() {
-        // Handle Invoice Form Submission
-        $('#editInvoiceForm').on('submit', function(e) {
-            e.preventDefault();
-            let formData = $(this).serialize();
-
-            // Disable the button and show loading
-            $(this).find('button[type="submit"]').prop('disabled', true).text('Saving...');
-
-            $.ajax({
-                url: 'edit_invoice.php',
-                type: 'POST',
-                data: formData + '&action=update_invoice',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        showAlert('success', response.message);
-                        // Update calculated fields
-                        $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
-                        $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
-                        $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
-                        $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
-                        $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
-                        $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
-                        $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
-
-                        // Fetch and update Transaction Groups
-                        fetchTransactionGroups();
-                    } else {
-                        showAlert('danger', response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                    showAlert('danger', 'An error occurred while updating the invoice.');
-                },
-                complete: function() {
-                    // Re-enable the button and reset text
-                    $('#editInvoiceForm').find('button[type="submit"]').prop('disabled', false).text('Save Changes');
-                }
-            });
-        });
-
-        // Function to show alerts
         // Function to show alerts
         function showAlert(type, message) {
             let alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+                <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
             $('#alert-container').html(alertHtml);
         }
 
@@ -1062,19 +1293,19 @@ $conn->close();
                         if (response.transactionGroups.length > 0) {
                             response.transactionGroups.forEach(function(tg) {
                                 let row = `
-                                <tr id="tg-${tg.TransactionGroupID}">
-                                    <td>${tg.TransactionGroupID}</td>
-                                    <td>${tg.TruckID}</td>
-                                    <td>${tg.Date}</td>
-                                    <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                    </td>
-                                </tr>
-                            `;
+                                    <tr id="tg-${tg.TransactionGroupID}">
+                                        <td>${tg.TransactionGroupID}</td>
+                                        <td>${tg.TruckID}</td>
+                                        <td>${tg.Date}</td>
+                                        <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
+                                        </td>
+                                    </tr>
+                                `;
                                 tbody.append(row);
                             });
                         } else {
@@ -1106,6 +1337,7 @@ $conn->close();
             // Show a loading state in the modal
             $('#editTGModal').find('form')[0].reset();
             $('#TG_RateAmount').val('0.00');
+            $('#TG_FuelPrice').val('0.00');
             $('#TG_Amount').val('0.00');
             $('#TG_TotalKGs').val('0.00');
             $('#transactionsTable tbody').html('<tr><td colspan="7" class="text-center">Loading...</td></tr>');
@@ -1129,6 +1361,7 @@ $conn->close();
                         $('#TG_Date').val(tg.Date);
                         $('#TG_TollFeeAmount').val(parseFloat(tg.TollFeeAmount).toFixed(2));
                         $('#TG_RateAmount').val(parseFloat(tg.RateAmount).toFixed(2));
+                        $('#TG_FuelPrice').val(parseFloat(tg.FuelPrice).toFixed(2));
                         $('#TG_Amount').val(parseFloat(tg.Amount).toFixed(2));
                         $('#TG_TotalKGs').val(parseFloat(tg.TotalKGs).toFixed(2));
 
@@ -1139,18 +1372,18 @@ $conn->close();
                         if (transactions.length > 0) {
                             transactions.forEach(function(tx) {
                                 let tr = `
-                                <tr id="tx-${tx.TransactionID}">
-                                    <td>${tx.TransactionID}</td>
-                                    <td>${tx.TransactionDate}</td>
-                                    <td>${tx.DRno}</td>
-                                    <td>${tx.OutletName}</td>
-                                    <td>${tx.Qty}</td>
-                                    <td>${tx.KGs}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
-                                    </td>
-                                </tr>
-                            `;
+                                    <tr id="tx-${tx.TransactionID}">
+                                        <td>${tx.TransactionID}</td>
+                                        <td>${tx.TransactionDate}</td>
+                                        <td>${tx.DRno}</td>
+                                        <td>${tx.OutletName}</td>
+                                        <td>${tx.Qty}</td>
+                                        <td>${tx.KGs}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
+                                        </td>
+                                    </tr>
+                                `;
                                 tbody.append(tr);
                             });
                         } else {
@@ -1379,9 +1612,12 @@ $conn->close();
             let Amount = TollFeeAmount + RateAmount;
             $('#TG_Amount').val(Amount.toFixed(2));
         });
+
+        /* ------------------ Autocomplete Feature for Outlet Name ------------------ */
+
         // Function to fetch outlet suggestions
         function fetchOutletSuggestions(query) {
-            if (query.length < 1) { // Start suggesting after 2 characters
+            if (query.length < 1) { // Start suggesting after 1 character
                 $('#outletSuggestions').hide();
                 return;
             }
@@ -1389,9 +1625,7 @@ $conn->close();
             $.ajax({
                 url: 'search_outlets.php',
                 type: 'GET',
-                data: {
-                    query: query
-                },
+                data: { query: query },
                 dataType: 'json',
                 success: function(data) {
                     if (data.error) {
@@ -1438,7 +1672,13 @@ $conn->close();
 <style>
     /* Additional styling for better user experience */
     /* Suggestion Box Styling */
-    
+    #outletSuggestions {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-top: none;
+        background-color: #fff;
+    }
 
     #outletSuggestions .list-group-item {
         cursor: pointer;

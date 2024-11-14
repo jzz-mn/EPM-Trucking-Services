@@ -147,7 +147,7 @@ $stmt->close();
             <div>
                 <div class="brand-logo d-flex align-items-center">
                     <a href="../officer/home.php" class="text-nowrap logo-img">
-                        <img src="../assetsEPM/logos/epm-logo-no-bg1.png" alt="Logo" class="img-fluid"
+                        <img src="../assetsEPM/logos/epm-logo-no-bg-light.png" alt="Logo" class="img-fluid"
                             style="max-width: 146px; height: auto;">
                     </a>
                 </div>
