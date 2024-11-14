@@ -120,19 +120,37 @@ if (isset($_GET['token'])) {
 
                                 <?php if (!isset($success)): ?>
                                     <form method="POST">
-                                        <div class="mb-3">
+                                        <div class="mb-3 position-relative">
                                             <label for="password" class="form-label">New Password</label>
-                                            <input type="password" class="form-control" name="password" id="password"
-                                                required />
+                                            <input type="password" class="form-control" name="password" id="password" required />
+                                            <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;">
+                                                <iconify-icon id="toggleNewPassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
+                                            </span>
                                         </div>
-                                        <div class="mb-4">
+                                        <div class="mb-4 position-relative">
                                             <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                            <input type="password" class="form-control" name="confirmPassword"
-                                                id="confirmPassword" required />
+                                            <input type="password" class="form-control" name="confirmPassword" id="confirmPassword" required />
+                                            <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;">
+                                                <iconify-icon id="toggleConfirmPassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
+                                            </span>
                                         </div>
                                         <button type="submit" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Activate
                                             Account</button>
                                     </form>
+                                    <style>
+                                        .form-control {
+                                            padding-right: 2.5rem;
+                                            margin-bottom: 0px;
+                                        }
+
+                                        #toggleNewPassword,
+                                        #toggleConfirmPassword {
+                                            color: #6c757d;
+                                            margin-top: 30px;
+                                            display: flex;
+                                            align-items: center;
+                                        }
+                                    </style>
                                 <?php else: ?>
                                     <a href="login/login.php" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Go to
                                         Login</a>
@@ -148,6 +166,26 @@ if (isset($_GET['token'])) {
     </div>
 
     <div class="dark-transparent sidebartoggler"></div>
+
+    <script>
+        const toggleNewPassword = document.querySelector("#toggleNewPassword");
+        const newPassword = document.querySelector("#password");
+
+        const toggleConfirmPassword = document.querySelector("#toggleConfirmPassword");
+        const confirmPassword = document.querySelector("#confirmPassword");
+
+        toggleNewPassword.addEventListener("click", function() {
+            const type = newPassword.getAttribute("type") === "password" ? "text" : "password";
+            newPassword.setAttribute("type", type);
+            this.setAttribute("icon", type === "password" ? "mdi:eye-off" : "mdi:eye");
+        });
+
+        toggleConfirmPassword.addEventListener("click", function() {
+            const type = confirmPassword.getAttribute("type") === "password" ? "text" : "password";
+            confirmPassword.setAttribute("type", type);
+            this.setAttribute("icon", type === "password" ? "mdi:eye-off" : "mdi:eye");
+        });
+    </script>
 
     <!-- Import JS Files -->
     <script src="assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
