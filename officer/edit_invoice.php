@@ -26,18 +26,24 @@ function insert_activity_log($conn, $userID, $action)
 }
 
 // Helper function to calculate amounts with date range
-function calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate)
+function calculate_amounts($conn, $billingStartDate, $billingEndDate)
 {
     // Fetch GrossAmount and AddTollCharges within the date range
-    $query = "SELECT SUM(tg.RateAmount) as GrossAmount, SUM(tg.TollFeeAmount) as AddTollCharges
+    $query = "SELECT 
+                SUM(tg.RateAmount) as GrossAmount, 
+                SUM(tg.TollFeeAmount) as AddTollCharges
               FROM transactiongroup tg
-              WHERE tg.BillingInvoiceNo = ?
-                AND tg.Date BETWEEN ? AND ?";
+              WHERE tg.Date BETWEEN ? AND ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("iss", $billingInvoiceNo, $billingStartDate, $billingEndDate);
+    if (!$stmt) {
+        throw new Exception('Failed to prepare amounts calculation query: ' . $conn->error);
+    }
+    $stmt->bind_param("ss", $billingStartDate, $billingEndDate);
     $stmt->execute();
     $result = $stmt->get_result();
     $amounts = $result->fetch_assoc();
+    $stmt->close();
+
     $grossAmount = $amounts['GrossAmount'] ?? 0;
     $addTollCharges = $amounts['AddTollCharges'] ?? 0;
 
@@ -90,6 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                   AND (BillingEndDate >= ?)
             ";
             $stmt = $conn->prepare($overlapQuery);
+            if (!$stmt) {
+                echo json_encode(['success' => false, 'message' => 'Failed to prepare overlapping dates query.']);
+                exit;
+            }
             $stmt->bind_param("iss", $billingInvoiceNo, $billingEndDate, $billingStartDate);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -109,10 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE BillingInvoiceNo = ?
                 ";
                 $stmt = $conn->prepare($updateInvoiceQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare invoice update query: ' . $conn->error);
+                }
                 $stmt->bind_param("sssi", $billingStartDate, $billingEndDate, $billedTo, $billingInvoiceNo);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update invoice: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Update related transaction groups
                 // First, set BillingInvoiceNo to NULL where the transaction group's date is now outside the new range
@@ -123,26 +137,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                       AND (Date < ? OR Date > ?)
                 ";
                 $stmt = $conn->prepare($resetTGQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare transaction groups reset query: ' . $conn->error);
+                }
                 $stmt->bind_param("iss", $billingInvoiceNo, $billingStartDate, $billingEndDate);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to reset transaction groups: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Then, set BillingInvoiceNo for transaction groups within the new date range
                 $updateTGQuery = "
                     UPDATE transactiongroup
                     SET BillingInvoiceNo = ?
-                    WHERE BillingInvoiceNo IS NULL
-                      AND Date BETWEEN ? AND ?
+                    WHERE Date BETWEEN ? AND ?
                 ";
                 $stmt = $conn->prepare($updateTGQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare transaction groups update query: ' . $conn->error);
+                }
                 $stmt->bind_param("iss", $billingInvoiceNo, $billingStartDate, $billingEndDate);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update transaction groups: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Recalculate invoice amounts with the updated date range
-                $amounts = calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate);
+                $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
                 $updateAmountsQuery = "
                     UPDATE invoices
                     SET GrossAmount = ?, VAT = ?, TotalAmount = ?, EWT = ?, AddTollCharges = ?, 
@@ -150,6 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE BillingInvoiceNo = ?
                 ";
                 $stmt = $conn->prepare($updateAmountsQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
+                }
                 $stmt->bind_param(
                     "dddddddi",
                     $amounts['GrossAmount'],
@@ -164,6 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update invoice amounts: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Commit Transaction
                 $conn->commit();
@@ -179,16 +204,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit;
         }
 
-        // Fetch Transaction Groups for the Invoice
+        // Fetch Transaction Groups based on Date Range
         if ($_POST['action'] == 'fetch_transaction_groups') {
-            $billingInvoiceNo = intval($_POST['BillingInvoiceNo']);
             $billingStartDate = $_POST['BillingStartDate'] ?? '';
             $billingEndDate = $_POST['BillingEndDate'] ?? '';
 
-            // Fetch Transaction Groups within the date range
-            $tgQuery = "SELECT * FROM transactiongroup WHERE BillingInvoiceNo = ? AND Date BETWEEN ? AND ?";
+            // Validate Date Inputs
+            if (empty($billingStartDate) || empty($billingEndDate)) {
+                echo json_encode(['success' => false, 'message' => 'Billing Start Date and End Date are required.']);
+                exit;
+            }
+
+            if ($billingStartDate > $billingEndDate) {
+                echo json_encode(['success' => false, 'message' => 'Billing Start Date cannot be after Billing End Date.']);
+                exit;
+            }
+
+            // Fetch Transaction Groups within the date range, regardless of BillingInvoiceNo
+            $tgQuery = "SELECT * FROM transactiongroup WHERE Date BETWEEN ? AND ?";
             $stmt = $conn->prepare($tgQuery);
-            $stmt->bind_param("iss", $billingInvoiceNo, $billingStartDate, $billingEndDate);
+            if (!$stmt) {
+                echo json_encode(['success' => false, 'message' => 'Failed to prepare transaction groups fetch query.']);
+                exit;
+            }
+            $stmt->bind_param("ss", $billingStartDate, $billingEndDate);
             $stmt->execute();
             $tgResult = $stmt->get_result();
 
@@ -196,9 +235,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             while ($row = $tgResult->fetch_assoc()) {
                 $transactionGroups[] = $row;
             }
+            $stmt->close();
 
             // Calculate updated amounts based on the current date range
-            $amounts = calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate);
+            $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
 
             echo json_encode(['success' => true, 'transactionGroups' => $transactionGroups, 'amounts' => $amounts]);
             exit;
@@ -227,21 +267,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($updateTGQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare transaction group update query: ' . $conn->error);
+                }
                 $stmt->bind_param("isdi", $TruckID, $Date, $TollFeeAmount, $transactionGroupID);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update transaction group: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Recalculate RateAmount (Assuming RateAmount is a fixed rate based on TruckID or other logic)
                 // For example, let's say RateAmount is determined by TruckID
                 // Replace this with your actual logic
                 $rateQuery = "SELECT Rate FROM trucksinfo WHERE TruckID = ?";
                 $stmtRate = $conn->prepare($rateQuery);
+                if (!$stmtRate) {
+                    throw new Exception('Failed to prepare rate fetch query: ' . $conn->error);
+                }
                 $stmtRate->bind_param("i", $TruckID);
                 $stmtRate->execute();
                 $rateResult = $stmtRate->get_result();
                 $rateRow = $rateResult->fetch_assoc();
                 $RateAmount = $rateRow['Rate'] ?? 0;
+                $stmtRate->close();
 
                 // Update RateAmount in Transaction Group
                 $updateRateQuery = "
@@ -250,10 +298,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($updateRateQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare RateAmount update query: ' . $conn->error);
+                }
                 $stmt->bind_param("di", $RateAmount, $transactionGroupID);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update RateAmount: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Calculate Amount = TollFeeAmount + RateAmount
                 $Amount = $TollFeeAmount + $RateAmount;
@@ -265,10 +317,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($updateAmountQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare Amount update query: ' . $conn->error);
+                }
                 $stmt->bind_param("di", $Amount, $transactionGroupID);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update Amount: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Recalculate TotalKGs based on related transactions
                 $kgQuery = "
@@ -277,11 +333,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($kgQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TotalKGs calculation query: ' . $conn->error);
+                }
                 $stmt->bind_param("i", $transactionGroupID);
                 $stmt->execute();
                 $kgResult = $stmt->get_result();
                 $kgRow = $kgResult->fetch_assoc();
                 $TotalKGs = $kgRow['TotalKGs'] ?? 0;
+                $stmt->close();
 
                 // Update TotalKGs
                 $updateKGsQuery = "
@@ -290,10 +350,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($updateKGsQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TotalKGs update query: ' . $conn->error);
+                }
                 $stmt->bind_param("di", $TotalKGs, $transactionGroupID);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update TotalKGs: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Recalculate invoice amounts based on updated Transaction Group
                 // Fetch BillingInvoiceNo from the Transaction Group
@@ -303,25 +367,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionGroupID = ?
                 ";
                 $stmt = $conn->prepare($fetchInvoiceNoQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                }
                 $stmt->bind_param("i", $transactionGroupID);
                 $stmt->execute();
                 $invoiceResult = $stmt->get_result();
                 $invoiceRow = $invoiceResult->fetch_assoc();
                 $billingInvoiceNo = $invoiceRow['BillingInvoiceNo'] ?? null;
+                $stmt->close();
 
                 if ($billingInvoiceNo) {
                     // Fetch BillingStartDate and BillingEndDate from invoices
                     $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
                     $stmt = $conn->prepare($fetchDateRangeQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare date range fetch query: ' . $conn->error);
+                    }
                     $stmt->bind_param("i", $billingInvoiceNo);
                     $stmt->execute();
                     $dateResult = $stmt->get_result();
                     $dateRow = $dateResult->fetch_assoc();
                     $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                     $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $stmt->close();
 
                     // Recalculate amounts based on the updated date range
-                    $amounts = calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate);
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
 
                     // Update invoice amounts
                     $updateAmountsQuery = "
@@ -331,6 +403,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE BillingInvoiceNo = ?
                     ";
                     $stmt = $conn->prepare($updateAmountsQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
+                    }
                     $stmt->bind_param(
                         "dddddddi",
                         $amounts['GrossAmount'],
@@ -345,6 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     if (!$stmt->execute()) {
                         throw new Exception('Failed to update invoice amounts: ' . $stmt->error);
                     }
+                    $stmt->close();
                 }
 
                 // Commit Transaction
@@ -371,6 +447,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 WHERE TransactionGroupID = ?
             ";
             $stmt = $conn->prepare($query);
+            if (!$stmt) {
+                echo json_encode(['success' => false, 'message' => 'Failed to prepare transactions fetch query.']);
+                exit;
+            }
             $stmt->bind_param("i", $transactionGroupID);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -379,6 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             while ($row = $result->fetch_assoc()) {
                 $transactions[] = $row;
             }
+            $stmt->close();
 
             echo json_encode(['success' => true, 'transactions' => $transactions]);
             exit;
@@ -404,6 +485,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Check if DR No already exists (excluding current transaction)
                 $checkDRnoQuery = "SELECT COUNT(*) as count FROM transactions WHERE DRno = ? AND TransactionID != ?";
                 $stmt = $conn->prepare($checkDRnoQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare DR No check query: ' . $conn->error);
+                }
                 $stmt->bind_param("si", $DRno, $transactionID);
                 $stmt->execute();
                 $result = $stmt->get_result();
@@ -421,14 +505,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE TransactionID = ?
                 ";
                 $stmt = $conn->prepare($updateTransactionQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare transaction update query: ' . $conn->error);
+                }
                 $stmt->bind_param("ssddi", $DRno, $OutletName, $Qty, $KGs, $transactionID);
                 if (!$stmt->execute()) {
                     throw new Exception('Failed to update transaction: ' . $stmt->error);
                 }
+                $stmt->close();
 
                 // Fetch TransactionGroupID
                 $tgQuery = "SELECT TransactionGroupID FROM transactions WHERE TransactionID = ?";
                 $stmt = $conn->prepare($tgQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TransactionGroupID fetch query: ' . $conn->error);
+                }
                 $stmt->bind_param("i", $transactionID);
                 $stmt->execute();
                 $tgResult = $stmt->get_result();
@@ -444,6 +535,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE TransactionGroupID = ?
                     ";
                     $stmt = $conn->prepare($kgQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare TotalKGs calculation query: ' . $conn->error);
+                    }
                     $stmt->bind_param("i", $transactionGroupID);
                     $stmt->execute();
                     $kgResult = $stmt->get_result();
@@ -458,6 +552,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE TransactionGroupID = ?
                     ";
                     $stmt = $conn->prepare($updateKGsQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare TotalKGs update query: ' . $conn->error);
+                    }
                     $stmt->bind_param("di", $TotalKGs, $transactionGroupID);
                     if (!$stmt->execute()) {
                         throw new Exception('Failed to update TotalKGs: ' . $stmt->error);
@@ -472,6 +569,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE TransactionGroupID = ?
                     ";
                     $stmt = $conn->prepare($fetchInvoiceNoQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                    }
                     $stmt->bind_param("i", $transactionGroupID);
                     $stmt->execute();
                     $invoiceResult = $stmt->get_result();
@@ -483,6 +583,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         // Fetch BillingStartDate and BillingEndDate from invoices
                         $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
                         $stmt = $conn->prepare($fetchDateRangeQuery);
+                        if (!$stmt) {
+                            throw new Exception('Failed to prepare date range fetch query: ' . $conn->error);
+                        }
                         $stmt->bind_param("i", $billingInvoiceNo);
                         $stmt->execute();
                         $dateResult = $stmt->get_result();
@@ -492,7 +595,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $stmt->close();
 
                         // Recalculate amounts based on the updated date range
-                        $amounts = calculate_amounts($conn, $billingInvoiceNo, $billingStartDate, $billingEndDate);
+                        $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
 
                         // Update invoice amounts
                         $updateAmountsQuery = "
@@ -502,6 +605,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             WHERE BillingInvoiceNo = ?
                         ";
                         $stmt = $conn->prepare($updateAmountsQuery);
+                        if (!$stmt) {
+                            throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
+                        }
                         $stmt->bind_param(
                             "dddddddi",
                             $amounts['GrossAmount'],
@@ -547,6 +653,10 @@ $billingInvoiceNo = intval($_GET['BillingInvoiceNo']);
 // Fetch the invoice details
 $invoiceQuery = "SELECT * FROM invoices WHERE BillingInvoiceNo = ?";
 $stmt = $conn->prepare($invoiceQuery);
+if (!$stmt) {
+    echo "Failed to prepare invoice fetch query: " . $conn->error;
+    exit;
+}
 $stmt->bind_param("i", $billingInvoiceNo);
 $stmt->execute();
 $invoiceResult = $stmt->get_result();
@@ -559,7 +669,7 @@ if ($invoiceResult->num_rows == 0) {
 $invoice = $invoiceResult->fetch_assoc();
 
 // Calculate initial amounts based on the current date range
-$amounts = calculate_amounts($conn, $billingInvoiceNo, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
+$amounts = calculate_amounts($conn, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
 
 // Close the statement
 $stmt->close();
@@ -614,6 +724,7 @@ include '../officer/header.php';
                             <label for="BillingStartDate" class="form-label">Billing Start Date</label>
                             <input type="date" class="form-control" id="BillingStartDate" name="BillingStartDate" value="<?php echo htmlspecialchars($invoice['BillingStartDate']); ?>" required>
                         </div>
+
                     </div>
 
                     <div class="row">
@@ -680,7 +791,7 @@ include '../officer/header.php';
             <div class="card-body">
                 <h5 class="card-title">Transaction Groups</h5>
                 <div class="table-responsive">
-                    <table class="table table-bordered" id="transactionGroupsTable">
+                    <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="transactionGroupsTable">
                         <thead>
                             <tr>
                                 <th>Transaction Group ID</th>
@@ -694,29 +805,7 @@ include '../officer/header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            // Fetch transaction groups within the current date range
-                            $tgQuery = "SELECT * FROM transactiongroup WHERE BillingInvoiceNo = ? AND Date BETWEEN ? AND ?";
-                            $stmt = $conn->prepare($tgQuery);
-                            $stmt->bind_param("iss", $billingInvoiceNo, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
-                            $stmt->execute();
-                            $tgResult = $stmt->get_result();
-
-                            while ($tg = $tgResult->fetch_assoc()):
-                            ?>
-                                <tr id="tg-<?php echo $tg['TransactionGroupID']; ?>">
-                                    <td><?php echo htmlspecialchars($tg['TransactionGroupID']); ?></td>
-                                    <td><?php echo htmlspecialchars($tg['TruckID']); ?></td>
-                                    <td><?php echo htmlspecialchars($tg['Date']); ?></td>
-                                    <td><?php echo number_format($tg['TollFeeAmount'], 2); ?></td>
-                                    <td><?php echo number_format($tg['RateAmount'], 2); ?></td>
-                                    <td><?php echo number_format($tg['Amount'], 2); ?></td>
-                                    <td><?php echo number_format($tg['TotalKGs'], 2); ?></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="<?php echo $tg['TransactionGroupID']; ?>">Edit</button>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
+                            <!-- Transaction groups will be dynamically loaded here via AJAX -->
                         </tbody>
                     </table>
                 </div>
@@ -784,7 +873,7 @@ include '../officer/header.php';
                         <div class="mt-4">
                             <h5>Transactions</h5>
                             <div class="table-responsive">
-                                <table class="table table-bordered" id="transactionsTable">
+                                <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="transactionsTable">
                                     <thead>
                                         <tr>
                                             <th>Transaction ID</th>
@@ -807,7 +896,7 @@ include '../officer/header.php';
             </div>
         </div>
 
-        <!-- Edit Transaction Modal -->
+        <!-- Edit Transaction Modal remains unchanged -->
         <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -835,10 +924,14 @@ include '../officer/header.php';
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            <!-- Outlet Name with Autocomplete -->
+                            <div class="mb-3 position-relative">
                                 <label for="T_OutletName" class="form-label">Outlet Name</label>
-                                <input type="text" class="form-control" id="T_OutletName" name="OutletName" required>
+                                <input type="text" class="form-control" id="T_OutletName" name="OutletName" required autocomplete="off">
+                                <!-- Suggestion Box -->
+                                <div id="outletSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
+
 
                             <div class="row">
                                 <!-- Qty -->
@@ -917,21 +1010,27 @@ $conn->close();
         });
 
         // Function to show alerts
+        // Function to show alerts
         function showAlert(type, message) {
             let alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
+            <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
             $('#alert-container').html(alertHtml);
         }
 
         // Function to fetch and update Transaction Groups
         function fetchTransactionGroups() {
-            let billingInvoiceNo = $('#BillingInvoiceNo').val();
             let billingStartDate = $('#BillingStartDate').val();
             let billingEndDate = $('#BillingEndDate').val();
+
+            // Validate Date Inputs
+            if (billingStartDate === '' || billingEndDate === '') {
+                $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Please select Billing Start Date and Billing End Date.</td></tr>');
+                return;
+            }
 
             // Show loading indicator
             $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
@@ -941,7 +1040,6 @@ $conn->close();
                 type: 'POST',
                 data: {
                     action: 'fetch_transaction_groups',
-                    BillingInvoiceNo: billingInvoiceNo,
                     BillingStartDate: billingStartDate,
                     BillingEndDate: billingEndDate
                 },
@@ -964,19 +1062,19 @@ $conn->close();
                         if (response.transactionGroups.length > 0) {
                             response.transactionGroups.forEach(function(tg) {
                                 let row = `
-                                    <tr id="tg-${tg.TransactionGroupID}">
-                                        <td>${tg.TransactionGroupID}</td>
-                                        <td>${tg.TruckID}</td>
-                                        <td>${tg.Date}</td>
-                                        <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                        </td>
-                                    </tr>
-                                `;
+                                <tr id="tg-${tg.TransactionGroupID}">
+                                    <td>${tg.TransactionGroupID}</td>
+                                    <td>${tg.TruckID}</td>
+                                    <td>${tg.Date}</td>
+                                    <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+                                    <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+                                    <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+                                    <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
+                                    </td>
+                                </tr>
+                            `;
                                 tbody.append(row);
                             });
                         } else {
@@ -993,9 +1091,11 @@ $conn->close();
             });
         }
 
+        // Initial Fetch on Page Load
+        fetchTransactionGroups();
+
         // Event listeners for real-time updates when Billing Start Date or End Date changes
         $('#BillingStartDate, #BillingEndDate').on('change', function() {
-            // Optionally, you can add validation here
             fetchTransactionGroups();
         });
 
@@ -1039,18 +1139,18 @@ $conn->close();
                         if (transactions.length > 0) {
                             transactions.forEach(function(tx) {
                                 let tr = `
-                                    <tr id="tx-${tx.TransactionID}">
-                                        <td>${tx.TransactionID}</td>
-                                        <td>${tx.TransactionDate}</td>
-                                        <td>${tx.DRno}</td>
-                                        <td>${tx.OutletName}</td>
-                                        <td>${tx.Qty}</td>
-                                        <td>${tx.KGs}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
-                                        </td>
-                                    </tr>
-                                `;
+                                <tr id="tx-${tx.TransactionID}">
+                                    <td>${tx.TransactionID}</td>
+                                    <td>${tx.TransactionDate}</td>
+                                    <td>${tx.DRno}</td>
+                                    <td>${tx.OutletName}</td>
+                                    <td>${tx.Qty}</td>
+                                    <td>${tx.KGs}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
+                                    </td>
+                                </tr>
+                            `;
                                 tbody.append(tr);
                             });
                         } else {
@@ -1279,11 +1379,74 @@ $conn->close();
             let Amount = TollFeeAmount + RateAmount;
             $('#TG_Amount').val(Amount.toFixed(2));
         });
+        // Function to fetch outlet suggestions
+        function fetchOutletSuggestions(query) {
+            if (query.length < 1) { // Start suggesting after 2 characters
+                $('#outletSuggestions').hide();
+                return;
+            }
+
+            $.ajax({
+                url: 'search_outlets.php',
+                type: 'GET',
+                data: {
+                    query: query
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.error) {
+                        console.error('Error fetching outlets:', data.error);
+                        $('#outletSuggestions').hide();
+                    } else if (data.length > 0) {
+                        let suggestions = data.map(function(outlet) {
+                            return `<button type="button" class="list-group-item list-group-item-action" data-outlet="${outlet.CustomerName}">${outlet.CustomerName}</button>`;
+                        }).join('');
+                        $('#outletSuggestions').html(suggestions).show();
+                    } else {
+                        $('#outletSuggestions').html('<div class="list-group-item">No outlets found.</div>').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#outletSuggestions').hide();
+                }
+            });
+        }
+
+        // Debounce function to limit the rate of AJAX calls for autocomplete
+        $('#T_OutletName').on('input', debounce(function() {
+            let query = $(this).val().trim();
+            fetchOutletSuggestions(query);
+        }, 300)); // 300ms debounce delay
+
+        // Handle click on suggestion
+        $(document).on('click', '#outletSuggestions .list-group-item', function() {
+            let selectedOutlet = $(this).data('outlet');
+            $('#T_OutletName').val(selectedOutlet);
+            $('#outletSuggestions').hide();
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#T_OutletName').length && !$(e.target).closest('#outletSuggestions').length) {
+                $('#outletSuggestions').hide();
+            }
+        });
     });
 </script>
 
 <style>
     /* Additional styling for better user experience */
+    /* Suggestion Box Styling */
+    
+
+    #outletSuggestions .list-group-item {
+        cursor: pointer;
+    }
+
+    #outletSuggestions .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
 
     .modal-lg {
         max-width: 80% !important;
