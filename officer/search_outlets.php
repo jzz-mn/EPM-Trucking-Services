@@ -7,7 +7,8 @@ $outlets = [];
 
 if (isset($_GET['query'])) {
     $query = $_GET['query'];
-    $stmt = $conn->prepare("SELECT CustomerName FROM customers WHERE CustomerName LIKE ? LIMIT 10");
+    // Use prepared statements to prevent SQL injection
+    $stmt = $conn->prepare("SELECT CustomerID, CustomerName FROM customers WHERE CustomerName LIKE ? LIMIT 10");
     $likeQuery = "%" . $query . "%";
     $stmt->bind_param("s", $likeQuery);
     if ($stmt->execute()) {
