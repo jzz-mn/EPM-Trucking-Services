@@ -944,38 +944,8 @@
           </div>
         </div>
 
-        <script>
-          // Handle cluster selection changes
-          document.getElementById('clusterSelection').addEventListener('change', function() {
-            const selection = this.value;
-            document.getElementById('existingClusterFields').style.display = selection === 'existing' ? 'block' : 'none';
-            document.getElementById('newClusterFields').style.display = selection === 'new' ? 'block' : 'none';
-          });
 
-          // Populate category and locations for existing clusters
-          document.getElementById('existingClusterCategory').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            document.getElementById('existingClusterID').value = selectedOption.getAttribute('data-clusterID');
-            document.getElementById('existingLocationsInCluster').value = selectedOption.getAttribute('data-locations');
-          });
-
-          // Fetch the next available ClusterID for a new cluster
-          function fetchNewClusterID() {
-            fetch('trucks.php?action=getNextClusterID')
-              .then(response => response.json())
-              .then(data => {
-                console.log("Fetched data:", data); // Debugging: log the response
-                if (data.success) {
-                  document.getElementById('newClusterID').value = data.nextClusterID;
-                } else {
-                  console.error('Failed to fetch the new ClusterID');
-                }
-              })
-              .catch(error => console.error('Error fetching ClusterID:', error));
-          }
-        </script>
-
-
+        <!----------- button/fetching etc. ---------->
 
         <script>
           // Function to populate the Edit Maintenance modal with the selected record data
@@ -1090,189 +1060,6 @@
       });
     </script>
 
-    <script>
-      document.querySelectorAll('.edit-cluster-btn').forEach(button => {
-        button.addEventListener('click', function(event) {
-          event.preventDefault();
-          const uniqueClusterId = this.closest('tr').querySelector('td:first-child').textContent; // Assuming UniqueClusterID is in the first cell
-
-          fetch(`fetch_cluster.php?uniqueClusterId=${uniqueClusterId}`)
-            .then(response => response.json())
-            .then(data => {
-              if (!data.error) {
-                document.getElementById('uniqueClusterId').value = data.UniqueClusterID;
-                document.getElementById('clusterID').value = data.UniqueClusterID;
-                document.getElementById('clusterCategory').value = data.ClusterCategory;
-                document.getElementById('locationsInCluster').value = data.LocationsInCluster;
-                document.getElementById('tonner').value = data.Tonner;
-                document.getElementById('kmRadius').value = data.KMRADIUS;
-                document.getElementById('fuelPrice').value = data.FuelPrice;
-                document.getElementById('rateAmount').value = data.RateAmount;
-
-                const editModal = new bootstrap.Modal(document.getElementById('editClusterModal'));
-                editModal.show();
-              } else {
-                alert(data.error);
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching cluster data:', error);
-            });
-        });
-      });
-    </script>
-
-
-    <!-- Maintenance Table -->
-    <script>
-      // Sorting logic for Maintenance Table
-      let maintenanceSortColumn = -1;
-      let maintenanceSortAscending = true;
-
-      function sortMaintenanceTable(columnIndex) {
-        let table = document.getElementById("maintenanceTable");
-        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
-        maintenanceSortAscending = maintenanceSortColumn === columnIndex ? !maintenanceSortAscending : true; // Toggle sorting direction
-        maintenanceSortColumn = columnIndex;
-
-        // Determine if the column contains numeric values (e.g., Maintenance ID, Year, Amount)
-        let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5); // Numeric columns: MaintenanceID, Year, Amount
-
-        let sortedRows = rows.sort((a, b) => {
-          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
-          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
-
-          // Sort numerically if it's a numeric column
-          if (isNumericColumn) {
-            aValue = parseFloat(aValue) || 0;
-            bValue = parseFloat(bValue) || 0;
-            return maintenanceSortAscending ? aValue - bValue : bValue - aValue;
-          }
-
-          // Otherwise, sort alphabetically
-          return maintenanceSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        });
-
-        // Clear and append sorted rows
-        let tableBody = document.getElementById("maintenanceTableBody");
-        tableBody.innerHTML = "";
-        sortedRows.forEach(row => tableBody.appendChild(row));
-
-        // Update the sorting icons
-        updateMaintenanceSortIcons(columnIndex, maintenanceSortAscending);
-      }
-
-      function updateMaintenanceSortIcons(columnIndex, ascending) {
-        const headers = document.querySelectorAll("#maintenanceTable th");
-        headers.forEach((header, index) => {
-          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
-          if (index === columnIndex) {
-            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
-          }
-        });
-      }
-    </script>
-
-    <!-- Transactions Table -->
-    <script>
-      // Sorting logic for Transactions Table
-      let transactionsSortColumn = -1;
-      let transactionsSortAscending = true;
-
-      function sortTransactionsTable(columnIndex) {
-        let table = document.getElementById("transactionsTable");
-        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
-        transactionsSortAscending = transactionsSortColumn === columnIndex ? !transactionsSortAscending : true; // Toggle sorting direction
-        transactionsSortColumn = columnIndex;
-
-        // Determine if the column contains numeric values (e.g., TransactionID, TransactionGroupID, Qty, KGs)
-        let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5 || columnIndex === 6); // Numeric columns: TransactionID, TransactionGroupID, Qty, KGs
-
-        let sortedRows = rows.sort((a, b) => {
-          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
-          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
-
-          // Sort numerically if it's a numeric column
-          if (isNumericColumn) {
-            aValue = parseFloat(aValue) || 0;
-            bValue = parseFloat(bValue) || 0;
-            return transactionsSortAscending ? aValue - bValue : bValue - aValue;
-          }
-
-          // Otherwise, sort alphabetically
-          return transactionsSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        });
-
-        // Clear and append sorted rows
-        let tableBody = document.getElementById("transactionsTableBody");
-        tableBody.innerHTML = "";
-        sortedRows.forEach(row => tableBody.appendChild(row));
-
-        // Update the sorting icons
-        updateTransactionsSortIcons(columnIndex, transactionsSortAscending);
-      }
-
-      function updateTransactionsSortIcons(columnIndex, ascending) {
-        const headers = document.querySelectorAll("#transactionsTable th");
-        headers.forEach((header, index) => {
-          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
-          if (index === columnIndex) {
-            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
-          }
-        });
-      }
-    </script>
-
-    <!-- Trucks Table -->
-    <script>
-      // Sorting logic for Trucks Table
-      let trucksSortColumn = -1;
-      let trucksSortAscending = true;
-
-      function sortTrucksTable(columnIndex) {
-        let table = document.getElementById("trucksTable");
-        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
-        trucksSortAscending = trucksSortColumn === columnIndex ? !trucksSortAscending : true; // Toggle sorting direction
-        trucksSortColumn = columnIndex;
-
-        // Determine if the column contains numeric values (for sorting numerically)
-        let isNumericColumn = columnIndex === 0; // Assume TruckID (columnIndex 0) is numeric
-
-        let sortedRows = rows.sort((a, b) => {
-          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
-          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
-
-          // Sort numerically if it's a numeric column
-          if (isNumericColumn) {
-            aValue = parseFloat(aValue) || 0;
-            bValue = parseFloat(bValue) || 0;
-            return trucksSortAscending ? aValue - bValue : bValue - aValue;
-          }
-
-          // Otherwise, sort alphabetically
-          return trucksSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        });
-
-        // Clear and append sorted rows
-        let tableBody = document.getElementById("trucksTableBody");
-        tableBody.innerHTML = "";
-        sortedRows.forEach(row => tableBody.appendChild(row));
-
-        // Update the sorting icons
-        updateTrucksSortIcons(columnIndex, trucksSortAscending);
-      }
-
-      function updateTrucksSortIcons(columnIndex, ascending) {
-        const headers = document.querySelectorAll("#trucksTable th");
-        headers.forEach((header, index) => {
-          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
-          if (index === columnIndex) {
-            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
-          }
-        });
-      }
-    </script>
-
 
     <script>
       function attachMaintenanceEditButtons() {
@@ -1297,6 +1084,8 @@
         });
       }
     </script>
+
+    <!------------------ Maintenance function --------------------->
 
     <script>
       let maintenanceCurrentPage = 1;
@@ -1448,10 +1237,58 @@
         return pageItem;
       }
     </script>
+    <script>
+      // Sorting logic for Maintenance Table
+      let maintenanceSortColumn = -1;
+      let maintenanceSortAscending = true;
+
+      function sortMaintenanceTable(columnIndex) {
+        let table = document.getElementById("maintenanceTable");
+        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+        maintenanceSortAscending = maintenanceSortColumn === columnIndex ? !maintenanceSortAscending : true; // Toggle sorting direction
+        maintenanceSortColumn = columnIndex;
+
+        // Determine if the column contains numeric values (e.g., Maintenance ID, Year, Amount)
+        let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5); // Numeric columns: MaintenanceID, Year, Amount
+
+        let sortedRows = rows.sort((a, b) => {
+          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+          // Sort numerically if it's a numeric column
+          if (isNumericColumn) {
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
+            return maintenanceSortAscending ? aValue - bValue : bValue - aValue;
+          }
+
+          // Otherwise, sort alphabetically
+          return maintenanceSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        });
+
+        // Clear and append sorted rows
+        let tableBody = document.getElementById("maintenanceTableBody");
+        tableBody.innerHTML = "";
+        sortedRows.forEach(row => tableBody.appendChild(row));
+
+        // Update the sorting icons
+        updateMaintenanceSortIcons(columnIndex, maintenanceSortAscending);
+      }
+
+      function updateMaintenanceSortIcons(columnIndex, ascending) {
+        const headers = document.querySelectorAll("#maintenanceTable th");
+        headers.forEach((header, index) => {
+          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
+          if (index === columnIndex) {
+            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
+          }
+        });
+      }
+    </script>
 
 
 
-
+    <!------------------ Transactions function ----------------->
     <script>
       let transactionsCurrentPage = 1;
       let transactionsRowsPerPage = 5;
@@ -1579,9 +1416,75 @@
         updateTransactionsPaginationNumbers(Math.ceil(filteredTransactionsRows.length / transactionsRowsPerPage) || 1);
       });
     </script>
+    <script>
+      // Sorting logic for Transactions Table
+      let transactionsSortColumn = -1;
+      let transactionsSortAscending = true;
 
+      function sortTransactionsTable(columnIndex) {
+        let table = document.getElementById("transactionsTable");
+        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+        transactionsSortAscending = transactionsSortColumn === columnIndex ? !transactionsSortAscending : true; // Toggle sorting direction
+        transactionsSortColumn = columnIndex;
 
+        // Determine if the column contains numeric values (e.g., TransactionID, TransactionGroupID, Qty, KGs)
+        let isNumericColumn = (columnIndex === 0 || columnIndex === 1 || columnIndex === 5 || columnIndex === 6); // Numeric columns: TransactionID, TransactionGroupID, Qty, KGs
 
+        let sortedRows = rows.sort((a, b) => {
+          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+          // Sort numerically if it's a numeric column
+          if (isNumericColumn) {
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
+            return transactionsSortAscending ? aValue - bValue : bValue - aValue;
+          }
+
+          // Otherwise, sort alphabetically
+          return transactionsSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        });
+
+        // Clear and append sorted rows
+        let tableBody = document.getElementById("transactionsTableBody");
+        tableBody.innerHTML = "";
+        sortedRows.forEach(row => tableBody.appendChild(row));
+
+        // Update the sorting icons
+        updateTransactionsSortIcons(columnIndex, transactionsSortAscending);
+      }
+
+      function updateTransactionsSortIcons(columnIndex, ascending) {
+        const headers = document.querySelectorAll("#transactionsTable th");
+        headers.forEach((header, index) => {
+          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
+          if (index === columnIndex) {
+            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
+          }
+        });
+      }
+    </script>
+    <script>
+      function filterTransactionsTable() {
+        let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
+        let table = document.getElementById("transactionsTable");
+        let rows = table.getElementsByTagName("tr");
+        let noDataFound = true; // Flag to check if no row matches the search criteria
+
+        for (let i = 1; i < rows.length; i++) { // Start from i=1 to skip the header row
+          let row = rows[i];
+          if (row.id !== "noTransactionsDataRow") {
+            row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+
+            if (row.style.display === "") {
+              noDataFound = false;
+            }
+          }
+        }
+
+        document.getElementById("noTransactionsDataRow").style.display = noDataFound ? "" : "none";
+      }
+    </script>
     <script>
       function filterTransactionsTable() {
         let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
@@ -1604,6 +1507,58 @@
       }
     </script>
 
+
+
+    <!----------- Trucks function ---------------->
+
+    <script>
+      // Sorting logic for Trucks Table
+      let trucksSortColumn = -1;
+      let trucksSortAscending = true;
+
+      function sortTrucksTable(columnIndex) {
+        let table = document.getElementById("trucksTable");
+        let rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+        trucksSortAscending = trucksSortColumn === columnIndex ? !trucksSortAscending : true; // Toggle sorting direction
+        trucksSortColumn = columnIndex;
+
+        // Determine if the column contains numeric values (for sorting numerically)
+        let isNumericColumn = columnIndex === 0; // Assume TruckID (columnIndex 0) is numeric
+
+        let sortedRows = rows.sort((a, b) => {
+          let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+          let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
+
+          // Sort numerically if it's a numeric column
+          if (isNumericColumn) {
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
+            return trucksSortAscending ? aValue - bValue : bValue - aValue;
+          }
+
+          // Otherwise, sort alphabetically
+          return trucksSortAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        });
+
+        // Clear and append sorted rows
+        let tableBody = document.getElementById("trucksTableBody");
+        tableBody.innerHTML = "";
+        sortedRows.forEach(row => tableBody.appendChild(row));
+
+        // Update the sorting icons
+        updateTrucksSortIcons(columnIndex, trucksSortAscending);
+      }
+
+      function updateTrucksSortIcons(columnIndex, ascending) {
+        const headers = document.querySelectorAll("#trucksTable th");
+        headers.forEach((header, index) => {
+          header.classList.remove('ascending', 'descending'); // Remove previous sorting class
+          if (index === columnIndex) {
+            header.classList.add(ascending ? 'ascending' : 'descending'); // Add ascending or descending class
+          }
+        });
+      }
+    </script>
     <script>
       function filterTrucksTable() {
         let input = document.getElementById("trucksSearchBar").value.toLowerCase();
@@ -1626,6 +1581,9 @@
         document.getElementById("noTrucksDataRow").style.display = noDataFound ? "" : "none";
       }
     </script>
+
+
+    <!------------- Cluster function --------------->
 
     <script>
       let clustersCurrentPage = 1;
@@ -1748,6 +1706,70 @@
         return pageItem;
       }
     </script>
+    <script>
+      document.querySelectorAll('.edit-cluster-btn').forEach(button => {
+        button.addEventListener('click', function(event) {
+          event.preventDefault();
+          const uniqueClusterId = this.closest('tr').querySelector('td:first-child').textContent; // Assuming UniqueClusterID is in the first cell
+
+          fetch(`fetch_cluster.php?uniqueClusterId=${uniqueClusterId}`)
+            .then(response => response.json())
+            .then(data => {
+              if (!data.error) {
+                document.getElementById('uniqueClusterId').value = data.UniqueClusterID;
+                document.getElementById('clusterID').value = data.UniqueClusterID;
+                document.getElementById('clusterCategory').value = data.ClusterCategory;
+                document.getElementById('locationsInCluster').value = data.LocationsInCluster;
+                document.getElementById('tonner').value = data.Tonner;
+                document.getElementById('kmRadius').value = data.KMRADIUS;
+                document.getElementById('fuelPrice').value = data.FuelPrice;
+                document.getElementById('rateAmount').value = data.RateAmount;
+
+                const editModal = new bootstrap.Modal(document.getElementById('editClusterModal'));
+                editModal.show();
+              } else {
+                alert(data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching cluster data:', error);
+            });
+        });
+      });
+    </script>
+    <script>
+      // Handle cluster selection changes
+      document.getElementById('clusterSelection').addEventListener('change', function() {
+        const selection = this.value;
+        document.getElementById('existingClusterFields').style.display = selection === 'existing' ? 'block' : 'none';
+        document.getElementById('newClusterFields').style.display = selection === 'new' ? 'block' : 'none';
+      });
+
+      // Populate category and locations for existing clusters
+      document.getElementById('existingClusterCategory').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('existingClusterID').value = selectedOption.getAttribute('data-clusterID');
+        document.getElementById('existingLocationsInCluster').value = selectedOption.getAttribute('data-locations');
+      });
+
+      // Fetch the next available ClusterID for a new cluster
+      function fetchNewClusterID() {
+        fetch('trucks.php?action=getNextClusterID')
+          .then(response => response.json())
+          .then(data => {
+            console.log("Fetched data:", data); // Debugging: log the response
+            if (data.success) {
+              document.getElementById('newClusterID').value = data.nextClusterID;
+            } else {
+              console.error('Failed to fetch the new ClusterID');
+            }
+          })
+          .catch(error => console.error('Error fetching ClusterID:', error));
+      }
+    </script>
+
+
+    <!----------- Theme function -------------->
 
     <script>
       document.addEventListener("DOMContentLoaded", function() {
@@ -1773,6 +1795,9 @@
       });
     </script>
 
+
+
+    <!--------- CSS/STYLE --------->
 
     <style>
       .dark-mode .pagination .page-item .page-link {
