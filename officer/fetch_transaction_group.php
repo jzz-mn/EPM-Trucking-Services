@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['success'] = false;
         $response['message'] = 'Invalid Transaction Group ID.';
         echo json_encode($response);
-        exit();
+        exit;
     }
 
     // Fetch Transaction Group Details
