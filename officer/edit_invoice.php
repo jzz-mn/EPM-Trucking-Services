@@ -1060,10 +1060,13 @@ include '../officer/header.php';
                                         name="TotalKGs" readonly>
                                 </div>
                             </div>
-
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
-
+                        <!-- Add Transaction Button -->
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-success" id="addTransactionBtn">Add
+                                Transaction</button>
+                        </div>
                         <!-- Transactions Table within Modal -->
                         <div class="mt-4">
                             <h5>Transactions</h5>
@@ -1091,7 +1094,62 @@ include '../officer/header.php';
                 </div>
             </div>
         </div>
+        <!-- Add Transaction Modal -->
+        <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Transaction</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addTransactionForm">
+                            <input type="hidden" id="Add_TransactionGroupID" name="TransactionGroupID">
+                            <input type="hidden" id="Add_TransactionDate" name="TransactionDate">
 
+                            <!-- DR No Input with Validation Feedback -->
+                            <div class="mb-3">
+                                <label for="Add_DRno" class="form-label">DR No</label>
+                                <input type="text" class="form-control" id="Add_DRno" name="DRno" required>
+                                <!-- Warning message placeholder -->
+                                <div id="Add_drNoWarning" class="invalid-feedback">
+                                    DR No already exists. Please enter a unique DR No.
+                                </div>
+                            </div>
+
+                            <!-- Outlet Name with Autocomplete -->
+                            <div class="mb-3 position-relative">
+                                <label for="Add_OutletName" class="form-label">Outlet Name</label>
+                                <input type="text" class="form-control" id="Add_OutletName" name="OutletName" required
+                                    autocomplete="off">
+                                <!-- Suggestion Box -->
+                                <div id="Add_outletSuggestions" class="list-group position-absolute w-100"
+                                    style="z-index: 1000; display: none;"></div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Qty -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="Add_Qty" class="form-label">Qty</label>
+                                    <input type="number" step="0.01" class="form-control" id="Add_Qty" name="Qty"
+                                        required>
+                                </div>
+
+                                <!-- KGs -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="Add_KGs" class="form-label">KGs</label>
+                                    <input type="number" step="0.01" class="form-control" id="Add_KGs" name="KGs"
+                                        required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Add Transaction</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Edit Transaction Modal remains unchanged -->
         <div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel"
             aria-hidden="true">
@@ -1314,6 +1372,7 @@ $conn->close();
             // Fetch Transaction Group Details via AJAX
             $.ajax({
                 url: 'fetch_transaction_group.php',
+                // You need to create this script
                 type: 'POST',
                 data: {
                     TransactionGroupID: tgID
@@ -1512,7 +1571,247 @@ $conn->close();
             });
         }, 500)); // 500ms debounce delay
 
-        // Handle Transaction Form Submission with DR No Validation
+        // Function to fetch outlet suggestions
+        function fetchOutletSuggestions(query) {
+            if (query.length < 1) { // Start suggesting after 1 character
+                $('#outletSuggestions').hide();
+                return;
+            }
+
+            $.ajax({
+                url: 'search_outlets.php',
+                type: 'GET',
+                data: {
+                    query: query
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.error) {
+                        console.error('Error fetching outlets:', data.error);
+                        $('#outletSuggestions').hide();
+                    } else if (data.length > 0) {
+                        let suggestions = data.map(function (outlet) {
+                            return `<button type="button" class="list-group-item list-group-item-action" data-outlet="${outlet.CustomerName}">${outlet.CustomerName}</button>`;
+                        }).join('');
+                        $('#outletSuggestions').html(suggestions).show();
+                    } else {
+                        $('#outletSuggestions').html('<div class="list-group-item">No outlets found.</div>').show();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#outletSuggestions').hide();
+                }
+            });
+        }
+
+        // Debounce function to limit the rate of AJAX calls for autocomplete
+        $('#T_OutletName').on('input', debounce(function () {
+            let query = $(this).val().trim();
+            fetchOutletSuggestions(query);
+        }, 300)); // 300ms debounce delay
+
+        // Handle click on outlet suggestion
+        $(document).on('click', '#outletSuggestions .list-group-item', function () {
+            let selectedOutlet = $(this).data('outlet');
+            $('#T_OutletName').val(selectedOutlet);
+            $('#outletSuggestions').hide();
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#T_OutletName').length && !$(e.target).closest('#outletSuggestions').length) {
+                $('#outletSuggestions').hide();
+            }
+        });
+
+        // Handle Add Transaction Button Click
+        $('#addTransactionBtn').on('click', function () {
+            // Get the current TransactionGroupID and TransactionDate from the Edit TG Form
+            let transactionGroupID = $('#TransactionGroupID').val();
+            let transactionDate = $('#TG_Date').val();
+
+            // Populate the hidden field and read-only TransactionDate in the Add Transaction Modal
+            $('#Add_TransactionGroupID').val(transactionGroupID);
+            $('#Add_TransactionDate').val(transactionDate);
+
+            // Reset the form fields
+            $('#addTransactionForm')[0].reset();
+            $('#Add_DRno').removeClass('is-invalid');
+            $('#Add_drNoWarning').hide();
+            $('#Add_outletSuggestions').hide();
+
+            // Open the Add Transaction Modal
+            $('#addTransactionModal').modal('show');
+        });
+
+        // Function to validate DR No for Add Transaction
+        function validateAddDRNo(drNo, transaction_id, callback) {
+            $.ajax({
+                url: 'validate_dr_no.php',
+                type: 'GET',
+                data: {
+                    dr_no: drNo,
+                    transaction_id: transaction_id // For new transactions, transaction_id can be 0 or omitted
+                },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.error) {
+                        console.error('Validation Error:', response.error);
+                        callback(false);
+                    } else {
+                        callback(response.exists);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error validating DR No:', error);
+                    callback(false); // Assume non-existing on error
+                }
+            });
+        }
+
+        // Event listener for DR No input field with debounce for Add Transaction
+        $('#Add_DRno').on('input', debounce(function () {
+            let drNo = $(this).val().trim();
+            let $drNoInput = $(this);
+            let $warning = $('#Add_drNoWarning');
+            let transaction_id = 0; // Since it's a new transaction
+
+            if (drNo === '') {
+                // If DR No is empty, remove validation states
+                $drNoInput.removeClass('is-invalid');
+                $warning.text('DR No is required.').hide();
+                return;
+            }
+
+            // Validate DR No
+            validateAddDRNo(drNo, transaction_id, function (exists) {
+                if (exists) {
+                    // DR No exists - show error
+                    $drNoInput.addClass('is-invalid');
+                    $warning.text('DR No already exists. Please enter a unique DR No.').show();
+                } else {
+                    // DR No does not exist - remove error
+                    $drNoInput.removeClass('is-invalid');
+                    $warning.hide();
+                }
+            });
+        }, 500)); // 500ms debounce delay
+
+        // Function to fetch outlet suggestions for Add Transaction
+        function fetchAddOutletSuggestions(query) {
+            if (query.length < 1) { // Start suggesting after 1 character
+                $('#Add_outletSuggestions').hide();
+                return;
+            }
+
+            $.ajax({
+                url: 'search_outlets.php',
+                type: 'GET',
+                data: {
+                    query: query
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.error) {
+                        console.error('Error fetching outlets:', data.error);
+                        $('#Add_outletSuggestions').hide();
+                    } else if (data.length > 0) {
+                        let suggestions = data.map(function (outlet) {
+                            return `<button type="button" class="list-group-item list-group-item-action" data-outlet="${outlet.CustomerName}">${outlet.CustomerName}</button>`;
+                        }).join('');
+                        $('#Add_outletSuggestions').html(suggestions).show();
+                    } else {
+                        $('#Add_outletSuggestions').html('<div class="list-group-item">No outlets found.</div>').show();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#Add_outletSuggestions').hide();
+                }
+            });
+        }
+
+        // Event listener for Outlet Name input field with debounce for Add Transaction
+        $('#Add_OutletName').on('input', debounce(function () {
+            let query = $(this).val().trim();
+            fetchAddOutletSuggestions(query);
+        }, 300)); // 300ms debounce delay
+
+        // Handle click on outlet suggestion for Add Transaction
+        $(document).on('click', '#Add_outletSuggestions .list-group-item', function () {
+            let selectedOutlet = $(this).data('outlet');
+            $('#Add_OutletName').val(selectedOutlet);
+            $('#Add_outletSuggestions').hide();
+        });
+
+        // Hide suggestions when clicking outside for Add Transaction
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#Add_OutletName').length && !$(e.target).closest('#Add_outletSuggestions').length) {
+                $('#Add_outletSuggestions').hide();
+            }
+        });
+
+        // Handle Add Transaction Form Submission
+        $('#addTransactionForm').on('submit', function (e) {
+            e.preventDefault();
+
+            // Get form data
+            let formData = $(this).serialize();
+
+            // Disable the button and show loading
+            $(this).find('button[type="submit"]').prop('disabled', true).text('Adding...');
+
+            $.ajax({
+                url: 'add_transaction.php', // Endpoint to handle adding transactions
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+
+                        // Append the new transaction to the transactionsTable
+                        let newRow = `
+                    <tr id="tx-${response.transaction.TransactionID}">
+                        <td>${response.transaction.TransactionID}</td>
+                        <td>${response.transaction.TransactionDate}</td>
+                        <td>${response.transaction.DRno}</td>
+                        <td>${response.transaction.OutletName}</td>
+                        <td>${parseFloat(response.transaction.Qty).toFixed(2)}</td>
+                        <td>${parseFloat(response.transaction.KGs).toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${response.transaction.TransactionID}">Edit</button>
+                        </td>
+                    </tr>
+                `;
+                        $('#transactionsTable tbody').append(newRow);
+
+                        // Update totals
+                        $('#TG_TotalKGs').val(parseFloat(response.newTotalKGs).toFixed(2));
+                        $('#TG_Amount').val(parseFloat(response.newAmount).toFixed(2));
+                        $('#NetAmount').val(parseFloat(response.newNetAmount).toFixed(2));
+
+                        // Optionally, you can also update the main invoice totals here if needed
+
+                        // Close the Add Transaction Modal
+                        $('#addTransactionModal').modal('hide');
+                    } else {
+                        showAlert('danger', response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                    showAlert('danger', 'An error occurred while adding the transaction.');
+                },
+                complete: function () {
+                    // Re-enable the button and reset text
+                    $('#addTransactionForm').find('button[type="submit"]').prop('disabled', false).text('Add Transaction');
+                }
+            });
+        });
+
+        // Handle Edit Transaction Form Submission with DR No Validation
         $('#editTransactionForm').on('submit', function (e) {
             e.preventDefault();
 
@@ -1649,17 +1948,6 @@ $conn->close();
             return rounded_total_kgs;
         }
 
-        // Debounce function to limit the rate of AJAX calls
-        function debounce(func, delay) {
-            let debounceTimer;
-            return function () {
-                const context = this;
-                const args = arguments;
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => func.apply(context, args), delay);
-            }
-        }
-
         // Function to show alerts
         function showAlert(type, message) {
             let alertHtml = `
@@ -1711,7 +1999,18 @@ $conn->close();
             fetchOutletSuggestions(query);
         }, 300)); // 300ms debounce delay
 
-        // Handle click on suggestion
+        // Debounce function to limit the rate of AJAX calls
+        function debounce(func, delay) {
+            let debounceTimer;
+            return function () {
+                const context = this;
+                const args = arguments;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(context, args), delay);
+            }
+        }
+
+        // Handle click on outlet suggestion
         $(document).on('click', '#outletSuggestions .list-group-item', function () {
             let selectedOutlet = $(this).data('outlet');
             $('#T_OutletName').val(selectedOutlet);
