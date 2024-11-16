@@ -594,6 +594,26 @@
           </div>
         </div>
 
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteClusterModal" tabindex="-1" aria-labelledby="deleteClusterLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="deleteClusterLabel">Delete Cluster</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                Are you sure you want to delete this cluster?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCluster">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
 
         <h5 class="border-bottom py-2 px-4 mb-4">Trucks</h5>
@@ -858,7 +878,7 @@
                         <i class="ti ti-users text-white me-1 fs-5"></i> Add Cluster
                       </a>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mt-3">
                       <div class="col-md-4">
                         <input type="text" id="clustersSearchBar" class="form-control" placeholder="Search..." onkeyup="filterClustersTable()" />
                       </div>
@@ -1766,6 +1786,54 @@
           })
           .catch(error => console.error('Error fetching ClusterID:', error));
       }
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        let deleteClusterId = null;
+
+        // Attach event listener to all delete buttons
+        document.querySelectorAll(".delete-cluster-btn").forEach(function(button) {
+          button.addEventListener("click", function() {
+            const row = this.closest("tr");
+            deleteClusterId = row.querySelector("td:first-child").textContent.trim(); // Get UniqueClusterID
+            const deleteModal = new bootstrap.Modal(document.getElementById("deleteClusterModal"));
+            deleteModal.show();
+          });
+        });
+
+        // Confirm deletion
+        document.getElementById("confirmDeleteCluster").addEventListener("click", function() {
+          if (deleteClusterId) {
+            fetch("delete_cluster.php", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `UniqueClusterID=${encodeURIComponent(deleteClusterId)}`,
+              })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json(); // Parse JSON response
+              })
+              .then((data) => {
+                if (data.success) {
+                  // Refresh the page after successful deletion
+                  alert("Cluster deleted successfully.");
+                  window.location.reload(); // Reload the page
+                } else {
+                  alert("Error: " + data.message);
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert(`An unexpected error occurred: ${error.message}`);
+              });
+          }
+        });
+      });
     </script>
 
 
