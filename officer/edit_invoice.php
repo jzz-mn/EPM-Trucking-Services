@@ -1379,7 +1379,7 @@ include '../officer/header.php';
                     <div class="modal-body">
                         <form id="editTGForm">
                             <input type="hidden" id="TransactionGroupID" name="TransactionGroupID">
-
+                            <input type="hidden" id="TG_ClusterID" name="ClusterID"> <!-- Hidden ClusterID Field -->
                             <div class="row">
                                 <!-- Truck Dropdown -->
                                 <div class="col-md-4 mb-3">
@@ -1752,7 +1752,7 @@ $conn->close();
 
             // Fetch Transaction Group Details via AJAX
             $.ajax({
-                url: 'fetch_transaction_group.php', // You need to create this script
+                url: 'fetch_transaction_group.php', // Ensure this script includes ClusterID in response
                 type: 'POST',
                 data: {
                     TransactionGroupID: tgID
@@ -1762,6 +1762,7 @@ $conn->close();
                     if (response.success) {
                         let tg = response.transactionGroup;
                         let transactions = response.transactions;
+                        let ClusterID = response.ClusterID; // Retrieved ClusterID
 
                         // Populate the form fields
                         $('#TransactionGroupID').val(tg.TransactionGroupID);
@@ -1773,11 +1774,8 @@ $conn->close();
                         $('#TG_Amount').val(parseFloat(tg.Amount).toFixed(2));
                         $('#TG_TotalKGs').val(parseFloat(tg.TotalKGs).toFixed(2));
 
-                        // Set min and max for TG_Date based on BillingStartDate and BillingEndDate
-                        let billingStartDate = $('#BillingStartDate').val();
-                        let billingEndDate = $('#BillingEndDate').val();
-                        $('#TG_Date').attr('min', billingStartDate);
-                        $('#TG_Date').attr('max', billingEndDate);
+                        // Set ClusterID in hidden input
+                        $('#TG_ClusterID').val(ClusterID);
 
                         // Populate Transactions Table
                         let tbody = $('#transactionsTable tbody');
@@ -1786,20 +1784,19 @@ $conn->close();
                         if (transactions.length > 0) {
                             transactions.forEach(function (tx) {
                                 let tr = `
-                                <tr id="tx-${tx.TransactionID}">
-                                    <td>${tx.TransactionID}</td>
-                                    <td>${tx.TransactionDate}</td>
-                                    <td>${tx.DRno}</td>
-                                    <td>${tx.OutletName}</td>
-                                    <td>${tx.Qty}</td>
-                                    <td>${tx.KGs}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
-                                        <button class="btn btn-sm btn-danger delete-tx-btn" data-tx-id="${tx.TransactionID}">Delete</button>
-                                    </td>
-                                </tr>
-                            `;
-
+                        <tr id="tx-${tx.TransactionID}">
+                            <td>${tx.TransactionID}</td>
+                            <td>${tx.TransactionDate}</td>
+                            <td>${tx.DRno}</td>
+                            <td>${tx.OutletName}</td>
+                            <td>${tx.Qty}</td>
+                            <td>${tx.KGs}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
+                                <button class="btn btn-sm btn-danger delete-tx-btn" data-tx-id="${tx.TransactionID}">Delete</button>
+                            </td>
+                        </tr>
+                    `;
                                 tbody.append(tr);
                             });
                         } else {
@@ -2287,7 +2284,7 @@ $conn->close();
             $('#TG_Amount').val(Amount.toFixed(2));
 
             // Fetch and update RateAmount based on new FuelPrice and existing Tonner
-            let clusterID = $('#TG_TruckID').val();
+            let clusterID = $('#TG_ClusterID').val(); // Correctly retrieve ClusterID from hidden input
             let totalKGs = parseFloat($('#TG_TotalKGs').val()) || 0;
             let tonner = calculateTonner(totalKGs);
 
@@ -2313,7 +2310,7 @@ $conn->close();
         // Function to fetch RateAmount based on ClusterID, FuelPrice, and Tonner
         function fetchRateAmount(clusterID, fuelPrice, tonner, callback) {
             $.ajax({
-                url: 'get_rate_amount.php',
+                url: 'get_rate_amount.php', // Endpoint to fetch RateAmount
                 type: 'POST',
                 data: {
                     ClusterID: clusterID,
