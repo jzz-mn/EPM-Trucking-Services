@@ -27,38 +27,47 @@ include '../includes/db_connection.php';
                     <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                   </a>
                 </li>
+                <li class="breadcrumb-item active" aria-current="page">Route Optimization</li>
               </ol>
             </nav>
           </div>
         </div>
       </div>
     </div>
+
     <h5 class="border-bottom py-2 px-4 mb-4">Routes</h5>
 
-    <!-- Map and Route Optimization Section -->
-    <div class="body-wrapper">
-      <div class="container-fluid p-0">
-        <div class="row">
-          <!-- Route Map Section -->
-          <div class="col-lg-12">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Truck Route Map</h5>
-                <div class="mb-4">
-                  <label for="cluster" class="form-label">Select Cluster</label>
-                  <select id="cluster" class="form-select">
-                    <option value="" disabled selected>Select a cluster</option>
-                    <option value="Padre Garcia, SAN PEDRO, ALAMINOS, UR STO. TOMAS, STO TOMAS, FPIP TANAUAN 2, WM TANAUAN 2, WM TANAUAN SM, CM TANAUAN, Talisay Area">
-                      Tanauan-Talisay Cluster
-                    </option>
-                  </select>
-                </div>
-                <button class="btn btn-primary mb-3" onclick="showRoute()">Show Optimized Route</button>
-                <!-- Map container -->
-                <div id="map" style="width: 100%; height: 500px;"></div>
-              </div>
-            </div>
+    <div class="row">
+      <!-- Map Section -->
+      <div class="col-md-6">
+        <h5 class="card-title">Truck Route Map</h5>
+        <div id="map" style="width: 100%; height: 500px; border: 1px solid #ccc;"></div>
+      </div>
+
+      <!-- Route Details Section -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5>Select Cluster</h5>
+            <label for="cluster" class="form-label">Cluster</label>
+            <select id="cluster" class="form-select">
+              <option value="" disabled selected>Select a cluster</option>
+              <?php
+              $query = "SELECT DISTINCT ClusterCategory, LocationsInCluster FROM clusters";
+              $result = mysqli_query($conn, $query);
+              while ($row = mysqli_fetch_assoc($result)) {
+                  echo "<option value='{$row['LocationsInCluster']}'>{$row['ClusterCategory']}</option>";
+              }
+              ?>
+            </select>
+            <button class="btn btn-primary mt-3" onclick="showRoute()">Show Optimized Route</button>
           </div>
+        </div>
+        <div class="mt-3">
+          <h6 class="text-primary">Route Summary</h6>
+          <p id="route-summary" class="text-muted fw-bold"></p>
+          <h6 class="text-primary">Overview</h6>
+          <p id="route-overview" class="text-muted"></p>
         </div>
       </div>
     </div>
@@ -84,6 +93,17 @@ include '../includes/db_connection.php';
         }).addTo(map);
     }
 
+    // Function to fetch coordinates for a given location
+    async function fetchCoordinates(location) {
+        const response = await fetch(`fetch_location_coordinates.php?location=${encodeURIComponent(location)}`);
+        const data = await response.json();
+
+        if (!data.lat || !data.lng) {
+            throw new Error(data.error || `Coordinates not found for: ${location}`);
+        }
+        return data;
+    }
+
     // Function to display the route
     async function showRoute() {
         const clusterSelect = document.getElementById("cluster");
@@ -98,40 +118,39 @@ include '../includes/db_connection.php';
             const locationNames = locations.split(",").map(loc => loc.trim());
             const waypoints = [];
 
-            // Fetch coordinates for all locations
-            for (let location of locationNames) {
-                const coords = await getCoordinates(location);
-                waypoints.push(L.latLng(coords.lat, coords.lng));
+            // Fetch coordinates dynamically for all locations in the cluster
+            for (const location of locationNames) {
+                const coords = await fetchCoordinates(location);
+                waypoints.push(`${coords.lng},${coords.lat}`);
             }
+
+            // Construct the route URL
+            const routeUrl = `https://router.project-osrm.org/route/v1/driving/${waypoints.join(";")}?overview=full&geometries=geojson`;
+            const response = await fetch(routeUrl);
+            const data = await response.json();
+
+            if (data.code !== "Ok") {
+                throw new Error("Error fetching route data. Ensure all locations have valid coordinates.");
+            }
+
+            const route = data.routes[0];
+            const summary = `Distance: ${(route.distance / 1000).toFixed(1)} km, Duration: ${(route.duration / 60).toFixed(0)} minutes`;
+            document.getElementById('route-summary').textContent = summary;
+
+            const description = `Optimized route includes: ${locationNames.join(", ")}.`;
+            document.getElementById('route-overview').textContent = description;
 
             // Clear existing route
             if (routeControl) {
-                map.removeControl(routeControl);
+                map.removeLayer(routeControl);
             }
 
-            // Add routing layer to the map
-            routeControl = L.Routing.control({
-                waypoints: waypoints,
-                routeWhileDragging: false,
-                show: true,
-                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
-            }).addTo(map);
+            // Display the route on the map
+            routeControl = L.geoJSON(route.geometry).addTo(map);
+            map.fitBounds(L.geoJSON(route.geometry).getBounds());
         } catch (error) {
-            alert("Error displaying route: " + error.message);
+            alert(`Error displaying route: ${error.message}`);
         }
-    }
-
-    // Function to fetch coordinates for a location using OpenStreetMap's Nominatim API
-    async function getCoordinates(location) {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`;
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.length === 0) {
-            throw new Error(`Location not found: ${location}`);
-        }
-
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
     }
 
     // Load the map when the page loads
