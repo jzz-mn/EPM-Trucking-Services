@@ -94,17 +94,24 @@ function calculate_tonner($total_kgs)
     $rounded_total_kgs = 0;
     if ($total_kgs > 0) {
         if ($total_kgs <= 1199) {
+            // 1,199 and below rounded to 1,000
             $rounded_total_kgs = 1000;
+        } else if ($total_kgs <= 2199) {
+            // 1,200 - 2,199 rounded to 2,000
+            $rounded_total_kgs = 2000;
+        } else if ($total_kgs <= 3199) {
+            // 2,200 - 3,199 rounded to 3,000
+            $rounded_total_kgs = 3000;
         } else if ($total_kgs <= 4199) {
-            $rounded_total_kgs = ceil($total_kgs / 1000) * 1000;
-            if ($rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
-                $rounded_total_kgs = 4000;
-            }
+            // 3,200 - 4,199 rounded to 4,000
+            $rounded_total_kgs = 4000;
         } else {
+            // 4,200 and above rounded to 4,000
             $rounded_total_kgs = 4000;
         }
     }
     return $rounded_total_kgs;
+
 }
 
 // Handle AJAX requests
@@ -788,6 +795,370 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             exit;
         }
+        // Handle Delete Transaction Action
+        if ($_POST['action'] == 'delete_transaction') {
+            $transactionID = intval($_POST['TransactionID']);
+
+            // Begin Transaction
+            $conn->begin_transaction();
+            try {
+                // Fetch the TransactionGroupID of the transaction to delete
+                $fetchTGQuery = "SELECT TransactionGroupID FROM transactions WHERE TransactionID = ?";
+                $stmt = $conn->prepare($fetchTGQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TransactionGroupID fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionID);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result->num_rows == 0) {
+                    throw new Exception('Transaction not found.');
+                }
+                $row = $result->fetch_assoc();
+                $transactionGroupID = $row['TransactionGroupID'];
+                $stmt->close();
+
+                // Delete the transaction
+                $deleteTxQuery = "DELETE FROM transactions WHERE TransactionID = ?";
+                $stmt = $conn->prepare($deleteTxQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare delete transaction query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to delete transaction: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Recalculate the Transaction Group's TotalKGs
+                $kgQuery = "SELECT SUM(KGs) as TotalKGs FROM transactions WHERE TransactionGroupID = ?";
+                $stmt = $conn->prepare($kgQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TotalKGs calculation query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $kgResult = $stmt->get_result();
+                $kgRow = $kgResult->fetch_assoc();
+                $TotalKGs = $kgRow['TotalKGs'] ?? 0;
+                $stmt->close();
+
+                // Calculate Tonner
+                $Tonner = calculate_tonner($TotalKGs);
+
+                // Fetch ClusterID from the first transaction's OutletName
+                $clusterIDQuery = "
+            SELECT c.ClusterID
+            FROM transactiongroup tg
+            JOIN transactions t ON tg.TransactionGroupID = t.TransactionGroupID
+            JOIN customers c ON LOWER(c.CustomerName) = LOWER(t.OutletName)
+            WHERE tg.TransactionGroupID = ?
+            LIMIT 1
+        ";
+                $stmt = $conn->prepare($clusterIDQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare ClusterID fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $clusterResult = $stmt->get_result();
+                if ($clusterResult->num_rows > 0) {
+                    $clusterRow = $clusterResult->fetch_assoc();
+                    $ClusterID = $clusterRow['ClusterID'];
+                } else {
+                    throw new Exception('ClusterID not found for the Outlet Name.');
+                }
+                $stmt->close();
+
+                // Fetch FuelPrice from the transaction group
+                $fuelPriceQuery = "SELECT FuelPrice FROM transactiongroup WHERE TransactionGroupID = ?";
+                $stmt = $conn->prepare($fuelPriceQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare FuelPrice fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $fuelPriceResult = $stmt->get_result();
+                $fuelPriceRow = $fuelPriceResult->fetch_assoc();
+                $FuelPrice = $fuelPriceRow['FuelPrice'] ?? 0;
+                $stmt->close();
+
+                // Fetch RateAmount from clusters based on ClusterID, FuelPrice, and Tonner
+                $RateAmount = fetch_rate_amount($conn, $ClusterID, $FuelPrice, $Tonner);
+
+                // Update RateAmount in Transaction Group
+                $updateRateQuery = "
+            UPDATE transactiongroup
+            SET RateAmount = ?
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($updateRateQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare RateAmount update query: ' . $conn->error);
+                }
+                $stmt->bind_param("di", $RateAmount, $transactionGroupID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to update RateAmount: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Calculate Amount = TollFeeAmount + RateAmount
+                $amountQuery = "SELECT TollFeeAmount FROM transactiongroup WHERE TransactionGroupID = ?";
+                $stmt = $conn->prepare($amountQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare Amount fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $amountResult = $stmt->get_result();
+                $amountRow = $amountResult->fetch_assoc();
+                $TollFeeAmount = $amountRow['TollFeeAmount'] ?? 0;
+                $stmt->close();
+
+                $Amount = $TollFeeAmount + $RateAmount;
+
+                // Update Amount in Transaction Group
+                $updateAmountQuery = "
+            UPDATE transactiongroup
+            SET Amount = ?
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($updateAmountQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare Amount update query: ' . $conn->error);
+                }
+                $stmt->bind_param("di", $Amount, $transactionGroupID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to update Amount: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Update TotalKGs in transaction group
+                $updateKGsQuery = "
+            UPDATE transactiongroup
+            SET TotalKGs = ?
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($updateKGsQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare TotalKGs update query: ' . $conn->error);
+                }
+                $stmt->bind_param("di", $TotalKGs, $transactionGroupID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to update TotalKGs: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Recalculate invoice amounts based on updated Transaction Group
+                // Fetch BillingInvoiceNo from the Transaction Group
+                $fetchInvoiceNoQuery = "
+            SELECT BillingInvoiceNo
+            FROM transactiongroup
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($fetchInvoiceNoQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $invoiceResult = $stmt->get_result();
+                $invoiceRow = $invoiceResult->fetch_assoc();
+                $billingInvoiceNo = $invoiceRow['BillingInvoiceNo'] ?? null;
+                $stmt->close();
+
+                if ($billingInvoiceNo) {
+                    // Fetch BillingStartDate and BillingEndDate from invoices
+                    $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
+                    $stmt = $conn->prepare($fetchDateRangeQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare date range fetch query: ' . $conn->error);
+                    }
+                    $stmt->bind_param("i", $billingInvoiceNo);
+                    $stmt->execute();
+                    $dateResult = $stmt->get_result();
+                    $dateRow = $dateResult->fetch_assoc();
+                    $billingStartDate = $dateRow['BillingStartDate'] ?? '';
+                    $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $stmt->close();
+
+                    // Recalculate amounts based on the updated date range
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+
+                    // Update invoice amounts
+                    $updateAmountsQuery = "
+                UPDATE invoices
+                SET GrossAmount = ?, VAT = ?, TotalAmount = ?, EWT = ?, AddTollCharges = ?, 
+                    AmountNetOfTax = ?, NetAmount = ?
+                WHERE BillingInvoiceNo = ?
+            ";
+                    $stmt = $conn->prepare($updateAmountsQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
+                    }
+                    $stmt->bind_param(
+                        "dddddddi",
+                        $amounts['GrossAmount'],
+                        $amounts['VAT'],
+                        $amounts['TotalAmount'],
+                        $amounts['EWT'],
+                        $amounts['AddTollCharges'],
+                        $amounts['AmountNetOfTax'],
+                        $amounts['NetAmount'],
+                        $billingInvoiceNo
+                    );
+                    if (!$stmt->execute()) {
+                        throw new Exception('Failed to update invoice amounts: ' . $stmt->error);
+                    }
+                    $stmt->close();
+                }
+
+                // Commit Transaction
+                $conn->commit();
+
+                // Log Activity
+                insert_activity_log($conn, $userID, "Deleted Transaction ID: $transactionID");
+
+                // Prepare response data
+                $responseAmounts = $amounts ?? calculate_amounts($conn, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Transaction deleted successfully.',
+                    'amounts' => $responseAmounts,
+                    'transactionGroupID' => $transactionGroupID,
+                    'newTotalKGs' => $TotalKGs,
+                    'newAmount' => $Amount
+                ]);
+            } catch (Exception $e) {
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
+        // Handle Delete Transaction Group Action
+        if ($_POST['action'] == 'delete_transaction_group') {
+            $transactionGroupID = intval($_POST['TransactionGroupID']);
+
+            // Begin Transaction
+            $conn->begin_transaction();
+            try {
+                // Fetch BillingInvoiceNo from the transaction group
+                $fetchInvoiceNoQuery = "
+            SELECT BillingInvoiceNo
+            FROM transactiongroup
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($fetchInvoiceNoQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare BillingInvoiceNo fetch query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                $stmt->execute();
+                $invoiceResult = $stmt->get_result();
+                $invoiceRow = $invoiceResult->fetch_assoc();
+                $billingInvoiceNo = $invoiceRow['BillingInvoiceNo'] ?? null;
+                $stmt->close();
+
+                // Delete associated transactions
+                $deleteTransactionsQuery = "
+            DELETE FROM transactions
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($deleteTransactionsQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare delete transactions query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to delete transactions: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Delete the transaction group
+                $deleteTGQuery = "
+            DELETE FROM transactiongroup
+            WHERE TransactionGroupID = ?
+        ";
+                $stmt = $conn->prepare($deleteTGQuery);
+                if (!$stmt) {
+                    throw new Exception('Failed to prepare delete transaction group query: ' . $conn->error);
+                }
+                $stmt->bind_param("i", $transactionGroupID);
+                if (!$stmt->execute()) {
+                    throw new Exception('Failed to delete transaction group: ' . $stmt->error);
+                }
+                $stmt->close();
+
+                // Recalculate invoice amounts if the transaction group was part of an invoice
+                if ($billingInvoiceNo) {
+                    // Fetch BillingStartDate and BillingEndDate from invoices
+                    $fetchDateRangeQuery = "SELECT BillingStartDate, BillingEndDate FROM invoices WHERE BillingInvoiceNo = ?";
+                    $stmt = $conn->prepare($fetchDateRangeQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare date range fetch query: ' . $conn->error);
+                    }
+                    $stmt->bind_param("i", $billingInvoiceNo);
+                    $stmt->execute();
+                    $dateResult = $stmt->get_result();
+                    $dateRow = $dateResult->fetch_assoc();
+                    $billingStartDate = $dateRow['BillingStartDate'] ?? '';
+                    $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $stmt->close();
+
+                    // Recalculate amounts based on the updated date range
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+
+                    // Update invoice amounts
+                    $updateAmountsQuery = "
+                UPDATE invoices
+                SET GrossAmount = ?, VAT = ?, TotalAmount = ?, EWT = ?, AddTollCharges = ?, 
+                    AmountNetOfTax = ?, NetAmount = ?
+                WHERE BillingInvoiceNo = ?
+            ";
+                    $stmt = $conn->prepare($updateAmountsQuery);
+                    if (!$stmt) {
+                        throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
+                    }
+                    $stmt->bind_param(
+                        "dddddddi",
+                        $amounts['GrossAmount'],
+                        $amounts['VAT'],
+                        $amounts['TotalAmount'],
+                        $amounts['EWT'],
+                        $amounts['AddTollCharges'],
+                        $amounts['AmountNetOfTax'],
+                        $amounts['NetAmount'],
+                        $billingInvoiceNo
+                    );
+                    if (!$stmt->execute()) {
+                        throw new Exception('Failed to update invoice amounts: ' . $stmt->error);
+                    }
+                    $stmt->close();
+                }
+
+                // Commit Transaction
+                $conn->commit();
+
+                // Log Activity
+                insert_activity_log($conn, $userID, "Deleted Transaction Group ID: $transactionGroupID");
+
+                // Prepare response data
+                $responseAmounts = $amounts ?? calculate_amounts($conn, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Transaction group deleted successfully.',
+                    'amounts' => $responseAmounts,
+                    'billingInvoiceNo' => $billingInvoiceNo
+                ]);
+            } catch (Exception $e) {
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            exit;
+        }
+
     }
 }
 // Fetch all trucks from trucksinfo table
@@ -1321,19 +1692,21 @@ $conn->close();
                         if (response.transactionGroups.length > 0) {
                             response.transactionGroups.forEach(function (tg) {
                                 let row = `
-                                <tr id="tg-${tg.TransactionGroupID}">
-                                    <td>${tg.TransactionGroupID}</td>
-                                    <td>${tg.TruckID}</td>
-                                    <td>${tg.Date}</td>
-                                    <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                    <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                    </td>
-                                </tr>
-                            `;
+                                    <tr id="tg-${tg.TransactionGroupID}">
+                                        <td>${tg.TransactionGroupID}</td>
+                                        <td>${tg.TruckID}</td>
+                                        <td>${tg.Date}</td>
+                                        <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+                                        <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
+                                            <button class="btn btn-sm btn-danger delete-tg-btn" data-tg-id="${tg.TransactionGroupID}">Delete</button>
+                                        </td>
+                                    </tr>
+                                `;
+
                                 tbody.append(row);
                             });
                         } else {
@@ -1409,9 +1782,11 @@ $conn->close();
                                     <td>${tx.KGs}</td>
                                     <td>
                                         <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${tx.TransactionID}">Edit</button>
+                                        <button class="btn btn-sm btn-danger delete-tx-btn" data-tx-id="${tx.TransactionID}">Delete</button>
                                     </td>
                                 </tr>
                             `;
+
                                 tbody.append(tr);
                             });
                         } else {
@@ -1933,20 +2308,29 @@ $conn->close();
         // Function to calculate Tonner based on TotalKGs
         function calculateTonner(totalKGs) {
             let rounded_total_kgs = 0;
+
             if (totalKGs > 0) {
                 if (totalKGs <= 1199) {
+                    // 1,199 and below rounded to 1,000
                     rounded_total_kgs = 1000;
+                } else if (totalKGs <= 2199) {
+                    // 1,200 - 2,199 rounded to 2,000
+                    rounded_total_kgs = 2000;
+                } else if (totalKGs <= 3199) {
+                    // 2,200 - 3,199 rounded to 3,000
+                    rounded_total_kgs = 3000;
                 } else if (totalKGs <= 4199) {
-                    rounded_total_kgs = Math.ceil(totalKGs / 1000) * 1000;
-                    if (rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
-                        rounded_total_kgs = 4000;
-                    }
+                    // 3,200 - 4,199 rounded to 4,000
+                    rounded_total_kgs = 4000;
                 } else {
+                    // 4,200 and above rounded to 4,000
                     rounded_total_kgs = 4000;
                 }
             }
+
             return rounded_total_kgs;
         }
+
 
         // Function to show alerts
         function showAlert(type, message) {
@@ -2021,6 +2405,94 @@ $conn->close();
         $(document).on('click', function (e) {
             if (!$(e.target).closest('#T_OutletName').length && !$(e.target).closest('#outletSuggestions').length) {
                 $('#outletSuggestions').hide();
+            }
+        });
+        // Event listener for Delete Transaction Group button
+        $(document).on('click', '.delete-tg-btn', function () {
+            let tgID = $(this).data('tg-id');
+            if (confirm('Are you sure you want to delete this Transaction Group? This action cannot be undone.')) {
+                $.ajax({
+                    url: 'edit_invoice.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_transaction_group',
+                        TransactionGroupID: tgID
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            showAlert('success', response.message);
+                            // Remove the deleted row from the table
+                            $('#tg-' + tgID).remove();
+
+                            // Update calculated fields in the main form
+                            $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
+                            $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
+                            $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
+                            $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
+                            $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
+                            $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
+                            $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
+
+                            // Optionally, refresh the transaction groups table
+                            // fetchTransactionGroups();
+                        } else {
+                            showAlert('danger', response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                        showAlert('danger', 'An error occurred while deleting the transaction group.');
+                    }
+                });
+            }
+        });
+
+        // Event listener for Delete Transaction button within the Edit TG Modal
+        $(document).on('click', '.delete-tx-btn', function () {
+            let txID = $(this).data('tx-id');
+            if (confirm('Are you sure you want to delete this Transaction? This action cannot be undone.')) {
+                $.ajax({
+                    url: 'edit_invoice.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_transaction',
+                        TransactionID: txID
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            showAlert('success', response.message);
+                            // Remove the deleted row from the transactions table
+                            $('#tx-' + txID).remove();
+
+                            // Update calculated fields in the Edit TG Modal
+                            $('#TG_TotalKGs').val(parseFloat(response.newTotalKGs).toFixed(2));
+                            $('#TG_Amount').val(parseFloat(response.newAmount).toFixed(2));
+
+                            // Optionally, update the RateAmount if necessary
+                            $('#TG_RateAmount').val(parseFloat(response.amounts.RateAmount).toFixed(2));
+
+                            // Update the main invoice totals
+                            $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
+                            $('#VAT').val(parseFloat(response.amounts.VAT).toFixed(2));
+                            $('#TotalAmount').val(parseFloat(response.amounts.TotalAmount).toFixed(2));
+                            $('#EWT').val(parseFloat(response.amounts.EWT).toFixed(2));
+                            $('#AddTollCharges').val(parseFloat(response.amounts.AddTollCharges).toFixed(2));
+                            $('#AmountNetOfTax').val(parseFloat(response.amounts.AmountNetOfTax).toFixed(2));
+                            $('#NetAmount').val(parseFloat(response.amounts.NetAmount).toFixed(2));
+
+                            // Optionally, refresh the main transaction groups table
+                            // fetchTransactionGroups();
+                        } else {
+                            showAlert('danger', response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(xhr.responseText);
+                        showAlert('danger', 'An error occurred while deleting the transaction.');
+                    }
+                });
             }
         });
     });

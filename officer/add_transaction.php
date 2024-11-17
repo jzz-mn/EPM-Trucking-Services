@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo json_encode($response);
         exit();
     }
-    $stmt->bind_param("s", $dr_no);
+    $stmt->bind_param("s", $DRno); // Correct variable
     $stmt->execute();
     $drNoResult = $stmt->get_result();
     $drNoRow = $drNoResult->fetch_assoc();
@@ -382,8 +382,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response['newTotalKGs'] = $TotalKGs;
     $response['newAmount'] = $Amount;
     $response['newNetAmount'] = isset($newNetAmount) ? $newNetAmount : $invoiceRow['NetAmount'];
+    $response['RateAmount'] = $RateAmount; // Added RateAmount
 
     echo json_encode($response);
     $conn->close();
+
 }
 ?>

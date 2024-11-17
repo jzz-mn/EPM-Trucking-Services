@@ -94,13 +94,19 @@ function calculate_tonner($total_kgs)
     $rounded_total_kgs = 0;
     if ($total_kgs > 0) {
         if ($total_kgs <= 1199) {
+            // 1,199 and below rounded to 1,000
             $rounded_total_kgs = 1000;
+        } else if ($total_kgs <= 2199) {
+            // 1,200 - 2,199 rounded to 2,000
+            $rounded_total_kgs = 2000;
+        } else if ($total_kgs <= 3199) {
+            // 2,200 - 3,199 rounded to 3,000
+            $rounded_total_kgs = 3000;
         } else if ($total_kgs <= 4199) {
-            $rounded_total_kgs = ceil($total_kgs / 1000) * 1000;
-            if ($rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
-                $rounded_total_kgs = 4000;
-            }
+            // 3,200 - 4,199 rounded to 4,000
+            $rounded_total_kgs = 4000;
         } else {
+            // 4,200 and above rounded to 4,000
             $rounded_total_kgs = 4000;
         }
     }
@@ -694,7 +700,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     $stmt->close();
 
-                    // Update TotalKGs in transaction group
+                    // Update TotalKGs
                     $updateKGsQuery = "
                         UPDATE transactiongroup
                         SET TotalKGs = ?
@@ -710,8 +716,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     $stmt->close();
 
-                    // Recalculate invoice amounts
-                    $billingInvoiceNo = null;
+                    // Recalculate invoice amounts based on updated Transaction Group
+                    // Fetch BillingInvoiceNo from the Transaction Group
                     $fetchInvoiceNoQuery = "
                         SELECT BillingInvoiceNo
                         FROM transactiongroup
@@ -781,13 +787,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Log Activity
                 insert_activity_log($conn, $userID, "Updated Transaction ID: $transactionID");
 
-                echo json_encode(['success' => true, 'message' => 'Transaction updated successfully.', 'TotalKGs' => $TotalKGs]);
+                // Prepare response data including RateAmount and TotalKGs
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Transaction updated successfully.',
+                    'TotalKGs' => $TotalKGs,
+                    'Amount' => $Amount,
+                    'RateAmount' => $RateAmount
+                ]);
             } catch (Exception $e) {
                 $conn->rollback();
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
             exit;
         }
+
         // Handle Delete Transaction Action
         if ($_POST['action'] == 'delete_transaction') {
             $transactionID = intval($_POST['TransactionID']);
@@ -1021,7 +1035,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'amounts' => $responseAmounts,
                     'transactionGroupID' => $transactionGroupID,
                     'newTotalKGs' => $TotalKGs,
-                    'newAmount' => $Amount
+                    'newAmount' => $Amount,
+                    'RateAmount' => $RateAmount // Added RateAmount to the response
                 ]);
             } catch (Exception $e) {
                 $conn->rollback();
@@ -1029,6 +1044,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             exit;
         }
+
         // Handle Delete Transaction Group Action
         if ($_POST['action'] == 'delete_transaction_group') {
             $transactionGroupID = intval($_POST['TransactionGroupID']);
@@ -1151,7 +1167,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             exit;
         }
-
     }
 }
 // Fetch all trucks from trucksinfo table
@@ -1737,8 +1752,7 @@ $conn->close();
 
             // Fetch Transaction Group Details via AJAX
             $.ajax({
-                url: 'fetch_transaction_group.php',
-                // You need to create this script
+                url: 'fetch_transaction_group.php', // You need to create this script
                 type: 'POST',
                 data: {
                     TransactionGroupID: tgID
@@ -1758,6 +1772,12 @@ $conn->close();
                         $('#TG_RateAmount').val(parseFloat(tg.RateAmount).toFixed(2));
                         $('#TG_Amount').val(parseFloat(tg.Amount).toFixed(2));
                         $('#TG_TotalKGs').val(parseFloat(tg.TotalKGs).toFixed(2));
+
+                        // Set min and max for TG_Date based on BillingStartDate and BillingEndDate
+                        let billingStartDate = $('#BillingStartDate').val();
+                        let billingEndDate = $('#BillingEndDate').val();
+                        $('#TG_Date').attr('min', billingStartDate);
+                        $('#TG_Date').attr('max', billingEndDate);
 
                         // Populate Transactions Table
                         let tbody = $('#transactionsTable tbody');
@@ -2139,7 +2159,7 @@ $conn->close();
                     if (response.success) {
                         showAlert('success', response.message);
 
-                        // Append the new transaction to the transactionsTable
+                        // Append the new transaction to the transactionsTable with Delete button
                         let newRow = `
                     <tr id="tx-${response.transaction.TransactionID}">
                         <td>${response.transaction.TransactionID}</td>
@@ -2150,14 +2170,23 @@ $conn->close();
                         <td>${parseFloat(response.transaction.KGs).toFixed(2)}</td>
                         <td>
                             <button class="btn btn-sm btn-primary edit-tx-btn" data-tx-id="${response.transaction.TransactionID}">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-tx-btn" data-tx-id="${response.transaction.TransactionID}">Delete</button>
                         </td>
                     </tr>
                 `;
                         $('#transactionsTable tbody').append(newRow);
 
-                        // Update totals
+                        // Update TG_RateAmount with the new RateAmount from the response
+                        $('#TG_RateAmount').val(parseFloat(response.RateAmount).toFixed(2));
+
+                        // Update TG_Amount based on the new RateAmount and existing TollFeeAmount
+                        let newRateAmount = parseFloat(response.RateAmount) || 0;
+                        let tollFeeAmount = parseFloat($('#TG_TollFeeAmount').val()) || 0;
+                        let newAmount = tollFeeAmount + newRateAmount;
+                        $('#TG_Amount').val(newAmount.toFixed(2));
+
+                        // Update TG_TotalKGs and NetAmount
                         $('#TG_TotalKGs').val(parseFloat(response.newTotalKGs).toFixed(2));
-                        $('#TG_Amount').val(parseFloat(response.newAmount).toFixed(2));
                         $('#NetAmount').val(parseFloat(response.newNetAmount).toFixed(2));
 
                         // Optionally, you can also update the main invoice totals here if needed
@@ -2220,6 +2249,14 @@ $conn->close();
                         row.find('td').eq(3).text($('#T_OutletName').val());
                         row.find('td').eq(4).text(parseFloat($('#T_Qty').val()).toFixed(2));
                         row.find('td').eq(5).text(parseFloat($('#T_KGs').val()).toFixed(2));
+
+                        // Update TG_RateAmount and TG_TotalKGs in editTGForm
+                        $('#TG_RateAmount').val(parseFloat(response.RateAmount).toFixed(2));
+                        $('#TG_TotalKGs').val(parseFloat(response.TotalKGs).toFixed(2));
+
+                        // Update the Amount field based on new RateAmount
+                        let newAmount = parseFloat($('#TG_TollFeeAmount').val()) + parseFloat(response.RateAmount);
+                        $('#TG_Amount').val(newAmount.toFixed(2));
 
                         // Fetch and update Transaction Groups to refresh totals
                         fetchTransactionGroups();
@@ -2301,20 +2338,29 @@ $conn->close();
         // Function to calculate Tonner based on TotalKGs
         function calculateTonner(totalKGs) {
             let rounded_total_kgs = 0;
+
             if (totalKGs > 0) {
                 if (totalKGs <= 1199) {
+                    // 1,199 and below rounded to 1,000
                     rounded_total_kgs = 1000;
+                } else if (totalKGs <= 2199) {
+                    // 1,200 - 2,199 rounded to 2,000
+                    rounded_total_kgs = 2000;
+                } else if (totalKGs <= 3199) {
+                    // 2,200 - 3,199 rounded to 3,000
+                    rounded_total_kgs = 3000;
                 } else if (totalKGs <= 4199) {
-                    rounded_total_kgs = Math.ceil(totalKGs / 1000) * 1000;
-                    if (rounded_total_kgs > 4000) {  // Ensure it doesn’t exceed 4000
-                        rounded_total_kgs = 4000;
-                    }
+                    // 3,200 - 4,199 rounded to 4,000
+                    rounded_total_kgs = 4000;
                 } else {
+                    // 4,200 and above rounded to 4,000
                     rounded_total_kgs = 4000;
                 }
             }
+
             return rounded_total_kgs;
         }
+
 
         // Function to show alerts
         function showAlert(type, message) {
@@ -2327,70 +2373,6 @@ $conn->close();
             $('#alert-container').html(alertHtml);
         }
 
-        // Function to fetch outlet suggestions
-        function fetchOutletSuggestions(query) {
-            if (query.length < 1) { // Start suggesting after 1 character
-                $('#outletSuggestions').hide();
-                return;
-            }
-
-            $.ajax({
-                url: 'search_outlets.php',
-                type: 'GET',
-                data: {
-                    query: query
-                },
-                dataType: 'json',
-                success: function (data) {
-                    if (data.error) {
-                        console.error('Error fetching outlets:', data.error);
-                        $('#outletSuggestions').hide();
-                    } else if (data.length > 0) {
-                        let suggestions = data.map(function (outlet) {
-                            return `<button type="button" class="list-group-item list-group-item-action" data-outlet="${outlet.CustomerName}">${outlet.CustomerName}</button>`;
-                        }).join('');
-                        $('#outletSuggestions').html(suggestions).show();
-                    } else {
-                        $('#outletSuggestions').html('<div class="list-group-item">No outlets found.</div>').show();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('AJAX Error:', error);
-                    $('#outletSuggestions').hide();
-                }
-            });
-        }
-
-        // Debounce function to limit the rate of AJAX calls for autocomplete
-        $('#T_OutletName').on('input', debounce(function () {
-            let query = $(this).val().trim();
-            fetchOutletSuggestions(query);
-        }, 300)); // 300ms debounce delay
-
-        // Debounce function to limit the rate of AJAX calls
-        function debounce(func, delay) {
-            let debounceTimer;
-            return function () {
-                const context = this;
-                const args = arguments;
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => func.apply(context, args), delay);
-            }
-        }
-
-        // Handle click on outlet suggestion
-        $(document).on('click', '#outletSuggestions .list-group-item', function () {
-            let selectedOutlet = $(this).data('outlet');
-            $('#T_OutletName').val(selectedOutlet);
-            $('#outletSuggestions').hide();
-        });
-
-        // Hide suggestions when clicking outside
-        $(document).on('click', function (e) {
-            if (!$(e.target).closest('#T_OutletName').length && !$(e.target).closest('#outletSuggestions').length) {
-                $('#outletSuggestions').hide();
-            }
-        });
         // Event listener for Delete Transaction Group button
         $(document).on('click', '.delete-tg-btn', function () {
             let tgID = $(this).data('tg-id');
@@ -2455,7 +2437,8 @@ $conn->close();
                             $('#TG_Amount').val(parseFloat(response.newAmount).toFixed(2));
 
                             // Optionally, update the RateAmount if necessary
-                            $('#TG_RateAmount').val(parseFloat(response.amounts.RateAmount).toFixed(2));
+                            $('#TG_RateAmount').val(parseFloat(response.RateAmount).toFixed(2));
+
 
                             // Update the main invoice totals
                             $('#GrossAmount').val(parseFloat(response.amounts.GrossAmount).toFixed(2));
