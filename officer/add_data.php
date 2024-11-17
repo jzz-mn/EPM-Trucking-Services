@@ -3,19 +3,6 @@ session_start();
 include '../officer/header.php';
 include '../includes/db_connection.php';
 
-/**
- * Function to round up Total KGs based on the specified rules.
- * 
- * Rules:
- * - 0 < KGs <= 1199 => 1000
- * - 1200 <= KGs <= 2199 => 2000
- * - 2200 <= KGs <= 3199 => 3000
- * - 3200 <= KGs <= 4199 => 4000
- * - KGs >= 4200 => 4000 (Cap at 4000)
- *
- * @param float $kgs Total KGs
- * @return int Rounded KGs
- */
 function round_up_kgs($kgs)
 {
     if ($kgs <= 0) {
@@ -176,11 +163,17 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
     $stmt->close();
 }
 
-// Fetch the last DR No from transactions table
-$last_dr_no_query = "SELECT COALESCE(MAX(DRno), 0) AS LastDRNo FROM transactions";
-$last_dr_no_result = $conn->query($last_dr_no_query);
-$last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 ?>
+<!-- Custom Styles -->
+<style>
+    /* Optional: Adjust spacing or alignment if necessary */
+    .error-message {
+        font-size: 0.875em; /* Equivalent to Bootstrap's 'small' class */
+        color: #dc3545; /* Bootstrap's 'text-danger' color */
+        font-style: italic; /* Bootstrap's 'fst-italic' class */
+        display: none; /* Initially hide the error message */
+    }
+</style>
 
 <div class="body-wrapper">
     <div class="container-fluid">
@@ -267,25 +260,27 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                 <div class="row g-3 align-items-end">
                                     <!-- Outlet Name with Autocomplete and Validation -->
                                     <div class="col-md-4 position-relative">
-                                        <label for="input-outlet-name" class="form-label">Outlet Name</label>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <label for="input-outlet-name" class="form-label me-2">Outlet Name</label>
+                                            <span class="text-danger small fst-italic d-none" id="outlet-error">
+                                                Outlet Name does not exist.
+                                            </span>
+                                        </div>
                                         <input type="text" class="form-control" id="input-outlet-name"
                                             placeholder="Search Outlet Name" autocomplete="off">
                                         <div id="outlet-suggestions" class="list-group position-absolute w-100"
                                             style="z-index: 1000; background-color: white;"></div>
-                                        <!-- Validation Feedback -->
-                                        <div class="invalid-feedback" id="outlet-error">
-                                            Outlet Name does not exist.
-                                        </div>
                                     </div>
                                     <!-- DR No -->
                                     <div class="col-md-2">
-                                        <label for="input-dr-no" class="form-label">DR No</label>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <label for="input-dr-no" class="form-label me-2">DR No</label>
+                                            <span class="text-danger small fst-italic d-none" id="dr-no-error">
+                                                DR No already exists.
+                                            </span>
+                                        </div>
                                         <input type="number" class="form-control" id="input-dr-no" placeholder="DR No"
                                             step="1" min="1">
-                                        <!-- Validation Feedback -->
-                                        <div class="invalid-feedback" id="dr-no-error">
-                                            DR No already exists.
-                                        </div>
                                     </div>
                                     <!-- Quantity -->
                                     <div class="col-md-2">
@@ -344,10 +339,16 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                             </div>
                             <!-- Unit Price -->
                             <div class="col-md-6">
-                                <label for="fuel-unit-price" class="form-label">Unit Price</label>
+                                <div class="d-flex align-items-center mb-2">
+                                    <label for="fuel-unit-price" class="form-label mb-0 me-2">Unit Price</label>
+                                    <span class="text-danger small fst-italic d-none " id="fuel-unit-price-error">
+                                        Enter a value between 50 and 100.
+                                    </span>
+                                </div>
                                 <input type="number" class="form-control" id="fuel-unit-price" name="fuel_unit_price"
-                                    placeholder="Enter price per liter" step="0.01" min="0">
+                                    placeholder="Enter price per liter" step="0.01" min="50" max="100" required>
                             </div>
+
                         </div>
 
                         <div class="row g-3 mt-3">
@@ -492,25 +493,27 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                 <form id="edit-transaction-form">
                     <!-- DR No -->
                     <div class="mb-3">
-                        <label for="edit-dr-no" class="form-label">DR No</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <label for="edit-dr-no" class="form-label me-2">DR No</label>
+                            <span class="text-danger small fst-italic d-none" id="edit-dr-no-error">
+                                DR No already exists.
+                            </span>
+                        </div>
                         <input type="number" class="form-control" id="edit-dr-no" placeholder="DR No" step="1" min="1"
                             required>
-                        <!-- Validation Feedback -->
-                        <div class="invalid-feedback" id="edit-dr-no-error">
-                            DR No already exists.
-                        </div>
                     </div>
                     <!-- Outlet Name with Autocomplete and Validation -->
                     <div class="mb-3 position-relative">
-                        <label for="edit-outlet-name" class="form-label">Outlet Name</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <label for="edit-outlet-name" class="form-label me-2">Outlet Name</label>
+                            <span class="text-danger small fst-italic d-none" id="edit-outlet-error">
+                                Outlet Name does not exist.
+                            </span>
+                        </div>
                         <input type="text" class="form-control" id="edit-outlet-name" placeholder="Search Outlet Name"
                             autocomplete="off" required>
                         <div id="edit-outlet-suggestions" class="list-group position-absolute w-100"
                             style="z-index: 1000; background-color: white;"></div>
-                        <!-- Validation Feedback -->
-                        <div class="invalid-feedback" id="edit-outlet-error">
-                            Outlet Name does not exist.
-                        </div>
                     </div>
                     <!-- Quantity -->
                     <div class="mb-3">
@@ -607,9 +610,63 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             $('#input-quantity').val('');
             $('#input-kgs').val('');
             $('#outlet-suggestions').empty();
-            $('#input-outlet-name').removeClass('is-invalid');
-            $('#input-dr-no').removeClass('is-invalid');
+            $('#input-outlet-name').removeClass('is-invalid').removeClass('is-valid');
+            $('#input-dr-no').removeClass('is-invalid').removeClass('is-valid');
         }
+
+        // Real-Time Validation for DR No
+        $('#input-dr-no').on('blur', function () {
+            const drNo = parseInt($(this).val());
+            if (isNaN(drNo)) {
+                $('#dr-no-error').removeClass('d-none').text('Enter a valid DR No.');
+                $('#input-dr-no').removeClass('is-valid').addClass('is-invalid');
+                return;
+            }
+
+            // AJAX call to validate DR No against the database
+            $.getJSON(`validate_dr_no.php`, { dr_no: drNo }, function (drData) {
+                if (drData.exists) {
+                    // DR No exists in the database
+                    $('#dr-no-error').removeClass('d-none').text('Already exists.');
+                    $('#input-dr-no').removeClass('is-valid').addClass('is-invalid');
+                } else {
+                    // DR No is unique
+                    $('#dr-no-error').addClass('d-none').text('');
+                    $('#input-dr-no').removeClass('is-invalid').addClass('is-valid');
+                }
+            }).fail(function () {
+                // Handle AJAX error
+                $('#dr-no-error').removeClass('d-none').text('Error.');
+                $('#input-dr-no').removeClass('is-valid').addClass('is-invalid');
+            });
+        });
+
+        // Real-Time Validation for Outlet Name
+        $('#input-outlet-name').on('blur', function () {
+            const outletName = $(this).val().trim();
+            if (outletName === '') {
+                $('#outlet-error').removeClass('d-none').text('Outlet Name cannot be empty.');
+                $('#input-outlet-name').removeClass('is-valid').addClass('is-invalid');
+                return;
+            }
+
+            // AJAX call to validate Outlet Name
+            $.getJSON(`../includes/validate_outlet.php`, { outlet_name: outletName }, function (data) {
+                if (data.exists) {
+                    // Outlet exists
+                    $('#outlet-error').addClass('d-none').text('');
+                    $('#input-outlet-name').removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    // Outlet does not exist
+                    $('#outlet-error').removeClass('d-none').text('Outlet Name does not exist.');
+                    $('#input-outlet-name').removeClass('is-valid').addClass('is-invalid');
+                }
+            }).fail(function () {
+                // Handle AJAX error
+                $('#outlet-error').removeClass('d-none').text('Error validating Outlet Name.');
+                $('#input-outlet-name').removeClass('is-valid').addClass('is-invalid');
+            });
+        });
 
         // Add Transaction Button Click Event
         $('#add-transaction-btn').click(function () {
@@ -619,8 +676,10 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const kgs = parseFloat($('#input-kgs').val());
 
             // Reset validation state
-            $('#input-outlet-name').removeClass('is-invalid');
-            $('#input-dr-no').removeClass('is-invalid');
+            $('#input-outlet-name').removeClass('is-invalid').removeClass('is-valid');
+            $('#outlet-error').addClass('d-none').text('');
+            $('#input-dr-no').removeClass('is-invalid').removeClass('is-valid');
+            $('#dr-no-error').addClass('d-none').text('');
 
             // Validate inputs
             if (outletName === '' || isNaN(drNo) || isNaN(quantity) || isNaN(kgs)) {
@@ -631,8 +690,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             // Check for duplicate DR No within current transactions
             const duplicateDR = transactions.some(txn => txn.drNo === drNo);
             if (duplicateDR) {
-                $('#input-dr-no').addClass('is-invalid');
-                $('#dr-no-error').text('DR No already exists in current transactions.');
+                $('#dr-no-error').removeClass('d-none').text('DR No already exists in current transactions.');
+                $('#input-dr-no').removeClass('is-valid').addClass('is-invalid');
                 return;
             }
 
@@ -647,11 +706,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                     $.getJSON(`validate_dr_no.php`, { dr_no: drNo }, function (drData) {
                         if (drData.exists) {
                             // DR No already exists in database, show error
-                            $('#input-dr-no').addClass('is-invalid');
-                            $('#dr-no-error').text('DR No already exists in the database.');
+                            $('#dr-no-error').removeClass('d-none').text('Already exists.');
+                            $('#input-dr-no').removeClass('is-valid').addClass('is-invalid');
                             addBtn.prop('disabled', false).text('Add Transaction');
                         } else {
                             // DR No is unique, proceed to add transaction
+                            $('#dr-no-error').addClass('d-none').text('');
+                            $('#input-dr-no').removeClass('is-invalid').addClass('is-valid');
                             const transaction = { drNo: drNo, outletName: outletName, quantity: quantity, kgs: kgs };
                             transactions.push(transaction);
                             updateTransactionsTable();
@@ -664,8 +725,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                     });
                 } else {
                     // Outlet does not exist, show error
-                    $('#input-outlet-name').addClass('is-invalid');
-                    $('#outlet-error').text('Outlet Name does not exist.');
+                    $('#outlet-error').removeClass('d-none').text('Outlet Name does not exist.');
+                    $('#input-outlet-name').removeClass('is-valid').addClass('is-invalid');
                     addBtn.prop('disabled', false).text('Add Transaction');
                 }
             }).fail(function () {
@@ -691,8 +752,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             $('#edit-quantity').val(transaction.quantity);
             $('#edit-kgs').val(transaction.kgs);
             $('#edit-outlet-suggestions').empty();
-            $('#edit-outlet-name').removeClass('is-invalid');
-            $('#edit-dr-no').removeClass('is-invalid');
+            $('#edit-outlet-name').removeClass('is-invalid').removeClass('is-valid');
+            $('#edit-dr-no').removeClass('is-invalid').removeClass('is-valid');
             $('#editTransactionModal').modal('show');
         };
 
@@ -704,8 +765,10 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             const kgs = parseFloat($('#edit-kgs').val());
 
             // Reset validation state
-            $('#edit-outlet-name').removeClass('is-invalid');
-            $('#edit-dr-no').removeClass('is-invalid');
+            $('#edit-outlet-name').removeClass('is-invalid').removeClass('is-valid');
+            $('#edit-outlet-error').addClass('d-none').text('');
+            $('#edit-dr-no').removeClass('is-invalid').removeClass('is-valid');
+            $('#edit-dr-no-error').addClass('d-none').text('');
 
             // Validate inputs
             if (outletName === '' || isNaN(drNo) || isNaN(quantity) || isNaN(kgs)) {
@@ -716,8 +779,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             // Check for duplicate DR No within current transactions, excluding the one being edited
             const duplicateDR = transactions.some((txn, idx) => txn.drNo === drNo && idx !== editingIndex);
             if (duplicateDR) {
-                $('#edit-dr-no').addClass('is-invalid');
-                $('#edit-dr-no-error').text('DR No already exists in current transactions.');
+                $('#edit-dr-no-error').removeClass('d-none').text('DR No already exists in current transactions.');
+                $('#edit-dr-no').removeClass('is-valid').addClass('is-invalid');
                 return;
             }
 
@@ -735,11 +798,13 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                         $.getJSON(`validate_dr_no.php`, { dr_no: drNo }, function (drData) {
                             if (drData.exists) {
                                 // DR No already exists in database, show error
-                                $('#edit-dr-no').addClass('is-invalid');
-                                $('#edit-dr-no-error').text('DR No already exists in the database.');
+                                $('#edit-dr-no-error').removeClass('d-none').text('Already exists.');
+                                $('#edit-dr-no').removeClass('is-valid').addClass('is-invalid');
                                 saveBtn.prop('disabled', false).text('Save changes');
                             } else {
                                 // DR No is unique, proceed to update transaction
+                                $('#edit-dr-no-error').addClass('d-none').text('');
+                                $('#edit-dr-no').removeClass('is-invalid').addClass('is-valid');
                                 transactions[editingIndex] = {
                                     drNo: drNo,
                                     outletName: outletName,
@@ -756,6 +821,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                         });
                     } else {
                         // DR No hasn't changed, proceed to update
+                        $('#edit-dr-no-error').addClass('d-none').text('');
+                        $('#edit-dr-no').removeClass('is-invalid').addClass('is-valid');
                         transactions[editingIndex] = {
                             drNo: drNo,
                             outletName: outletName,
@@ -768,8 +835,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                     }
                 } else {
                     // Outlet does not exist, show error
-                    $('#edit-outlet-name').addClass('is-invalid');
-                    $('#edit-outlet-error').text('Outlet Name does not exist.');
+                    $('#edit-outlet-error').removeClass('d-none').text('Outlet Name does not exist.');
+                    $('#edit-outlet-name').removeClass('is-valid').addClass('is-invalid');
                     saveBtn.prop('disabled', false).text('Save changes');
                 }
             }).fail(function () {
@@ -794,6 +861,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                 e.preventDefault();
                                 $('#input-outlet-name').val(outlet.CustomerName);
                                 suggestionsList.empty();
+                                // Trigger validation after selecting a suggestion
+                                $('#input-outlet-name').trigger('blur');
                             });
                         suggestionsList.append(suggestionItem);
                     });
@@ -819,6 +888,8 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
                                 e.preventDefault();
                                 $('#edit-outlet-name').val(outlet.CustomerName);
                                 suggestionsList.empty();
+                                // Trigger validation after selecting a suggestion
+                                $('#edit-outlet-name').trigger('blur');
                             });
                         suggestionsList.append(suggestionItem);
                     });
@@ -843,6 +914,11 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
 
         // Calculate Fuel Amount and Total Expenses
         function calculateFuelAmount() {
+            if (!validateFuelUnitPrice()) {
+                $('#fuel-amount').val('');
+                return;
+            }
+
             const liters = parseFloat($('#fuel-liters').val());
             const unitPrice = parseFloat($('#fuel-unit-price').val());
             if (!isNaN(liters) && !isNaN(unitPrice)) {
@@ -1099,6 +1175,48 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
             // Submit the form
             $('#final-submit-btn').click();
         });
+
+        // Function to validate Fuel Unit Price
+        function validateFuelUnitPrice() {
+            const fuelUnitPriceInput = $('#fuel-unit-price');
+            const fuelUnitPriceError = $('#fuel-unit-price-error');
+            const value = parseFloat(fuelUnitPriceInput.val());
+
+            if (isNaN(value) || value < 50 || value > 100) {
+                fuelUnitPriceInput.addClass('is-invalid');
+                fuelUnitPriceError.removeClass('d-none').text('Enter a value between 50 and 100.');
+                return false;
+            } else {
+                fuelUnitPriceInput.removeClass('is-invalid').addClass('is-valid');
+                fuelUnitPriceError.addClass('d-none').text('');
+                return true;
+            }
+        }
+
+        // Call validation on input change
+        $('#fuel-unit-price').on('input', function () {
+            validateFuelUnitPrice();
+        });
+
+        // Integrate validation before calculating fuel amount
+        function calculateFuelAmount() {
+            if (!validateFuelUnitPrice()) {
+                $('#fuel-amount').val('');
+                return;
+            }
+
+            const liters = parseFloat($('#fuel-liters').val());
+            const unitPrice = parseFloat($('#fuel-unit-price').val());
+            if (!isNaN(liters) && !isNaN(unitPrice)) {
+                const amount = liters * unitPrice;
+                $('#fuel-amount').val(amount.toFixed(2));
+            } else {
+                $('#fuel-amount').val('');
+            }
+            // After calculating fuel amount, recalculate total expenses
+            calculateTotalExpense();
+        }
+
     });
 
     // Function to edit a transaction (Global Scope)
@@ -1107,14 +1225,6 @@ $last_dr_no = $last_dr_no_result->fetch_assoc()['LastDRNo'];
         // No action needed here
     }
 </script>
-
-<!-- Ensure the following PHP scripts exist and are correctly implemented:
-     - validate_dr_no.php
-     - validate_outlet.php
-     - search_outlets.php
-     - get_cluster_rate.php
--->
-
 <?php
 include '../officer/footer.php';
 $conn->close();

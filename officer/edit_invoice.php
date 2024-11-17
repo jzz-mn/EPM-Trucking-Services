@@ -1393,7 +1393,6 @@ include '../officer/header.php';
                                     </select>
                                 </div>
 
-
                                 <!-- Date -->
                                 <div class="col-md-4 mb-3">
                                     <label for="TG_Date" class="form-label">Date</label>
@@ -1413,7 +1412,9 @@ include '../officer/header.php';
                                 <div class="col-md-4 mb-3">
                                     <label for="TG_FuelPrice" class="form-label">Fuel Price</label>
                                     <input type="number" step="0.01" class="form-control" id="TG_FuelPrice"
-                                        name="FuelPrice" required>
+                                        name="FuelPrice" required min="50" max="100"
+                                        title="Enter a value between 50 and 100">
+
                                 </div>
 
                                 <!-- Rate Amount (Read Only) -->
@@ -1490,7 +1491,7 @@ include '../officer/header.php';
                             <!-- DR No Input with Validation Feedback -->
                             <div class="mb-3">
                                 <label for="Add_DRno" class="form-label">DR No</label>
-                                <input type="text" class="form-control" id="Add_DRno" name="DRno" required>
+                                <input type="number" class="form-control" id="Add_DRno" name="DRno" required min="1">
                                 <!-- Warning message placeholder -->
                                 <div id="Add_drNoWarning" class="invalid-feedback">
                                     DR No already exists. Please enter a unique DR No.
@@ -1503,7 +1504,7 @@ include '../officer/header.php';
                                 <input type="text" class="form-control" id="Add_OutletName" name="OutletName" required
                                     autocomplete="off">
                                 <!-- Suggestion Box -->
-                                <div id="Add_outletSuggestions" class="list-group position-absolute w-100"
+                                <div id="Add_outletSuggestions" class="list-group position-absolute w-100 bg-white"
                                     style="z-index: 1000; display: none;"></div>
                             </div>
 
@@ -1552,7 +1553,7 @@ include '../officer/header.php';
                             <!-- DR No Input with Validation Feedback -->
                             <div class="mb-3">
                                 <label for="T_DRno" class="form-label">DR No</label>
-                                <input type="text" class="form-control" id="T_DRno" name="DRno" required>
+                                <input type="number" class="form-control" id="T_DRno" name="DRno" required min="1">
                                 <!-- Warning message placeholder -->
                                 <div id="drNoWarning" class="invalid-feedback">
                                     DR No already exists. Please enter a unique DR No.
@@ -1565,7 +1566,7 @@ include '../officer/header.php';
                                 <input type="text" class="form-control" id="T_OutletName" name="OutletName" required
                                     autocomplete="off">
                                 <!-- Suggestion Box -->
-                                <div id="outletSuggestions" class="list-group position-absolute w-100"
+                                <div id="outletSuggestions" class="list-group position-absolute w-100 bg-white"
                                     style="z-index: 1000; display: none;"></div>
                             </div>
 
@@ -2458,6 +2459,30 @@ $conn->close();
                     }
                 });
             }
+        });
+        // Function to set min and max for TG_Date based on BillingStartDate and BillingEndDate
+        function setTGDateConstraints() {
+            let billingStartDate = $('#BillingStartDate').val();
+            let billingEndDate = $('#BillingEndDate').val();
+            if (billingStartDate && billingEndDate) {
+                $('#TG_Date').attr('min', billingStartDate);
+                $('#TG_Date').attr('max', billingEndDate);
+            } else {
+                $('#TG_Date').removeAttr('min');
+                $('#TG_Date').removeAttr('max');
+            }
+        }
+
+        // Call the function on page load to set initial constraints
+        setTGDateConstraints();
+
+        // Update TG_Date constraints whenever BillingStartDate or BillingEndDate changes
+        $('#BillingStartDate, #BillingEndDate').on('change', function () {
+            setTGDateConstraints();
+        });
+        // When the Edit Transaction Group Modal is shown, set the date constraints
+        $('#editTGModal').on('show.bs.modal', function () {
+            setTGDateConstraints();
         });
     });
 </script>

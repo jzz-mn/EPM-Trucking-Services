@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $transactions_json = $_POST['transactions_json'] ?? '';
     $fuel_data = [
         'liters' => $_POST['fuel_liters'] ?? 0,
-        'unit_price' => $_POST['fuel_unit_price'] ?? 0,
+        'unit_price' => $_POST['fuel_unit_price'] ?? 0, // Ensure 'unit_price' is captured
         'fuel_type' => $_POST['fuel_type'] ?? '',
         'amount' => $_POST['fuel_amount'] ?? 0,
     ];
@@ -205,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // ---- Step 5: Retrieve RateAmount from clusters table based on ClusterID, Rounded Total KGs, and FuelPrice ----
         if (isset($cluster_id) && $cluster_id > 0 && $rounded_total_kgs > 0) {
-            // Calculate Tonner (assuming 1 Ton = 1000 KGs)
+            // Calculate Tonner (assuming Tonner is equivalent to Rounded Total KGs)
             $tonner = $rounded_total_kgs;
 
             // Fetch RateAmount from clusters based on ClusterID, FuelPrice, and Tonner
@@ -245,30 +245,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Final Amount = RateAmount + TollFeeAmount
         $final_amount = $rate_amount + $toll_fee_amount;
 
-        // ---- Step 9: Insert into transactiongroup table ----
-        $transaction_group_query = "INSERT INTO transactiongroup (TruckID, Date, TollFeeAmount, RateAmount, Amount, TotalKGs, ExpenseID)
-                                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // ---- Step 9: Retrieve BillingInvoiceNo based on transaction_date ----
+        // New Step: Check if transaction_date overlaps with any billing period in invoices table
+        $billing_invoice_no = null; // Initialize as null
+
+        // Prepare the SQL statement to find overlapping billing period
+        $billing_query = "SELECT BillingInvoiceNo FROM invoices 
+                          WHERE ? BETWEEN BillingStartDate AND BillingEndDate 
+                          LIMIT 1"; // Assuming no overlapping billing periods
+
+        $stmt = $conn->prepare($billing_query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed for billing invoice query: ({$conn->errno}) {$conn->error}");
+        }
+        $stmt->bind_param("s", $transaction_date);
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to execute billing invoice query: " . $stmt->error);
+        }
+        $billing_result = $stmt->get_result();
+
+        if ($billing_result->num_rows > 0) {
+            $billing_row = $billing_result->fetch_assoc();
+            $billing_invoice_no = $billing_row['BillingInvoiceNo'];
+        }
+        // If no matching billing period is found, BillingInvoiceNo remains null
+        $stmt->close();
+
+        // ---- Step 10: Insert into transactiongroup table ----
+        // *** Modification Starts Here ***
+        // Added FuelPrice and BillingInvoiceNo to the INSERT statement and bind parameters
+        $transaction_group_query = "INSERT INTO transactiongroup (TruckID, Date, TollFeeAmount, RateAmount, FuelPrice, Amount, TotalKGs, ExpenseID, BillingInvoiceNo)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($transaction_group_query);
         if (!$stmt) {
             throw new Exception("Prepare failed for transactiongroup query: ({$conn->errno}) {$conn->error}");
         }
         $stmt->bind_param(
-            "isddiid",
-            $truck_id,                          // "i" - integer
-            $transaction_date,                  // "s" - string (date)
-            $toll_fee_amount,                   // "d" - double (decimal)
-            $rate_amount,                       // "d" - double (decimal)
-            $final_amount,                      // "d" - double (decimal)
-            $rounded_total_kgs,                 // "i" - integer (Rounded Total KGs)
-            $expense_id                         // "i" - integer (ExpenseID)
+            "isddddiii",
+            $truck_id,                      // "i" - integer
+            $transaction_date,              // "s" - string (date)
+            $toll_fee_amount,               // "d" - double (decimal)
+            $rate_amount,                   // "d" - double (decimal)
+            $fuel_data['unit_price'],       // "d" - double (decimal)
+            $final_amount,                  // "d" - double (decimal)
+            $total_kgs,             // "i" - integer (Rounded Total KGs)
+            $expense_id,                    // "i" - integer (ExpenseID)
+            $billing_invoice_no             // "i" - integer (BillingInvoiceNo) or null
         );
+        // Handle null BillingInvoiceNo by setting it to NULL in the database
+        if ($billing_invoice_no === null) {
+            $stmt->bind_param(
+                "isddddiii",
+                $truck_id,
+                $transaction_date,
+                $toll_fee_amount,
+                $rate_amount,
+                $fuel_data['unit_price'],
+                $final_amount,
+                $rounded_total_kgs,
+                $expense_id,
+                $billing_invoice_no // PHP will bind null as NULL in the database
+            );
+        }
         if (!$stmt->execute()) {
             throw new Exception("Failed to insert into transactiongroup table: " . $stmt->error);
         }
         $transaction_group_id = $stmt->insert_id;
         $stmt->close();
+        // *** Modification Ends Here ***
 
-        // ---- Step 10: Insert transactions into transactions table ----
+        // ---- Step 11: Insert transactions into transactions table ----
         $insert_transaction_query = "INSERT INTO transactions (TransactionGroupID, TransactionDate, DRno, OutletName, Qty, KGs)
                                      VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($insert_transaction_query);
@@ -284,12 +330,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $stmt->bind_param(
                 "isissd",
-                $transaction_group_id,         // "i" - integer
-                $transaction_date,             // "s" - string (date)
-                $drNo,                         // "i" - integer
-                $outletName,                   // "s" - string
-                $quantity,                     // "s" - string (assuming Qty is string based on table schema)
-                $kgs                           // "d" - double
+                $transaction_group_id, // "i" - integer
+                $transaction_date,     // "s" - string (date)
+                $drNo,                 // "i" - integer
+                $outletName,           // "s" - string
+                $quantity,             // "s" - string (assuming Qty is string based on table schema)
+                $kgs                   // "d" - double
             );
             if (!$stmt->execute()) {
                 throw new Exception("Failed to insert into transactions table: " . $stmt->error);
@@ -297,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->close();
 
-        // ---- Step 11: Insert Activity Log ----
+        // ---- Step 12: Insert Activity Log ----
         // Retrieve the logged-in user's UserID from the session
         $currentUserID = $_SESSION['UserID'];
 
@@ -323,10 +369,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         // ---- End of Activity Log Insertion ----
 
-        // ---- Step 12: Commit the transaction ----
+        // ---- Step 13: Commit the transaction ----
         $conn->commit();
 
-        // ---- Step 13: Redirect to a success page or display a success message ----
+        // ---- Step 14: Redirect to a success page or display a success message ----
         include '../officer/header.php';
         ?>
         <div class="body-wrapper">
