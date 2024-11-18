@@ -5,57 +5,81 @@ include '../includes/db_connection.php';
 ?>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
 <div class="body-wrapper">
   <div class="container-fluid">
-    <?php
-    $sidebar_path = '../officer/sidebar.php';
-    if (file_exists($sidebar_path)) {
-        include $sidebar_path;
-    } else {
-        echo "<!-- Sidebar not found at $sidebar_path -->";
-    }
-    ?>
-    <div class="card card-body py-3">
-      <div class="row align-items-center">
-        <div class="col-12">
-          <div class="d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-4 mb-sm-0 card-title">Analytics - Route Optimization</h4>
-            <nav aria-label="breadcrumb" class="ms-auto">
-              <ol class="breadcrumb">
-                <li class="breadcrumb-item d-flex align-items-center">
-                  <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
-                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
-                  </a>
-                </li>
-              </ol>
-            </nav>
-          </div>
-        </div>
-      </div>
-    </div>
-    <h5 class="border-bottom py-2 px-4 mb-4">Routes</h5>
 
-    <!-- Map and Route Optimization Section -->
-    <div class="body-wrapper">
-      <div class="container-fluid p-0">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title mb-4">Route Optimization System</h4>
+
         <div class="row">
-          <!-- Route Map Section -->
-          <div class="col-lg-12">
+          <!-- Control Panel -->
+          <div class="col-md-4">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Truck Route Map</h5>
-                <div class="mb-4">
-                  <label for="cluster" class="form-label">Select Cluster</label>
-                  <select id="cluster" class="form-select">
-                    <option value="" disabled selected>Select a cluster</option>
-                    <option value="Padre Garcia, SAN PEDRO, ALAMINOS, UR STO. TOMAS, STO TOMAS, FPIP TANAUAN 2, WM TANAUAN 2, WM TANAUAN SM, CM TANAUAN, Talisay Area">
-                      Tanauan-Talisay Cluster
-                    </option>
+                <div class="mb-3">
+                  <label class="form-label">Select Cluster</label>
+                  <select id="clusterSelect" class="form-select mb-3">
+                    <option value="">Select a cluster...</option>
+                    <?php
+                    $query = "SELECT DISTINCT ClusterID, ClusterCategory FROM clusters ORDER BY ClusterCategory";
+                    $result = mysqli_query($conn, $query);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                      echo "<option value='{$row['ClusterID']}'>{$row['ClusterCategory']}</option>";
+                    }
+                    ?>
                   </select>
+
+                  <label class="form-label">Select Truck</label>
+                  <select id="truckSelect" class="form-select mb-3">
+                    <option value="">Select a truck...</option>
+                    <?php
+                    $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+                    $result = mysqli_query($conn, $query);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                      echo "<option value='{$row['TruckID']}'>{$row['PlateNo']} - {$row['TruckBrand']}</option>";
+                    }
+                    ?>
+                  </select>
+
+                  <button class="btn btn-primary w-100" onclick="calculateRoute()">
+                    Calculate Route
+                  </button>
                 </div>
-                <button class="btn btn-primary mb-3" onclick="showRoute()">Show Optimized Route</button>
-                <!-- Map container -->
-                <div id="map" style="width: 100%; height: 500px;"></div>
+
+                <div class="mt-4">
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h5 class="card-title">Route Statistics</h5>
+                      <div id="routeStats">
+                        <p class="mb-2"><i class="bi bi-geo-alt"></i> <strong>Distance:</strong>
+                          <span id="totalDistance">-</span>
+                        </p>
+                        <p class="mb-2"><i class="bi bi-clock"></i> <strong>Est. Time:</strong>
+                          <span id="estTime">-</span>
+                        </p>
+                        <p class="mb-2"><i class="bi bi-fuel-pump"></i> <strong>Est. Fuel:</strong>
+                          <span id="estFuel">-</span>
+                        </p>
+                        <p class="mb-2"><i class="bi bi-currency-dollar"></i> <strong>Est. Cost:</strong>
+                          <span id="estCost">-</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Map Section -->
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-body">
+                <div id="map" style="height: 600px;"></div>
               </div>
             </div>
           </div>
@@ -65,78 +89,140 @@ include '../includes/db_connection.php';
   </div>
 </div>
 
-<!-- Include Leaflet.js and its CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <script>
-    let map, routeControl;
+  let map, routingControl;
+  let markers = [];
+  const fuelConsumptionRate = 0.12; // Liters per kilometer
+  const defaultFuelPrice = 52.00; // Default fuel price in PHP
 
-    // Initialize the map centered on the Philippines
-    function initMap() {
-        map = L.map('map').setView([12.8797, 121.7740], 6); // Coordinates for the Philippines
+  // Initialize map
+  function initMap() {
+    // Center on Philippines
+    map = L.map('map').setView([14.5995, 120.9842], 7);
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+  }
+
+  // Clear existing markers and routes
+  function clearMap() {
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+    if (routingControl) {
+      map.removeControl(routingControl);
+    }
+  }
+
+  // Fetch all locations for a cluster
+  async function fetchClusterLocations(clusterId) {
+    const response = await fetch(`get_cluster_coordinates.php?cluster_id=${clusterId}`);
+    if (!response.ok) throw new Error('Failed to fetch cluster locations');
+    return await response.json();
+  }
+
+  // Save the calculated route
+  async function saveRoute(data) {
+    const response = await fetch('save_route.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to save route');
+    return await response.json();
+  }
+
+  // Calculate route
+  async function calculateRoute() {
+    const clusterId = document.getElementById('clusterSelect').value;
+    const truckId = document.getElementById('truckSelect').value;
+
+    if (!clusterId || !truckId) {
+      alert('Please select both a cluster and a truck');
+      return;
     }
 
-    // Function to display the route
-    async function showRoute() {
-        const clusterSelect = document.getElementById("cluster");
-        const locations = clusterSelect.value;
+    try {
+      // Fetch cluster locations
+      const locations = await fetchClusterLocations(clusterId);
+      if (!locations.length) throw new Error('No locations found in this cluster');
 
-        if (!locations) {
-            alert("Please select a cluster.");
-            return;
-        }
+      clearMap();
 
-        try {
-            const locationNames = locations.split(",").map(loc => loc.trim());
-            const waypoints = [];
+      // Add markers for each location
+      locations.forEach(location => {
+        const marker = L.marker([location.Latitude, location.Longitude])
+          .bindPopup(location.LocationName)
+          .addTo(map);
+        markers.push(marker);
+      });
 
-            // Fetch coordinates for all locations
-            for (let location of locationNames) {
-                const coords = await getCoordinates(location);
-                waypoints.push(L.latLng(coords.lat, coords.lng));
-            }
+      // Create waypoints for routing
+      const waypoints = locations.map(loc => L.latLng(loc.Latitude, loc.Longitude));
 
-            // Clear existing route
-            if (routeControl) {
-                map.removeControl(routeControl);
-            }
+      // Calculate route
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
 
-            // Add routing layer to the map
-            routeControl = L.Routing.control({
-                waypoints: waypoints,
-                routeWhileDragging: false,
-                show: true,
-                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
-            }).addTo(map);
-        } catch (error) {
-            alert("Error displaying route: " + error.message);
-        }
+      routingControl = L.Routing.control({
+        waypoints: waypoints,
+        routeWhileDragging: false,
+        show: false,
+      }).addTo(map);
+
+      routingControl.on('routesfound', async function (e) {
+        const route = e.routes[0];
+        const distance = route.summary.totalDistance / 1000; // Convert to km
+        const time = route.summary.totalTime;
+
+        // Calculate estimates
+        const fuelUsed = distance * fuelConsumptionRate;
+        const cost = fuelUsed * defaultFuelPrice;
+
+        // Update statistics display
+        document.getElementById('totalDistance').textContent = `${distance.toFixed(2)} km`;
+        document.getElementById('estTime').textContent = formatTime(time);
+        document.getElementById('estFuel').textContent = `${fuelUsed.toFixed(2)} L`;
+        document.getElementById('estCost').textContent = `₱${cost.toFixed(2)}`;
+
+        // Save route data
+        await saveRoute({
+          clusterId,
+          truckId,
+          distance,
+          time,
+          fuel: fuelUsed,
+          cost,
+          fuelPrice: defaultFuelPrice,
+          waypoints: locations,
+        });
+      });
+
+      // Fit map to show all markers
+      const group = L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.1));
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
     }
+  }
 
-    // Function to fetch coordinates for a location using OpenStreetMap's Nominatim API
-    async function getCoordinates(location) {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`;
-        const response = await fetch(url);
-        const data = await response.json();
+  // Format time from seconds to hours and minutes
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
 
-        if (data.length === 0) {
-            throw new Error(`Location not found: ${location}`);
-        }
-
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    }
-
-    // Load the map when the page loads
-    window.onload = initMap;
+  // Initialize map on page load
+  window.onload = initMap;
 </script>
+
+<?php include '../officer/footer.php'; ?>
 
 <script src="../assets/js/vendor.min.js"></script>
 <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
