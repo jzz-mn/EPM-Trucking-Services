@@ -1221,6 +1221,36 @@ include '../officer/header.php';
 ?>
 <div class="body-wrapper">
     <div class="container-fluid">
+        <div class="card card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-12">
+                    <div class="d-sm-flex align-items-center justify-space-between">
+                        <h4 class="mb-4 mb-sm-0 card-title">Edit Invoice</h4>
+                        <nav aria-label="breadcrumb" class="ms-auto">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item d-flex align-items-center">
+                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                                        <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item" aria-current="page">
+                                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
+                                        Edit Invoice
+                                    </span>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="invoice-header border-bottom py-2 px-4 mb-4">
+            <h5 class="mb-0">
+                <span class="">Editing Invoice No:</span>
+                <strong class="text-primary">SOA#<?php echo htmlspecialchars($billingInvoiceNo); ?>-E</strong>
+            </h5>
+        </div>
+
         <!-- Alert Section -->
         <div id="alert-container">
             <?php if (isset($_GET['success'])): ?>
@@ -1372,8 +1402,8 @@ include '../officer/header.php';
         <div class="modal fade" id="editTGModal" tabindex="-1" aria-labelledby="editTGModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Transaction Group</h5>
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title text-white">Edit Transaction Group</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -1442,11 +1472,7 @@ include '../officer/header.php';
                             </div>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
-                        <!-- Add Transaction Button -->
-                        <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-success" id="addTransactionBtn">Add
-                                Transaction</button>
-                        </div>
+
                         <!-- Transactions Table within Modal -->
                         <div class="mt-4">
                             <h5>Transactions</h5>
@@ -1469,6 +1495,11 @@ include '../officer/header.php';
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                        <!-- Add Transaction Button -->
+                        <div class="d-flex justify-content-start mb-3">
+                            <button type="button" class="btn btn-success" id="addTransactionBtn">Add
+                                Transaction</button>
                         </div>
                     </div>
                 </div>

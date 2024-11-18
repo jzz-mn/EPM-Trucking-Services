@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           $row = $result->fetch_assoc();
 
           // Check if the account is activated
-          if ($row['ActivationStatus'] !== 'Activated') {
+          if (strtoupper($row['ActivationStatus']) !== 'ACTIVATED') {
             $error_message = "Your account is not activated. Please check your email for the activation link.";
           } else {
             $storedPassword = $row['Password'];
@@ -121,7 +121,7 @@ function loginUser($userData, $conn)
   $_SESSION['Username'] = $userData['Username'];
   $_SESSION['Role'] = $userData['Role'];
   $_SESSION['EmailAddress'] = $userData['EmailAddress'];
-  
+
 
   // **NEW CODE STARTS HERE**
   // Store last_seen_logid in session
@@ -219,7 +219,8 @@ function loginUser($userData, $conn)
                   <div class="mb-4 position-relative">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control pe-5" id="password" name="Password" required />
-                    <span class="position-absolute" id="togglePasswordContainer" style="right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                    <span class="position-absolute" id="togglePasswordContainer"
+                      style="right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer;">
                       <iconify-icon id="togglePassword" icon="mdi:eye-off" style="font-size: 1.25rem;"></iconify-icon>
                     </span>
                   </div>
@@ -230,6 +231,7 @@ function loginUser($userData, $conn)
                       border-radius: 0.5rem;
                       /* Ensures border radius stays consistent */
                     }
+
                     #togglePasswordContainer {
                       color: #6c757d;
                       /* Adjust color to match the style */
@@ -276,7 +278,7 @@ function loginUser($userData, $conn)
     const togglePassword = document.querySelector("#togglePassword");
     const password = document.querySelector("#password");
 
-    togglePassword.addEventListener("click", function() {
+    togglePassword.addEventListener("click", function () {
       // Toggle the type attribute
       const type = password.getAttribute("type") === "password" ? "text" : "password";
       password.setAttribute("type", type);
