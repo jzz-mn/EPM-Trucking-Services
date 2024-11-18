@@ -3,6 +3,7 @@ include '../includes/db_connection.php';
 
 header('Content-Type: application/json');
 
+// Ensure a cluster_id parameter is passed
 if (!isset($_GET['cluster_id'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Cluster ID is required']);
@@ -11,37 +12,28 @@ if (!isset($_GET['cluster_id'])) {
 
 $clusterId = mysqli_real_escape_string($conn, $_GET['cluster_id']);
 
-$query = "SELECT 
-            LocationInCluster as LocationName,
-            Latitude,
-            Longitude
-          FROM clusters 
-          WHERE ClusterID = ?";
+// Fetch locations for the given cluster
+$locationsQuery = "SELECT LocationInCluster AS LocationName, Latitude, Longitude 
+                   FROM clusters 
+                   WHERE ClusterID = ?";
 
-$stmt = mysqli_prepare($conn, $query);
+$stmt = mysqli_prepare($conn, $locationsQuery);
 mysqli_stmt_bind_param($stmt, 's', $clusterId);
 mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-
-if (!$result) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . mysqli_error($conn)]);
-    exit;
-}
+$locationsResult = mysqli_stmt_get_result($stmt);
 
 $locations = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    // Convert latitude and longitude to float values
+while ($row = mysqli_fetch_assoc($locationsResult)) {
     $locations[] = [
         'LocationName' => $row['LocationName'],
         'Latitude' => floatval($row['Latitude']),
-        'Longitude' => floatval($row['Longitude'])
+        'Longitude' => floatval($row['Longitude']),
     ];
 }
 
 if (empty($locations)) {
     http_response_code(404);
-    echo json_encode(['error' => 'No locations found for this cluster']);
+    echo json_encode(['error' => 'No locations found for the specified Cluster ID']);
     exit;
 }
 

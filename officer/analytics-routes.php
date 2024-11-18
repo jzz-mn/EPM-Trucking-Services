@@ -1,85 +1,90 @@
-<?php
-session_start();
-include '../officer/header.php';
-include '../includes/db_connection.php';
-?>
+<!DOCTYPE html>
+<html lang="en">
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analytics - Route Optimization</title>
+  
+  <!-- Bootstrap CSS (Ensure it's the same version as in analytics-finance.php) -->
+  <link rel="stylesheet" href="../assets/libs/bootstrap/dist/css/bootstrap.min.css">
+  
+  <!-- Bootstrap Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  
+  <!-- Custom Styles -->
+  <style>
+    #map {
+      height: 100%;
+      min-height: 500px;
+      width: 100%;
+      border-radius: 5px;
+    }
+  </style>
+</head>
 
-<div class="body-wrapper">
-  <div class="container-fluid">
+<body>
+  <?php
+  session_start();
+  include '../officer/header.php';
+  include '../includes/db_connection.php';
 
-    <div class="card">
-      <div class="card-body">
-        <h4 class="card-title mb-4">Route Optimization System</h4>
+  $sidebar_path = '../officer/sidebar.php';
+  if (file_exists($sidebar_path)) {
+      include $sidebar_path;
+  } else {
+      echo "<!-- Sidebar not found: $sidebar_path -->";
+  }
+  ?>
 
+  <div class="body-wrapper">
+    <div class="container-fluid">
+      <div class="card card-body py-3">
+        <h4 class="mb-4">Route Optimization System</h4>
         <div class="row">
           <!-- Control Panel -->
-          <div class="col-md-4">
+          <div class="col-md-4 mb-4">
             <div class="card">
               <div class="card-body">
+                <h5 class="card-title">Route Details</h5>
                 <div class="mb-3">
-                  <label class="form-label">Select Cluster</label>
-                  <select id="clusterSelect" class="form-select mb-3">
-                    <option value="">Select a cluster...</option>
+                  <label for="routeSelect" class="form-label">Select Route</label>
+                  <select id="routeSelect" class="form-select">
+                    <option value="">Select a route...</option>
                     <?php
-                    $query = "SELECT DISTINCT ClusterID, ClusterCategory FROM clusters ORDER BY ClusterCategory";
+                    $query = "SELECT RouteID, StartLocation, EndLocation FROM route_optimization ORDER BY StartLocation";
                     $result = mysqli_query($conn, $query);
                     while ($row = mysqli_fetch_assoc($result)) {
-                      echo "<option value='{$row['ClusterID']}'>{$row['ClusterCategory']}</option>";
+                      echo "<option value='{$row['RouteID']}'>{$row['StartLocation']} → {$row['EndLocation']}</option>";
                     }
                     ?>
                   </select>
-
-                  <label class="form-label">Select Truck</label>
-                  <select id="truckSelect" class="form-select mb-3">
-                    <option value="">Select a truck...</option>
-                    <?php
-                    $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
-                    $result = mysqli_query($conn, $query);
-                    while ($row = mysqli_fetch_assoc($result)) {
-                      echo "<option value='{$row['TruckID']}'>{$row['PlateNo']} - {$row['TruckBrand']}</option>";
-                    }
-                    ?>
-                  </select>
-
-                  <button class="btn btn-primary w-100" onclick="calculateRoute()">
-                    Calculate Route
-                  </button>
                 </div>
-
+                <button class="btn btn-primary w-100" onclick="calculateRoute()">Calculate Route</button>
                 <div class="mt-4">
                   <div class="card bg-light">
                     <div class="card-body">
                       <h5 class="card-title">Route Statistics</h5>
-                      <div id="routeStats">
-                        <p class="mb-2"><i class="bi bi-geo-alt"></i> <strong>Distance:</strong>
-                          <span id="totalDistance">-</span>
-                        </p>
-                        <p class="mb-2"><i class="bi bi-clock"></i> <strong>Est. Time:</strong>
-                          <span id="estTime">-</span>
-                        </p>
-                        <p class="mb-2"><i class="bi bi-fuel-pump"></i> <strong>Est. Fuel:</strong>
-                          <span id="estFuel">-</span>
-                        </p>
-                        <p class="mb-2"><i class="bi bi-currency-dollar"></i> <strong>Est. Cost:</strong>
-                          <span id="estCost">-</span>
-                        </p>
-                      </div>
+                      <p><strong>Distance:</strong> <span id="totalDistance">-</span></p>
+                      <p><strong>Est. Time:</strong> <span id="estTime">-</span></p>
+                      <p><strong>Est. Fuel:</strong> <span id="estFuel">-</span></p>
+                      <p><strong>Est. Cost:</strong> <span id="estCost">-</span></p>
                     </div>
                   </div>
                 </div>
+                <button class="btn btn-secondary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#directionsModal">View Directions</button>
               </div>
             </div>
           </div>
 
           <!-- Map Section -->
-          <div class="col-md-8">
+          <div class="col-md-8 mb-4">
             <div class="card">
-              <div class="card-body">
-                <div id="map" style="height: 600px;"></div>
+              <div class="card-body p-0">
+                <div id="map"></div>
               </div>
             </div>
           </div>
@@ -87,152 +92,120 @@ include '../includes/db_connection.php';
       </div>
     </div>
   </div>
-</div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <!-- Directions Modal -->
+  <div class="modal fade" id="directionsModal" tabindex="-1" aria-labelledby="directionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="directionsModalLabel">Route Directions</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ol id="routeDirectionsList"></ol>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<script>
-  let map, routingControl;
-  let markers = [];
-  const fuelConsumptionRate = 0.12; // Liters per kilometer
-  const defaultFuelPrice = 52.00; // Default fuel price in PHP
+  <!-- Required Libraries -->
+  <!-- Ensure the order matches analytics-finance.php to prevent conflicts -->
+  <script src="../assets/js/vendor.min.js"></script>
+  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+  <script src="../assets/js/theme/app.init.js"></script>
+  <script src="../assets/js/theme/theme.js"></script>
+  <script src="../assets/js/theme/app.min.js"></script>
+  <script src="../assets/js/theme/sidebarmenu-default.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+  <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  // Initialize map
-  function initMap() {
-    // Center on Philippines
-    map = L.map('map').setView([14.5995, 120.9842], 7);
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-  }
+  <!-- Custom Scripts -->
+  <script>
+    let map, routingControl;
 
-  // Clear existing markers and routes
-  function clearMap() {
-    markers.forEach(marker => map.removeLayer(marker));
-    markers = [];
-    if (routingControl) {
-      map.removeControl(routingControl);
-    }
-  }
-
-  // Fetch all locations for a cluster
-  async function fetchClusterLocations(clusterId) {
-    const response = await fetch(`get_cluster_coordinates.php?cluster_id=${clusterId}`);
-    if (!response.ok) throw new Error('Failed to fetch cluster locations');
-    return await response.json();
-  }
-
-  // Save the calculated route
-  async function saveRoute(data) {
-    const response = await fetch('save_route.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to save route');
-    return await response.json();
-  }
-
-  // Calculate route
-  async function calculateRoute() {
-    const clusterId = document.getElementById('clusterSelect').value;
-    const truckId = document.getElementById('truckSelect').value;
-
-    if (!clusterId || !truckId) {
-      alert('Please select both a cluster and a truck');
-      return;
+    function initMap() {
+      map = L.map("map").setView([14.5995, 120.9842], 7);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
     }
 
-    try {
-      // Fetch cluster locations
-      const locations = await fetchClusterLocations(clusterId);
-      if (!locations.length) throw new Error('No locations found in this cluster');
+    async function fetchRouteData(routeId) {
+      try {
+        const response = await fetch(`get_route_data.php?route_id=${routeId}`);
+        if (!response.ok) throw new Error("Failed to fetch route data");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching route data:", error);
+        alert("Failed to fetch route data.");
+      }
+    }
 
-      clearMap();
-
-      // Add markers for each location
-      locations.forEach(location => {
-        const marker = L.marker([location.Latitude, location.Longitude])
-          .bindPopup(location.LocationName)
-          .addTo(map);
-        markers.push(marker);
-      });
-
-      // Create waypoints for routing
-      const waypoints = locations.map(loc => L.latLng(loc.Latitude, loc.Longitude));
-
-      // Calculate route
+    function clearMap() {
       if (routingControl) {
         map.removeControl(routingControl);
       }
-
-      routingControl = L.Routing.control({
-        waypoints: waypoints,
-        routeWhileDragging: false,
-        show: false,
-      }).addTo(map);
-
-      routingControl.on('routesfound', async function (e) {
-        const route = e.routes[0];
-        const distance = route.summary.totalDistance / 1000; // Convert to km
-        const time = route.summary.totalTime;
-
-        // Calculate estimates
-        const fuelUsed = distance * fuelConsumptionRate;
-        const cost = fuelUsed * defaultFuelPrice;
-
-        // Update statistics display
-        document.getElementById('totalDistance').textContent = `${distance.toFixed(2)} km`;
-        document.getElementById('estTime').textContent = formatTime(time);
-        document.getElementById('estFuel').textContent = `${fuelUsed.toFixed(2)} L`;
-        document.getElementById('estCost').textContent = `₱${cost.toFixed(2)}`;
-
-        // Save route data
-        await saveRoute({
-          clusterId,
-          truckId,
-          distance,
-          time,
-          fuel: fuelUsed,
-          cost,
-          fuelPrice: defaultFuelPrice,
-          waypoints: locations,
-        });
-      });
-
-      // Fit map to show all markers
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.1));
-    } catch (error) {
-      console.error(error);
-      alert(error.message);
     }
-  }
 
-  // Format time from seconds to hours and minutes
-  function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  }
+    async function calculateRoute() {
+      const routeId = document.getElementById("routeSelect").value;
+      if (!routeId) {
+        alert("Please select a route.");
+        return;
+      }
 
-  // Initialize map on page load
-  window.onload = initMap;
-</script>
+      try {
+        const data = await fetchRouteData(routeId);
+        if (!data || data.error) {
+          throw new Error(data.error || "No data found for the selected route.");
+        }
 
-<?php include '../officer/footer.php'; ?>
+        const { route, waypoints, directions } = data;
 
-<script src="../assets/js/vendor.min.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-<script src="../assets/js/apps/productDetail.js"></script>
+        document.getElementById("totalDistance").textContent = `${route.TotalDistance} km`;
+        document.getElementById("estTime").textContent = `${Math.floor(route.EstimatedTime / 60)}h ${route.EstimatedTime % 60}m`;
+        document.getElementById("estFuel").textContent = `${route.EstimatedFuel} L`;
+        document.getElementById("estCost").textContent = route.TotalCost ? `₱${parseFloat(route.TotalCost).toFixed(2)}` : "-";
+
+        clearMap();
+
+        const waypointCoordinates = waypoints.map((wp) => L.latLng(wp.Latitude, wp.Longitude));
+        routingControl = L.Routing.control({
+          waypoints: waypointCoordinates,
+          routeWhileDragging: false,
+          fitSelectedRoutes: true,
+          showAlternatives: false,
+          createMarker: () => null, // Suppress the markers
+        }).addTo(map);
+
+        // Populate directions in the modal
+        const directionsList = document.getElementById("routeDirectionsList");
+        directionsList.innerHTML = "";
+        directions.forEach((step) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = step;
+          directionsList.appendChild(listItem);
+        });
+      } catch (error) {
+        console.error("Error calculating route:", error);
+        alert("Error calculating route.");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initMap();
+      // Initialize other features if needed
+    });
+  </script>
 </body>
+
 </html>
