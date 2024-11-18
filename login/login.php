@@ -141,9 +141,9 @@ function loginUser($userData, $conn)
   $action = "Logged In";
 
   // Prepare the INSERT statement
-  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
   if ($insert_stmt = $conn->prepare($insert_sql)) {
-    $insert_stmt->bind_param("iss", $userData['UserID'], $action, $current_timestamp);
+    $insert_stmt->bind_param("is", $userData['UserID'], $action);
     if (!$insert_stmt->execute()) {
       // Handle insertion error (optional)
       error_log("Failed to insert activity log: " . $insert_stmt->error);

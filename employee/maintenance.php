@@ -127,7 +127,8 @@ $result = $stmt->get_result();
                             <div class="mb-3">
                               <label for="loggedBy" class="form-label">Logged By</label>
                               <!-- Hidden field not necessary; directly use session -->
-                              <input type="hidden" id="loggedBy" name="loggedBy" value="<?php echo $_SESSION['UserID']; ?>">
+                              <input type="hidden" id="loggedBy" name="loggedBy"
+                                value="<?php echo $_SESSION['UserID']; ?>">
                             </div>
                           </div>
 
@@ -140,7 +141,6 @@ $result = $stmt->get_result();
                           </div>
                         </div>
                       </form>
-
                     </div>
                   </div>
                 </div>
@@ -183,7 +183,8 @@ $result = $stmt->get_result();
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
                 </div>
-                <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+                <div
+                  class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
                   <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                     data-bs-target="#addMaintenanceRecordModal">
                     <i class="ti ti-users text-white me-1 fs-5"></i> Add Maintenance Record
@@ -213,7 +214,8 @@ $result = $stmt->get_result();
                     <div class="d-flex justify-content-between align-items-center">
                       <div class="col-md-4">
                         <form class="position-relative">
-                          <input type="text" class="form-control" id="input-search" placeholder="Search..." oninput="filterMaintenance()" />
+                          <input type="text" class="form-control" id="input-search" placeholder="Search..."
+                            oninput="filterMaintenance()" />
                         </form>
                       </div>
                       <div class="col-md-4 text-end">
@@ -228,7 +230,8 @@ $result = $stmt->get_result();
 
                   <div class="card card-body">
                     <div class="table-responsive">
-                      <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="maintenanceTable">
+                      <table class="table table-striped table-bordered text-nowrap align-middle text-center"
+                        id="maintenanceTable">
                         <thead>
                           <tr>
                             <th class="sortable" onclick="sortTable(0, true)">Maintenance ID <span></span></th>
@@ -266,7 +269,8 @@ $result = $stmt->get_result();
                     $stmt->close();
                     $conn->close();
                     ?>
-                    <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                    <div
+                      class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                       <div>Number of pages: <span id="totalPages"></span></div>
                       <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center" id="paginationNumbers"></ul>
@@ -291,7 +295,7 @@ $result = $stmt->get_result();
               }
 
               // Submit form if user confirms
-              document.getElementById('confirmSubmit').addEventListener('click', function() {
+              document.getElementById('confirmSubmit').addEventListener('click', function () {
                 document.getElementById('addMaintenanceForm').submit(); // Submit the form
               });
             </script>
@@ -399,13 +403,13 @@ $result = $stmt->get_result();
                 updateTable();
               });
 
-              document.getElementById("rowsPerPage").addEventListener('change', function() {
+              document.getElementById("rowsPerPage").addEventListener('change', function () {
                 rowsPerPage = parseInt(this.value);
                 currentPage = 1;
                 updateTable();
               });
 
-              document.getElementById("input-search").addEventListener("input", function() {
+              document.getElementById("input-search").addEventListener("input", function () {
                 const searchValue = this.value.toLowerCase();
                 const tableRows = document.querySelectorAll("#maintenanceBody tr");
 

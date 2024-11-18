@@ -1,12 +1,60 @@
 <?php
 session_start();
 include '../officer/header.php';
-if ($_SESSION['Role'] !== 'SuperAdmin') {
-  echo "Access denied. This page is only accessible to SuperAdmin.";
-  exit();
-}
 include '../includes/db_connection.php';
+
+// Check if the user is authenticated
+if (!isset($_SESSION['Role'])) {
+    echo "Access denied. Please log in.";
+    exit();
+}
+
+$role = $_SESSION['Role'];
+
+// Allow access to SuperAdmin and Officer roles only
+if ($role !== 'SuperAdmin' && $role !== 'Officer') {
+    echo "Access denied. This page is only accessible to SuperAdmin and Officer roles.";
+    exit();
+}
+
+// Prepare SQL query based on the user's role
+if ($role === 'SuperAdmin') {
+    // SuperAdmin can view all activity logs
+    $sql = "
+        SELECT 
+            activitylogs.LogID, 
+            useraccounts.Username, 
+            useraccounts.Role, 
+            activitylogs.Action, 
+            activitylogs.TimeStamp 
+        FROM activitylogs 
+        INNER JOIN useraccounts ON activitylogs.UserID = useraccounts.UserID
+        ORDER BY activitylogs.LogID DESC
+    ";
+} elseif ($role === 'Officer') {
+    // Officer can view activity logs performed by Employees only
+    $sql = "
+        SELECT 
+            activitylogs.LogID, 
+            useraccounts.Username, 
+            useraccounts.Role, 
+            activitylogs.Action, 
+            activitylogs.TimeStamp 
+        FROM activitylogs 
+        INNER JOIN useraccounts ON activitylogs.UserID = useraccounts.UserID
+        WHERE useraccounts.Role = 'Employee'
+        ORDER BY activitylogs.LogID DESC
+    ";
+}
+
+// Execute the SQL query
+$result = $conn->query($sql);
+
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
 ?>
+
 <div class="body-wrapper">
   <div class="container-fluid">
     <div class="card card-body py-3">
@@ -39,7 +87,6 @@ include '../includes/db_connection.php';
           <div class="col-md-4 ">
             <form class="position-relative">
               <input type="text" class="form-control" id="input-search" placeholder="Search..." oninput="filterActivityLogs()" />
-
             </form>
           </div>
           <div class="col-md-4 text-end ">
@@ -66,29 +113,18 @@ include '../includes/db_connection.php';
             </thead>
             <tbody id="activityLogsbody">
               <?php
-              $sql = "SELECT activitylogs.LogID, useraccounts.Username, useraccounts.Role, activitylogs.Action, activitylogs.TimeStamp 
-          FROM activitylogs 
-          INNER JOIN useraccounts ON activitylogs.UserID = useraccounts.UserID
-          ORDER BY LogID DESC";
-
-              $result = $conn->query($sql);
-
-              if (!$result) {
-                die("Query failed: " . $conn->error);
-              }
-
               if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                  echo "<tr>";
-                  echo "<td style='width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['LogID']}</td>";
-                  echo "<td style='width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Username']}</td>";
-                  echo "<td style='width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Role']}</td>";
-                  echo "<td style='width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Action']}</td>";
-                  echo "<td style='width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['TimeStamp']}</td>";
-                  echo "</tr>";
-                }
+                  while ($row = $result->fetch_assoc()) {
+                      echo "<tr>";
+                      echo "<td style='width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['LogID']}</td>";
+                      echo "<td style='width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Username']}</td>";
+                      echo "<td style='width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Role']}</td>";
+                      echo "<td style='width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['Action']}</td>";
+                      echo "<td style='width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{$row['TimeStamp']}</td>";
+                      echo "</tr>";
+                  }
               } else {
-                echo "<tr><td colspan='5' class='text-center'>No activity logs found</td></tr>";
+                  echo "<tr><td colspan='5' class='text-center'>No activity logs found</td></tr>";
               }
               ?>
             </tbody>
@@ -104,7 +140,6 @@ include '../includes/db_connection.php';
             </ul>
           </nav>
         </div>
-
       </div>
     </div>
   </div>
@@ -285,7 +320,7 @@ include '../includes/db_connection.php';
     pageLink.style.justifyContent = 'center';
     pageLink.style.alignItems = 'center';
 
-    if (onClick) {
+    if (onClick && !isDisabled) {
       pageLink.onclick = onClick;
     }
 
@@ -362,7 +397,6 @@ include '../includes/db_connection.php';
   });
 </script>
 
-
 <style>
   /* Dark mode pagination styles */
   .dark-mode .pagination .page-item .page-link {
@@ -426,7 +460,6 @@ include '../includes/db_connection.php';
     background-color: #e9ecef;
   }
 </style>
-
 
 <?php
 include '../officer/footer.php';

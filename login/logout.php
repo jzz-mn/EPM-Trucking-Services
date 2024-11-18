@@ -14,10 +14,10 @@ function log_activity($conn, $user_id, $action)
     $current_timestamp = date("Y-m-d H:i:s");
 
     // Prepare the INSERT statement to prevent SQL injection
-    $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+    $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
 
     if ($stmt = $conn->prepare($insert_sql)) {
-        $stmt->bind_param("iss", $user_id, $action, $current_timestamp);
+        $stmt->bind_param("is", $user_id, $action);
         if (!$stmt->execute()) {
             // Handle insertion error (optional)
             error_log("Failed to insert activity log: " . $stmt->error);
