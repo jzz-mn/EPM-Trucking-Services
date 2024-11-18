@@ -141,14 +141,14 @@ if (isset($_POST['officerID']) && is_numeric($_POST['officerID'])) {
         $currentTimestamp = date("Y-m-d H:i:s");
 
         // Prepare the INSERT statement for activitylogs
-        $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+        $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
         $stmtLog = $conn->prepare($sqlInsertLog);
 
         if (!$stmtLog) {
             throw new Exception("Failed to prepare activity log insertion: " . $conn->error);
         }
 
-        $stmtLog->bind_param('iss', $currentUserID, $action, $currentTimestamp);
+        $stmtLog->bind_param('is', $currentUserID, $action);
 
         // Execute the activity log insertion
         if (!$stmtLog->execute()) {

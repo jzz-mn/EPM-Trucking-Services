@@ -59,13 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $action = "Updated Fuel ID: " . $fuelID;
     $currentTimestamp = date("Y-m-d H:i:s");
 
-    $sqlLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+    $sqlLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?,NOW())";
     $stmtLog = mysqli_prepare($conn, $sqlLog);
     if (!$stmtLog) {
       throw new Exception("Failed to prepare activity log insertion: " . mysqli_error($conn));
     }
 
-    mysqli_stmt_bind_param($stmtLog, "iss", $currentUserID, $action, $currentTimestamp);
+    mysqli_stmt_bind_param($stmtLog, "is", $currentUserID, $action);
 
     // Execute the activity log insertion
     mysqli_stmt_execute($stmtLog);

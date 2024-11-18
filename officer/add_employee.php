@@ -167,10 +167,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $action = "Added Employee: " . $username;
             $currentTimestamp = date("Y-m-d H:i:s");
 
-            $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+            $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
             $stmtLog = $conn->prepare($sqlInsertLog);
             if ($stmtLog) {
-                $stmtLog->bind_param('iss', $currentUserID, $action, $currentTimestamp);
+                $stmtLog->bind_param('is', $currentUserID, $action);
                 if (!$stmtLog->execute()) {
                     error_log("Failed to insert activity log: " . $stmtLog->error);
                 }

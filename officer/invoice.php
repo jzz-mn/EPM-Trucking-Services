@@ -15,9 +15,9 @@ function insert_activity_log($conn, $userID, $action)
   $current_timestamp = date("Y-m-d H:i:s"); // Current date and time
 
   // Prepare the INSERT statement
-  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
   if ($insert_stmt = $conn->prepare($insert_sql)) {
-    $insert_stmt->bind_param("iss", $userID, $action, $current_timestamp);
+    $insert_stmt->bind_param("is", $userID, $action);
     if (!$insert_stmt->execute()) {
       // Handle insertion error (optional)
       error_log("Failed to insert activity log: " . $insert_stmt->error);

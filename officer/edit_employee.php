@@ -187,12 +187,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $currentTimestamp = date("Y-m-d H:i:s");
 
         // Prepare the INSERT statement for activitylogs
-        $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, ?)";
+        $sqlInsertLog = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
         $stmtLog = $conn->prepare($sqlInsertLog);
         if ($stmtLog === false) {
             throw new Exception('Error preparing activity log insertion: ' . $conn->error);
         }
-        $stmtLog->bind_param('iss', $currentUserID, $action, $currentTimestamp);
+        $stmtLog->bind_param('is', $currentUserID, $action);
         if (!$stmtLog->execute()) {
             // Log the error without halting the transaction
             error_log("Failed to insert activity log: " . $stmtLog->error);
