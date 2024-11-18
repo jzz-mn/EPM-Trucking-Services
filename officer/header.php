@@ -257,7 +257,7 @@ if (!empty($sql_all_notifications)) {
                                     return isset($_SESSION['Role']) && $_SESSION['Role'] === $role;
                                 }
                                 ?>
-                                <?php if (isUserRole('SuperAdmin') || isUserRole('Officer')): // Updated condition to include 'Officer' ?>
+                                <?php if (isUserRole('SuperAdmin')): // Updated condition to include 'Officer' ?>
                                     <li class="sidebar-item">
                                         <a class="sidebar-link" href="../officer/officers.php">
                                             <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>

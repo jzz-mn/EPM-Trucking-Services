@@ -94,7 +94,14 @@ $transactionsByGroup = [];
 if (!empty($transactionGroupIDs)) {
     // Secure the IDs by ensuring they are integers
     $ids = implode(',', array_map('intval', $transactionGroupIDs));
-    $txnQuery = "SELECT * FROM transactions WHERE TransactionGroupID IN ($ids) ORDER BY DRno ASC";
+    // Modified Query: Join with customers to get CustomerLocCode and CustomerCode
+    $txnQuery = "
+        SELECT t.*, c.CustomerLocCode, c.CustomerCode 
+        FROM transactions t
+        LEFT JOIN customers c ON t.OutletName = c.CustomerName
+        WHERE t.TransactionGroupID IN ($ids) 
+        ORDER BY t.DRno ASC
+    ";
     $txnResult = $conn->query($txnQuery);
     if ($txnResult) {
         while ($txn = $txnResult->fetch_assoc()) {
@@ -196,6 +203,8 @@ if ($format === 'pdf') {
                 border: 1px solid #000;
                 padding: 2px;
                 /* Reduced padding */
+                text-align: center; /* Center-align all data */
+                vertical-align: middle; /* Vertically center-align */
                 margin: 0;
             }
 
@@ -205,13 +214,16 @@ if ($format === 'pdf') {
                 padding: 2px;
             }
 
-            .transactions-table td.numeric,
+            /* Remove numeric class alignment */
+            /* .transactions-table td.numeric,
             .transactions-table th.numeric {
                 text-align: right;
-            }
+            } */
 
             .transaction-group {
                 page-break-inside: avoid;
+                border: 2px solid #000; /* Bold border for SUB TOTAL */
+                font-weight: bold; /* Bold text for SUB TOTAL */
             }
 
             .totals-row {
@@ -237,10 +249,11 @@ if ($format === 'pdf') {
                 padding: 2px;
                 /* Reduced padding */
                 margin: 0;
+                text-align: center; /* Center-align totals */
             }
 
             .totals-table td.numeric {
-                text-align: right;
+                text-align: center;
             }
 
             .totals-table td:first-child {
@@ -266,6 +279,7 @@ if ($format === 'pdf') {
             .signature-table p {
                 margin: 5px 0;
                 padding: 0;
+                text-align: center; /* Center-align signature text */
             }
 
             .signature-container {
@@ -283,6 +297,14 @@ if ($format === 'pdf') {
                 margin-right: 10px;
                 padding: 0;
             }
+
+            /* Style for TOTAL row */
+            .totals-row td {
+                border: 2px solid #000; /* Bold border for TOTAL */
+                font-weight: bold; /* Bold text for TOTAL */
+            }
+
+            /* Add empty row styling if needed */
         </style>
     </head>
 
@@ -322,17 +344,17 @@ if ($format === 'pdf') {
         ?>
         <table class="transactions-table">
             <thead>
-                <tr>
+                <tr class="header">
                     <th>DATE</th>
                     <th>PLATE #</th>
                     <th>DR #</th>
                     <th>DIESEL</th>
-                    <th>OUTLET NAME</th>
-                    <th class="numeric">QTY</th>
-                    <th class="numeric">KGS</th>
-                    <th class="numeric">RATE</th>
-                    <th class="numeric">TOLLFEE/PW</th>
-                    <th class="numeric">AMOUNT</th>
+                    <th colspan="2">CUSTOMER CODE</th>
+                    <th>QTY</th>
+                    <th>KGS</th>
+                    <th>RATE</th>
+                    <th>TOLLFEE/PW</th>
+                    <th>AMOUNT</th>
                 </tr>
             </thead>
             <tbody>
@@ -347,7 +369,7 @@ if ($format === 'pdf') {
                     $tollFeePW = $tg['TollFeeAmount'] ?? 0; // TollFeeAmount from transactiongroup
                     $rate_amount = $tg['RateAmount'] ?? 0; // RateAmount from transactiongroup
                     $amount = $tg['Amount'] ?? 0; // Amount from transactiongroup
-            
+
                     // Start of transaction group
                     echo '<!-- Start of Transaction Group -->';
 
@@ -361,14 +383,15 @@ if ($format === 'pdf') {
                                 <td><?php echo date('j-M-Y', strtotime($txn['TransactionDate'])); ?></td>
                                 <td><?php echo htmlspecialchars($tg['PlateNo']); ?></td>
                                 <td><?php echo htmlspecialchars($txn['DRno']); ?></td>
-                                <td class="numeric">-</td>
-                                <td><?php echo htmlspecialchars($txn['OutletName']); ?></td>
-                                <td class="numeric"><?php echo number_format($txn['Qty'], 2); ?></td>
-                                <td class="numeric"><?php echo number_format($txn['KGs'], 2); ?></td>
+                                <td>-</td>
+                                <td><?php echo htmlspecialchars($txn['CustomerLocCode'] ?? '-'); ?></td>
+                                <td><?php echo htmlspecialchars($txn['CustomerCode'] ?? '-'); ?></td>
+                                <td><?php echo number_format($txn['Qty'], 2, '.', ''); ?></td>
+                                <td><?php echo number_format($txn['KGs'], 2, '.', ''); ?></td>
                                 <!-- Do not show values in Rate, TollFee/PW, and Amount columns -->
-                                <td class="numeric">-</td>
-                                <td class="numeric">-</td>
-                                <td class="numeric">-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
                             </tr>
                             <?php
                         endforeach;
@@ -377,14 +400,17 @@ if ($format === 'pdf') {
                     // Subtotal row for the transaction group
                     ?>
                     <tr class="transaction-group">
-                        <td colspan="3"><strong>SUB TOTAL</strong></td>
-                        <td class="numeric"><?php echo '₱' . number_format($fuelUnitPrice, 2); ?></td>
-                        <td></td>
-                        <td class="numeric"><?php echo number_format($subtotalQty, 2); ?></td>
-                        <td class="numeric"><?php echo number_format($subtotalKGs, 2); ?></td>
-                        <td class="numeric"><?php echo '₱' . number_format($rate_amount, 2); ?></td>
-                        <td class="numeric"><?php echo '₱' . number_format($tollFeePW, 2); ?></td>
-                        <td class="numeric"><?php echo '₱' . number_format($amount, 2); ?></td>
+                        <td colspan="4"><strong>SUB TOTAL</strong></td>
+                        <td colspan="2"></td>
+                        <td><?php echo number_format($subtotalQty, 2, '.', ''); ?></td>
+                        <td><?php echo number_format($subtotalKGs, 2, '.', ''); ?></td>
+                        <td><?php echo '₱' . number_format($rate_amount, 2, '.', ''); ?></td>
+                        <td><?php echo '₱' . number_format($tollFeePW, 2, '.', ''); ?></td>
+                        <td><?php echo '₱' . number_format($amount, 2, '.', ''); ?></td>
+                    </tr>
+                    <!-- Empty row after SUB TOTAL -->
+                    <tr>
+                        <td colspan="11">&nbsp;</td>
                     </tr>
                     <?php
                     // End of transaction group
@@ -399,10 +425,10 @@ if ($format === 'pdf') {
                 ?>
                 <!-- Total row at the bottom -->
                 <tr class="totals-row">
-                    <td colspan="7"><strong>TOTAL</strong></td>
-                    <td class="numeric"><strong><?php echo '₱' . number_format($totalRate, 2); ?></strong></td>
-                    <td class="numeric"><strong><?php echo '₱' . number_format($totalTollFee, 2); ?></strong></td>
-                    <td class="numeric"><strong><?php echo '₱' . number_format($totalAmount, 2); ?></strong></td>
+                    <td colspan="8"><strong>TOTAL</strong></td>
+                    <td><strong>₱<?php echo number_format($totalRate, 2, '.', ''); ?></strong></td>
+                    <td><strong>₱<?php echo number_format($totalTollFee, 2, '.', ''); ?></strong></td>
+                    <td><strong>₱<?php echo number_format($totalAmount, 2, '.', ''); ?></strong></td>
                 </tr>
             </tbody>
         </table>
@@ -426,31 +452,31 @@ if ($format === 'pdf') {
             <table class="totals-table">
                 <tr>
                     <td><strong>GROSS AMOUNT:</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($grossAmount, 2); ?></td>
+                    <td>₱<?php echo number_format($grossAmount, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>ADD: VAT 12%</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($vat, 2); ?></td>
+                    <td>₱<?php echo number_format($vat, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>TOTAL AMOUNT</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($totalAmountInvoice, 2); ?></td>
+                    <td>₱<?php echo number_format($totalAmountInvoice, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>LESS: EWT 2%</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($ewt, 2); ?></td>
+                    <td>₱<?php echo number_format($ewt, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>AMOUNT NET OF TAX</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($amountNetOfTax, 2); ?></td>
+                    <td>₱<?php echo number_format($amountNetOfTax, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>ADD: TOLL/CHARGES</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($addTollCharges, 2); ?></td>
+                    <td>₱<?php echo number_format($addTollCharges, 2, '.', ''); ?></td>
                 </tr>
                 <tr>
                     <td><strong>NET AMOUNT:</strong></td>
-                    <td class="numeric"><?php echo '₱' . number_format($netAmount, 2); ?></td>
+                    <td>₱<?php echo number_format($netAmount, 2, '.', ''); ?></td>
                 </tr>
             </table>
         </div>
@@ -553,7 +579,7 @@ if ($format === 'pdf') {
 
     // Company Info
     $sheet->setCellValue('A' . $rowNum, 'E.P.MONTALBO TRUCKING');
-    $sheet->mergeCells('A' . $rowNum . ':J' . $rowNum);
+    $sheet->mergeCells('A' . $rowNum . ':J' . $rowNum); // Adjusted to J for 10 columns
     $sheet->getStyle('A' . $rowNum)->getFont()->setBold(true)->setSize(14);
     $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal('center');
     $rowNum++;
@@ -602,16 +628,20 @@ if ($format === 'pdf') {
     $rowNum += 2;
 
     // Transactions Table Headers
+    // Single Header Row
     $sheet->setCellValue('A' . $rowNum, 'DATE');
     $sheet->setCellValue('B' . $rowNum, 'PLATE #');
     $sheet->setCellValue('C' . $rowNum, 'DR #');
     $sheet->setCellValue('D' . $rowNum, 'DIESEL');
-    $sheet->setCellValue('E' . $rowNum, 'OUTLET NAME');
+    $sheet->setCellValue('E' . $rowNum, 'CUSTOMER CODE');
     $sheet->setCellValue('F' . $rowNum, 'QTY');
     $sheet->setCellValue('G' . $rowNum, 'KGS');
     $sheet->setCellValue('H' . $rowNum, 'RATE');
     $sheet->setCellValue('I' . $rowNum, 'TOLLFEE/PW');
     $sheet->setCellValue('J' . $rowNum, 'AMOUNT');
+    // Merge cells for 'CUSTOMER CODE' header
+    $sheet->mergeCells('E' . $rowNum . ':F' . $rowNum);
+    $sheet->setCellValue('E' . $rowNum, 'CUSTOMER CODE');
     $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getFont()->setBold(true);
     $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getAlignment()->setHorizontal('center');
     $rowNum++;
@@ -636,14 +666,18 @@ if ($format === 'pdf') {
                 $subtotalQty += $txn['Qty'];
                 $subtotalKGs += $txn['KGs'];
 
+                // Combine CustomerLocCode and CustomerCode in separate cells
+                $customerLocCode = $txn['CustomerLocCode'] ?? '-';
+                $customerCode = $txn['CustomerCode'] ?? '-';
+
                 $sheet->setCellValue('A' . $rowNum, date('j-M-Y', strtotime($txn['TransactionDate'])));
                 $sheet->setCellValue('B' . $rowNum, $tg['PlateNo']);
                 $sheet->setCellValue('C' . $rowNum, $txn['DRno']);
                 $sheet->setCellValue('D' . $rowNum, '-');
-                $sheet->setCellValue('E' . $rowNum, $txn['OutletName']);
-                $sheet->setCellValue('F' . $rowNum, number_format($txn['Qty'], 2));
-                $sheet->setCellValue('G' . $rowNum, number_format($txn['KGs'], 2));
-                $sheet->setCellValue('H' . $rowNum, '-');
+                $sheet->setCellValue('E' . $rowNum, $customerLocCode);
+                $sheet->setCellValue('F' . $rowNum, $customerCode);
+                $sheet->setCellValue('G' . $rowNum, number_format($txn['Qty'], 2, '.', ''));
+                $sheet->setCellValue('H' . $rowNum, number_format($txn['KGs'], 2, '.', ''));
                 $sheet->setCellValue('I' . $rowNum, '-');
                 $sheet->setCellValue('J' . $rowNum, '-');
                 $rowNum++;
@@ -652,15 +686,22 @@ if ($format === 'pdf') {
 
         // Subtotal row for the transaction group
         $sheet->setCellValue('A' . $rowNum, 'SUB TOTAL');
-        $sheet->mergeCells('A' . $rowNum . ':C' . $rowNum);
-        $sheet->setCellValue('D' . $rowNum, '₱' . number_format($fuelUnitPrice, 2));
+        $sheet->mergeCells('A' . $rowNum . ':D' . $rowNum);
         $sheet->setCellValue('E' . $rowNum, '');
-        $sheet->setCellValue('F' . $rowNum, number_format($subtotalQty, 2));
-        $sheet->setCellValue('G' . $rowNum, number_format($subtotalKGs, 2));
-        $sheet->setCellValue('H' . $rowNum, '₱' . number_format($rate_amount, 2));
-        $sheet->setCellValue('I' . $rowNum, '₱' . number_format($tollFeePW, 2));
-        $sheet->setCellValue('J' . $rowNum, '₱' . number_format($amount, 2));
+        $sheet->setCellValue('F' . $rowNum, '');
+        $sheet->setCellValue('G' . $rowNum, number_format($subtotalQty, 2, '.', ''));
+        $sheet->setCellValue('H' . $rowNum, number_format($subtotalKGs, 2, '.', ''));
+        $sheet->setCellValue('I' . $rowNum, '₱' . number_format($rate_amount, 2, '.', ''));
+        $sheet->setCellValue('J' . $rowNum, '₱' . number_format($tollFeePW, 2, '.', ''));
+        // Bold the SUB TOTAL row text
         $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getFont()->setBold(true);
+        // Apply bold borders to SUB TOTAL row
+        $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK);
+        $rowNum++;
+
+        // Add an empty row after SUB TOTAL
+        $sheet->setCellValue('A' . $rowNum, '');
+        $sheet->mergeCells('A' . $rowNum . ':J' . $rowNum);
         $rowNum++;
 
         // Accumulate totals
@@ -671,11 +712,14 @@ if ($format === 'pdf') {
 
     // Total row at the bottom
     $sheet->setCellValue('A' . $rowNum, 'TOTAL');
-    $sheet->mergeCells('A' . $rowNum . ':G' . $rowNum);
-    $sheet->setCellValue('H' . $rowNum, '₱' . number_format($totalRate, 2));
-    $sheet->setCellValue('I' . $rowNum, '₱' . number_format($totalTollFee, 2));
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($totalAmount, 2));
+    $sheet->mergeCells('A' . $rowNum . ':F' . $rowNum); // Merge first six columns for 'TOTAL' label
+    $sheet->setCellValue('G' . $rowNum, '₱' . number_format($totalRate, 2, '.', ''));
+    $sheet->setCellValue('H' . $rowNum, '₱' . number_format($totalTollFee, 2, '.', ''));
+    $sheet->setCellValue('I' . $rowNum, '₱' . number_format($totalAmount, 2, '.', ''));
+    // Bold the TOTAL row text
     $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getFont()->setBold(true);
+    // Apply bold borders to TOTAL row
+    $sheet->getStyle('A' . $rowNum . ':J' . $rowNum)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK);
     $rowNum += 2;
 
     // Totals Section from Invoices Table
@@ -689,31 +733,31 @@ if ($format === 'pdf') {
 
     // Totals
     $sheet->setCellValue('I' . $rowNum, 'GROSS AMOUNT:');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($grossAmount, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($grossAmount, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'ADD: VAT 12%');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($vat, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($vat, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'TOTAL AMOUNT');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($totalAmountInvoice, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($totalAmountInvoice, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'LESS: EWT 2%');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($ewt, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($ewt, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'AMOUNT NET OF TAX');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($amountNetOfTax, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($amountNetOfTax, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'ADD: TOLL/CHARGES');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($addTollCharges, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($addTollCharges, 2, '.', ''));
     $rowNum++;
 
     $sheet->setCellValue('I' . $rowNum, 'NET AMOUNT:');
-    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($netAmount, 2));
+    $sheet->setCellValue('J' . $rowNum, '₱' . number_format($netAmount, 2, '.', ''));
     $sheet->getStyle('I' . $rowNum . ':J' . $rowNum)->getFont()->setBold(true);
     $rowNum += 2;
 
@@ -736,15 +780,17 @@ if ($format === 'pdf') {
     $sheet->setCellValue('A' . ($rowNum + 6), 'E.P.MONTALBO TRUCKING');
 
     // Adjust column widths and styles
-    foreach (range('A', 'J') as $columnID) {
+    foreach (range('A', 'J') as $columnID) { // Adjusted to 'J' for 10 columns
         $sheet->getColumnDimension($columnID)->setAutoSize(true);
     }
 
     // Set number formats for numeric columns
-    $numericColumns = ['F', 'G', 'H', 'I', 'J'];
+    $numericColumns = ['G', 'H', 'I', 'J'];
     for ($i = 1; $i <= $rowNum + 6; $i++) {
         foreach ($numericColumns as $col) {
-            $sheet->getStyle($col . $i)->getAlignment()->setHorizontal('right');
+            $sheet->getStyle($col . $i)->getAlignment()->setHorizontal('center');
+            // Set number format to number with 2 decimals
+            $sheet->getStyle($col . $i)->getNumberFormat()->setFormatCode('#,##0.00');
         }
     }
 
@@ -764,3 +810,4 @@ if ($format === 'pdf') {
 } else {
     die('Invalid format specified.');
 }
+?>
