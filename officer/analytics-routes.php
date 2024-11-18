@@ -5,16 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics - Route Optimization</title>
-  
-  <!-- Bootstrap CSS (Ensure it's the same version as in analytics-finance.php) -->
+
+  <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../assets/libs/bootstrap/dist/css/bootstrap.min.css">
-  
+
   <!-- Bootstrap Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-  
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-  
+
   <!-- Custom Styles -->
   <style>
     #map {
@@ -22,6 +22,11 @@
       min-height: 500px;
       width: 100%;
       border-radius: 5px;
+    }
+
+    .leaflet-top.leaflet-right {
+      display: none !important;
+      /* Hide the route details in the map view */
     }
   </style>
 </head>
@@ -31,61 +36,82 @@
   session_start();
   include '../officer/header.php';
   include '../includes/db_connection.php';
-
-  $sidebar_path = '../officer/sidebar.php';
-  if (file_exists($sidebar_path)) {
-      include $sidebar_path;
-  } else {
-      echo "<!-- Sidebar not found: $sidebar_path -->";
-  }
   ?>
 
   <div class="body-wrapper">
     <div class="container-fluid">
+      <?php
+      // Include sidebar for navigation
+      $sidebar_path = '../officer/sidebar.php';
+      if (file_exists($sidebar_path)) {
+        include $sidebar_path;
+      } else {
+        echo "<!-- Sidebar not found: $sidebar_path -->";
+      }
+      ?>
+
       <div class="card card-body py-3">
-        <h4 class="mb-4">Route Optimization System</h4>
-        <div class="row">
-          <!-- Control Panel -->
-          <div class="col-md-4 mb-4">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Route Details</h5>
-                <div class="mb-3">
-                  <label for="routeSelect" class="form-label">Select Route</label>
-                  <select id="routeSelect" class="form-select">
-                    <option value="">Select a route...</option>
-                    <?php
-                    $query = "SELECT RouteID, StartLocation, EndLocation FROM route_optimization ORDER BY StartLocation";
-                    $result = mysqli_query($conn, $query);
-                    while ($row = mysqli_fetch_assoc($result)) {
-                      echo "<option value='{$row['RouteID']}'>{$row['StartLocation']} → {$row['EndLocation']}</option>";
-                    }
-                    ?>
-                  </select>
-                </div>
-                <button class="btn btn-primary w-100" onclick="calculateRoute()">Calculate Route</button>
-                <div class="mt-4">
-                  <div class="card bg-light">
-                    <div class="card-body">
-                      <h5 class="card-title">Route Statistics</h5>
-                      <p><strong>Distance:</strong> <span id="totalDistance">-</span></p>
-                      <p><strong>Est. Time:</strong> <span id="estTime">-</span></p>
-                      <p><strong>Est. Fuel:</strong> <span id="estFuel">-</span></p>
-                      <p><strong>Est. Cost:</strong> <span id="estCost">-</span></p>
-                    </div>
-                  </div>
-                </div>
-                <button class="btn btn-secondary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#directionsModal">View Directions</button>
-              </div>
+        <div class="row align-items-center">
+          <div class="col-12">
+            <div class="d-sm-flex align-items-center justify-content-between">
+              <h4 class="mb-4 mb-sm-0 card-title">Analytics - Route Optimization</h4>
+              <nav aria-label="breadcrumb" class="ms-auto">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item d-flex align-items-center">
+                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                      <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
+                    </a>
+                  </li>
+                </ol>
+              </nav>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Map Section -->
-          <div class="col-md-8 mb-4">
-            <div class="card">
-              <div class="card-body p-0">
-                <div id="map"></div>
+      <h5 class="border-bottom py-2 px-4 mb-4">Route Optimization</h5>
+
+      <div class="row">
+        <!-- Control Panel -->
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Route Details</h5>
+              <div class="mb-3">
+                <label for="routeSelect" class="form-label">Select Route</label>
+                <select id="routeSelect" class="form-select">
+                  <option value="">Select a route...</option>
+                  <?php
+                  $query = "SELECT RouteID, StartLocation, EndLocation FROM route_optimization ORDER BY StartLocation";
+                  $result = mysqli_query($conn, $query);
+                  while ($row = mysqli_fetch_assoc($result)) {
+                    echo "<option value='{$row['RouteID']}'>{$row['StartLocation']} → {$row['EndLocation']}</option>";
+                  }
+                  ?>
+                </select>
               </div>
+              <button class="btn btn-primary w-100" onclick="calculateRoute()">Calculate Route</button>
+              <div class="mt-4">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h5 class="card-title">Route Statistics</h5>
+                    <p><strong>Distance:</strong> <span id="totalDistance">-</span></p>
+                    <p><strong>Est. Time:</strong> <span id="estTime">-</span></p>
+                    <p><strong>Est. Fuel:</strong> <span id="estFuel">-</span></p>
+                    <p><strong>Est. Cost:</strong> <span id="estCost">-</span></p>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-secondary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#directionsModal">View Directions</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="col-md-8 mb-4">
+          <div class="card">
+            <div class="card-body p-0">
+              <div id="map"></div>
             </div>
           </div>
         </div>
@@ -102,7 +128,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <ol id="routeDirectionsList"></ol>
+          <div id="mapModal" style="height: 400px; display: none;"></div>
+          <ol id="routeDirectionsList" class="mt-3"></ol>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -111,8 +138,8 @@
     </div>
   </div>
 
+
   <!-- Required Libraries -->
-  <!-- Ensure the order matches analytics-finance.php to prevent conflicts -->
   <script src="../assets/js/vendor.min.js"></script>
   <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
@@ -121,22 +148,24 @@
   <script src="../assets/js/theme/app.min.js"></script>
   <script src="../assets/js/theme/sidebarmenu-default.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-  <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
-  <!-- Custom Scripts -->
   <script>
-    let map, routingControl;
+    let map, routingControl, mapModal, startMarker, endMarker;
 
     function initMap() {
       map = L.map("map").setView([14.5995, 120.9842], 7);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
       }).addTo(map);
+    }
+
+    function initMapModal() {
+      mapModal = L.map("mapModal").setView([14.5995, 120.9842], 7);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(mapModal);
     }
 
     async function fetchRouteData(routeId) {
@@ -151,9 +180,9 @@
     }
 
     function clearMap() {
-      if (routingControl) {
-        map.removeControl(routingControl);
-      }
+      if (routingControl) map.removeControl(routingControl);
+      if (startMarker) map.removeLayer(startMarker);
+      if (endMarker) map.removeLayer(endMarker);
     }
 
     async function calculateRoute() {
@@ -169,7 +198,11 @@
           throw new Error(data.error || "No data found for the selected route.");
         }
 
-        const { route, waypoints, directions } = data;
+        const {
+          route,
+          waypoints,
+          directions
+        } = data;
 
         document.getElementById("totalDistance").textContent = `${route.TotalDistance} km`;
         document.getElementById("estTime").textContent = `${Math.floor(route.EstimatedTime / 60)}h ${route.EstimatedTime % 60}m`;
@@ -184,10 +217,16 @@
           routeWhileDragging: false,
           fitSelectedRoutes: true,
           showAlternatives: false,
-          createMarker: () => null, // Suppress the markers
+          createMarker: () => null,
         }).addTo(map);
 
-        // Populate directions in the modal
+        startMarker = L.marker(waypointCoordinates[0], {
+          title: "Start Point"
+        }).addTo(map);
+        endMarker = L.marker(waypointCoordinates[waypointCoordinates.length - 1], {
+          title: "End Point"
+        }).addTo(map);
+
         const directionsList = document.getElementById("routeDirectionsList");
         directionsList.innerHTML = "";
         directions.forEach((step) => {
@@ -195,6 +234,18 @@
           listItem.textContent = step;
           directionsList.appendChild(listItem);
         });
+
+        mapModal.eachLayer((layer) => mapModal.removeLayer(layer));
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(mapModal);
+        L.Routing.control({
+          waypoints: waypointCoordinates,
+          routeWhileDragging: false,
+          fitSelectedRoutes: true,
+          showAlternatives: false,
+          createMarker: () => null,
+        }).addTo(mapModal);
       } catch (error) {
         console.error("Error calculating route:", error);
         alert("Error calculating route.");
@@ -203,7 +254,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       initMap();
-      // Initialize other features if needed
+      initMapModal();
     });
   </script>
 </body>
