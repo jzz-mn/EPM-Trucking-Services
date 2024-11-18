@@ -15,6 +15,23 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
 }
 ?>
 
+<?php
+include '../includes/db_connection.php';
+
+// Fetch logged-in user's UserID
+$loggedInUserID = $_SESSION['UserID'];
+
+// Query to fetch maintenance records created by the logged-in user
+$query = "SELECT MaintenanceID, Year, Month, Category, Description, TruckID 
+          FROM truckmaintenance 
+          WHERE LoggedBy = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $loggedInUserID);
+$stmt->execute();
+$result = $stmt->get_result();
+?>
+
+
 <div class="body-wrapper">
   <div class="container-fluid">
     <div class="card card-body py-3">
@@ -30,7 +47,7 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                   </a>
                 </li>
                 <li class="breadcrumb-item" aria-current="page">
-                  <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">Trucks</span>
+                  <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">Maintenance</span>
                 </li>
               </ol>
             </nav>
@@ -165,10 +182,6 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
             <div class="tab-pane active" id="home" role="tabpanel">
               <div class="row mt-3">
                 <div class="col-md-4 col-xl-3">
-                  <form class="position-relative">
-                    <input type="text" class="form-control product-search" id="input-search" placeholder="Search" onkeyup="searchMaintenance()" />
-                    <i class="ti position-absolute top-50 start-0 translate-middle-y fs-6 text-dark ms-3"></i>
-                  </form>
                 </div>
                 <div class="col-md-8 col-xl-9 text-end d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
                   <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
@@ -182,100 +195,229 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                 <?php
                 include '../includes/db_connection.php';
 
-                // Query to fetch data from truckmaintenance table
-                $query = "SELECT MaintenanceID, Year, Month, Category, Description, TruckID FROM truckmaintenance";
-                $result = $conn->query($query);
-                ?>
-                <div class="table-responsive">
-                  <table class="table table-striped table-bordered text-nowrap align-middle text-center">
-                    <thead>
-                      <tr>
-                        <th>Maintenance ID</th>
-                        <th>Year</th>
-                        <th>Month</th>
-                        <th>Truck ID</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php
-                      if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                          echo "<tr>";
-                          echo "<td>" . $row['MaintenanceID'] . "</td>";
-                          echo "<td>" . $row['Year'] . "</td>";
-                          echo "<td>" . $row['Month'] . "</td>";
-                          echo "<td>" . $row['TruckID'] . "</td>";
-                          echo "<td>" . $row['Category'] . "</td>";
-                          echo "<td>" . $row['Description'] . "</td>";
-                          echo "</tr>";
-                        }
-                      } else {
-                        echo "<tr><td colspan='6'>No records found</td></tr>";
-                      }
-                      ?>
-                    </tbody>
-                  </table>
-                </div>
+                // Fetch logged-in user's UserID
+                $loggedInUserID = $_SESSION['UserID'];
 
-                <?php
-                // Close the database connection
-                $conn->close();
+                // Query to fetch maintenance records created by the logged-in user
+                $query = "SELECT MaintenanceID, Year, Month, TruckID, Category, Description 
+          FROM truckmaintenance 
+          WHERE LoggedBy = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("i", $loggedInUserID);
+                $stmt->execute();
+                $result = $stmt->get_result();
                 ?>
+
+                <div class="widget-content searchable-container list">
+                  <div class="card card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="col-md-4">
+                        <form class="position-relative">
+                          <input type="text" class="form-control" id="input-search" placeholder="Search..." oninput="filterMaintenance()" />
+                        </form>
+                      </div>
+                      <div class="col-md-4 text-end">
+                        <select id="rowsPerPage" class="form-select w-auto d-inline m-1">
+                          <option value="5">5 rows</option>
+                          <option value="10">10 rows</option>
+                          <option value="20">20 rows</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card card-body">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="maintenanceTable">
+                        <thead>
+                          <tr>
+                            <th class="sortable" onclick="sortTable(0, true)">Maintenance ID <span></span></th>
+                            <th class="sortable" onclick="sortTable(1)">Year <span></span></th>
+                            <th class="sortable" onclick="sortTable(2)">Month <span></span></th>
+                            <th class="sortable" onclick="sortTable(3)">Truck ID <span></span></th>
+                            <th class="sortable" onclick="sortTable(4)">Category <span></span></th>
+                            <th class="sortable" onclick="sortTable(5)">Description <span></span></th>
+                          </tr>
+                        </thead>
+                        <tbody id="maintenanceBody">
+                          <?php
+                          if ($result->num_rows > 0) {
+                            while ($row = $result->fetch_assoc()) {
+                              echo "<tr>";
+                              echo "<td>{$row['MaintenanceID']}</td>";
+                              echo "<td>{$row['Year']}</td>";
+                              echo "<td>{$row['Month']}</td>";
+                              echo "<td>{$row['TruckID']}</td>";
+                              echo "<td>{$row['Category']}</td>";
+                              echo "<td>{$row['Description']}</td>";
+                              echo "</tr>";
+                            }
+                          } else {
+                            echo "<tr><td colspan='6' class='text-center'>No records found</td></tr>";
+                          }
+                          ?>
+                        </tbody>
+                      </table>
+                    </div>
+
+
+                    <?php
+                    // Close the statement and database connection
+                    $stmt->close();
+                    $conn->close();
+                    ?>
+                    <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                      <div>Number of pages: <span id="totalPages"></span></div>
+                      <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="paginationNumbers"></ul>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<script>
-  // Function to review data before submitting
-  function reviewData() {
-    const maintenanceDate = document.getElementById('maintenanceDate').value;
-    const maintenanceCategory = document.getElementById('maintenanceCategory').value;
-    const maintenanceDescription = document.getElementById('maintenanceDescription').value;
+            <script>
+              // Function to review data before submitting
+              function reviewData() {
+                const maintenanceDate = document.getElementById('maintenanceDate').value;
+                const maintenanceCategory = document.getElementById('maintenanceCategory').value;
+                const maintenanceDescription = document.getElementById('maintenanceDescription').value;
 
-    // Populate the confirmation modal with the form data
-    document.getElementById('reviewDate').innerText = maintenanceDate;
-    document.getElementById('reviewCategory').innerText = maintenanceCategory;
-    document.getElementById('reviewDescription').innerText = maintenanceDescription;
-  }
+                // Populate the confirmation modal with the form data
+                document.getElementById('reviewDate').innerText = maintenanceDate;
+                document.getElementById('reviewCategory').innerText = maintenanceCategory;
+                document.getElementById('reviewDescription').innerText = maintenanceDescription;
+              }
 
-  // Submit form if user confirms
-  document.getElementById('confirmSubmit').addEventListener('click', function() {
-    document.getElementById('addMaintenanceForm').submit(); // Submit the form
-  });
-</script>
+              // Submit form if user confirms
+              document.getElementById('confirmSubmit').addEventListener('click', function() {
+                document.getElementById('addMaintenanceForm').submit(); // Submit the form
+              });
+            </script>
 
-<script>
-  // Function to search and filter maintenance table
-  function searchMaintenance() {
-    // Get the search input and filter value
-    const searchInput = document.getElementById("input-search").value.toLowerCase();
-    const tableRows = document.querySelectorAll(".table tbody tr");
+            <script>
+              let currentSortColumn = -1;
+              let isAscending = true;
 
-    // Loop through all table rows
-    tableRows.forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      let match = false;
+              function sortTable(columnIndex, isNumeric = false) {
+                const table = document.getElementById("maintenanceTable");
+                const rows = Array.from(table.getElementsByTagName("tr")).slice(1);
 
-      // Check if any cell in the row contains the search term
-      cells.forEach((cell) => {
-        if (cell.innerText.toLowerCase().includes(searchInput)) {
-          match = true;
-        }
-      });
+                isAscending = currentSortColumn === columnIndex ? !isAscending : true;
+                currentSortColumn = columnIndex;
 
-      // Toggle the visibility of the row based on the match result
-      row.style.display = match ? "" : "none";
-    });
-  }
-</script>
+                const sortedRows = rows.sort((a, b) => {
+                  let aValue = a.getElementsByTagName("td")[columnIndex].innerText.trim();
+                  let bValue = b.getElementsByTagName("td")[columnIndex].innerText.trim();
 
-<?php
-include '../employee/footer.php';
-?>
+                  if (isNumeric) {
+                    aValue = parseFloat(aValue) || 0;
+                    bValue = parseFloat(bValue) || 0;
+                  }
+
+                  return isAscending ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
+                });
+
+                const tableBody = document.getElementById("maintenanceBody");
+                tableBody.innerHTML = "";
+                sortedRows.forEach(row => tableBody.appendChild(row));
+
+                updateTable();
+                updateSortIcons(columnIndex);
+              }
+
+              function updateSortIcons(columnIndex) {
+                const headers = document.querySelectorAll(".sortable span");
+                headers.forEach((span, index) => {
+                  span.innerHTML = "";
+                  if (index === columnIndex) {
+                    span.innerHTML = isAscending ? "&#8593;" : "&#8595;";
+                  }
+                });
+              }
+
+              let currentPage = 1;
+              let rowsPerPage = 5;
+              let totalRows = 0;
+              let totalPages = 0;
+              let filteredRows = [];
+
+              function updateTable() {
+                const tableBody = document.getElementById("maintenanceBody");
+                const rows = filteredRows.length ? filteredRows : Array.from(tableBody.children);
+                totalRows = rows.length;
+                totalPages = Math.ceil(totalRows / rowsPerPage);
+
+                const startIndex = (currentPage - 1) * rowsPerPage;
+                const endIndex = startIndex + rowsPerPage;
+
+                rows.forEach((row, index) => {
+                  row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+                });
+
+                document.getElementById("totalPages").textContent = totalPages;
+                updatePaginationNumbers();
+              }
+
+              function nextPage() {
+                if (currentPage < totalPages) {
+                  currentPage++;
+                  updateTable();
+                }
+              }
+
+              function prevPage() {
+                if (currentPage > 1) {
+                  currentPage--;
+                  updateTable();
+                }
+              }
+
+              function updatePaginationNumbers() {
+                const paginationNumbers = document.getElementById("paginationNumbers");
+                paginationNumbers.innerHTML = "";
+
+                for (let i = 1; i <= totalPages; i++) {
+                  const pageItem = document.createElement("li");
+                  pageItem.classList.add('page-item', currentPage === i ? 'active' : '');
+
+                  const pageLink = document.createElement("button");
+                  pageLink.classList.add('page-link');
+                  pageLink.textContent = i;
+                  pageLink.onclick = () => {
+                    currentPage = i;
+                    updateTable();
+                  };
+
+                  pageItem.appendChild(pageLink);
+                  paginationNumbers.appendChild(pageItem);
+                }
+              }
+
+              document.addEventListener('DOMContentLoaded', () => {
+                updateTable();
+              });
+
+              document.getElementById("rowsPerPage").addEventListener('change', function() {
+                rowsPerPage = parseInt(this.value);
+                currentPage = 1;
+                updateTable();
+              });
+
+              document.getElementById("input-search").addEventListener("input", function() {
+                const searchValue = this.value.toLowerCase();
+                const tableRows = document.querySelectorAll("#maintenanceBody tr");
+
+                filteredRows = Array.from(tableRows).filter(row =>
+                  row.innerText.toLowerCase().includes(searchValue)
+                );
+
+                currentPage = 1;
+                updateTable();
+              });
+            </script>
+
+            <?php
+            include '../employee/footer.php';
+            ?>

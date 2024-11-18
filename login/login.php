@@ -121,6 +121,7 @@ function loginUser($userData, $conn)
   $_SESSION['Username'] = $userData['Username'];
   $_SESSION['Role'] = $userData['Role'];
   $_SESSION['EmailAddress'] = $userData['EmailAddress'];
+  
 
   // **NEW CODE STARTS HERE**
   // Store last_seen_logid in session
