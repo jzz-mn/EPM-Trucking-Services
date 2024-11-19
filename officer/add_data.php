@@ -168,10 +168,14 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
 <style>
     /* Optional: Adjust spacing or alignment if necessary */
     .error-message {
-        font-size: 0.875em; /* Equivalent to Bootstrap's 'small' class */
-        color: #dc3545; /* Bootstrap's 'text-danger' color */
-        font-style: italic; /* Bootstrap's 'fst-italic' class */
-        display: none; /* Initially hide the error message */
+        font-size: 0.875em;
+        /* Equivalent to Bootstrap's 'small' class */
+        color: #dc3545;
+        /* Bootstrap's 'text-danger' color */
+        font-style: italic;
+        /* Bootstrap's 'fst-italic' class */
+        display: none;
+        /* Initially hide the error message */
     }
 </style>
 
@@ -1012,8 +1016,22 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
             let truckInfo = $('#truck-select option:selected').text() || 'No truck selected';
             let transactionDate = $('#transaction-date').val() || 'No date selected';
 
+            // Start Row
+            summaryHtml += '<div class="row">';
+
+            // Truck Column
+            summaryHtml += '<div class="col">';
             summaryHtml += '<p><strong>Truck:</strong> ' + truckInfo + '</p>';
+            summaryHtml += '</div>'; // Close Truck Column
+
+            // Date Column
+            summaryHtml += '<div class="col">';
             summaryHtml += '<p><strong>Date:</strong> ' + transactionDate + '</p>';
+            summaryHtml += '</div>'; // Close Date Column
+
+            // End Row
+            summaryHtml += '</div>'; // Close Row
+
 
             // Transactions Summary
             summaryHtml += '<h6>Transactions</h6>';
@@ -1056,29 +1074,47 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
 
             // Get expenses total (already includes fuel_amount)
             const expensesTotal = parseFloat($('#expenses-total').val()) || 0;
+            // Start Row
+            summaryHtml += '<div class="row">';
 
-            // Fuel Summary
+            // Fuel Details Column
+            summaryHtml += '<div class="col">';
+            // Fuel Details
             const fuelAmount = parseFloat($('#fuel-amount').val()) || 0;
             summaryHtml += '<h6>Fuel Details</h6>';
             summaryHtml += '<p><strong>Liters:</strong> ' + $('#fuel-liters').val() + '</p>';
             summaryHtml += '<p><strong>Unit Price:</strong> ' + $('#fuel-unit-price').val() + '</p>';
             summaryHtml += '<p><strong>Fuel Type:</strong> ' + $('#fuel-type').val() + '</p>';
             summaryHtml += '<p><strong>Fuel Amount:</strong> ' + fuelAmount.toFixed(2) + '</p>';
+            summaryHtml += '</div>'; // Close Fuel Details Column
 
-            // Expenses Summary
+            // Expenses Column
+            summaryHtml += '<div class="col">';
+            // Expenses
             summaryHtml += '<h6>Expenses</h6>';
             summaryHtml += '<p><strong>Salary Amount:</strong> ' + $('#expenses-salary').val() + '</p>';
             summaryHtml += '<p><strong>Mobile Fee:</strong> ' + $('#expenses-mobile-fee').val() + '</p>';
             summaryHtml += '<p><strong>Other Amount:</strong> ' + $('#expenses-other-amount').val() + '</p>';
             summaryHtml += '<p><strong>Total Expenses (Including Fuel):</strong> ' + expensesTotal.toFixed(2) + '</p>';
+            summaryHtml += '</div>'; // Close Expenses Column
+
+            // End Row
+            summaryHtml += '</div>'; // Close Row
 
             // Toll Fee Amount
             const tollFeeAmount = parseFloat($('#toll_fee_amount').val()) || 0;
 
             // Calculated Totals
             summaryHtml += '<h6>Calculated Totals</h6>';
+
+            // Start Row
+            summaryHtml += '<div class="row">';
+
+            // Column 1: Original and Rounded Total KGs
+            summaryHtml += '<div class="col">';
             summaryHtml += '<p><strong>Original Total KGs:</strong> ' + total_kgs.toFixed(2) + '</p>';
             summaryHtml += '<p><strong>Rounded Total KGs:</strong> ' + rounded_total_kgs.toFixed(0) + '</p>';
+            summaryHtml += '</div>'; // Close Column 1
 
             // Fetch Cluster ID and Rate Amount via AJAX
             if (transactions.length > 0) {
@@ -1097,10 +1133,18 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                     dataType: 'json',
                     success: function (data) {
                         if (data.success) {
+                            // Column 2: Rate Amount and Total Amount
+                            summaryHtml += '<div class="col">';
                             summaryHtml += '<p><strong>Rate Amount:</strong> ₱' + parseFloat(data.rate_amount).toFixed(2) + '</p>';
+
                             // Final Amount
                             const finalAmount = parseFloat(data.rate_amount) + tollFeeAmount;
                             summaryHtml += '<p><strong>Total Amount:</strong> ₱' + finalAmount.toFixed(2) + '</p>';
+                            summaryHtml += '</div>'; // Close Column 2
+
+                            // End Row
+                            summaryHtml += '</div>'; // Close Row
+
                             // Display the summary
                             $('#summary-content-modal').html(summaryHtml);
                         } else {
