@@ -11,10 +11,10 @@ if (isset($_SESSION['UserID'])) {
   switch ($_SESSION['Role']) {
     case 'SuperAdmin':
     case 'Officer':
-      header("Location: officer/home.php");
+      header("Location: ../officer/home.php");
       break;
     case 'Employee':
-      header("Location: employee/home.php");
+      header("Location: ../employee/home.php");
       break;
     default:
       // Optional: Handle unknown roles
