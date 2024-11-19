@@ -2,6 +2,13 @@
 session_start();
 include '../employee/header.php';
 include '../includes/db_connection.php';
+
+// Check if the user is logged in (redundant if already handled in header.php)
+if (!isset($_SESSION['UserID'])) {
+  header('Location: ../index.php');
+  exit();
+}
+
 ?>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"

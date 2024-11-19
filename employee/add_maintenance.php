@@ -1,6 +1,12 @@
 <?php
 session_start();
 include '../includes/db_connection.php';
+// Check if the user is logged in (redundant if already handled in header.php)
+if (!isset($_SESSION['UserID'])) {
+    header('Location: ../index.php');
+    exit();
+}
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve and sanitize POST data

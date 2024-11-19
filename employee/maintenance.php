@@ -2,6 +2,11 @@
 session_start();
 include '../employee/header.php';
 include '../includes/db_connection.php';
+// Check if the user is logged in (redundant if already handled in header.php)
+if (!isset($_SESSION['UserID'])) {
+  header('Location: ../index.php');
+  exit();
+}
 
 // Fetch truck details for display
 if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
@@ -252,7 +257,8 @@ $result = $stmt->get_result();
 
 
           <div class="table-responsive">
-            <table class="table table-striped table-bordered text-nowrap align-middle text-center" id="maintenanceTable">
+            <table class="table table-striped table-bordered text-nowrap align-middle text-center"
+              id="maintenanceTable">
               <thead>
                 <tr>
                   <th class="sortable" onclick="sortTable(0, true)">Maintenance ID</th>
@@ -283,12 +289,14 @@ $result = $stmt->get_result();
               </tbody>
             </table>
           </div>
-          <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+          <div
+            class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
             <div class="order-2 order-md-1 mt-3 mt-md-0">
               <span>Number of pages: <span id="totalPagesMaintenance"></span></span>
             </div>
             <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
-              <ul class="pagination justify-content-center justify-content-md-end mb-0" id="maintenancePaginationNumbers">
+              <ul class="pagination justify-content-center justify-content-md-end mb-0"
+                id="maintenancePaginationNumbers">
                 <!-- Pagination buttons will be dynamically generated -->
               </ul>
             </nav>
@@ -310,7 +318,7 @@ $result = $stmt->get_result();
             }
 
             // Submit form if user confirms
-            document.getElementById('confirmSubmit').addEventListener('click', function() {
+            document.getElementById('confirmSubmit').addEventListener('click', function () {
               document.getElementById('addMaintenanceForm').submit(); // Submit the form
             });
           </script>
@@ -603,7 +611,7 @@ $result = $stmt->get_result();
           </style>
 
           <script>
-            document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("DOMContentLoaded", function () {
               const theme = localStorage.getItem("theme") || "light";
               document.documentElement.setAttribute("data-bs-theme", theme);
               document.body.classList.toggle("dark-mode", theme === "dark");
