@@ -5,16 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics - Route Optimization</title>
-
+  
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../assets/libs/bootstrap/dist/css/bootstrap.min.css">
-
+  
   <!-- Bootstrap Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-
+  
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-
+  
   <!-- Custom Styles -->
   <style>
     #map {
@@ -25,8 +25,7 @@
     }
 
     .leaflet-top.leaflet-right {
-      display: none !important;
-      /* Hide the route details in the map view */
+      display: none !important; /* Hide the route details in the map view */
     }
   </style>
 </head>
@@ -44,9 +43,9 @@
       // Include sidebar for navigation
       $sidebar_path = '../officer/sidebar.php';
       if (file_exists($sidebar_path)) {
-        include $sidebar_path;
+          include $sidebar_path;
       } else {
-        echo "<!-- Sidebar not found: $sidebar_path -->";
+          echo "<!-- Sidebar not found: $sidebar_path -->";
       }
       ?>
 
@@ -120,23 +119,23 @@
   </div>
 
   <!-- Directions Modal -->
-  <div class="modal fade" id="directionsModal" tabindex="-1" aria-labelledby="directionsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="directionsModalLabel">Route Directions</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div id="mapModal" style="height: 400px; display: none;"></div>
-          <ol id="routeDirectionsList" class="mt-3"></ol>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+<div class="modal fade" id="directionsModal" tabindex="-1" aria-labelledby="directionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="directionsModalLabel">Route Directions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="mapModal" style="height: 400px; display: none;"></div>
+        <ol id="routeDirectionsList" class="mt-3"></ol>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
 
 
   <!-- Required Libraries -->
@@ -198,11 +197,7 @@
           throw new Error(data.error || "No data found for the selected route.");
         }
 
-        const {
-          route,
-          waypoints,
-          directions
-        } = data;
+        const { route, waypoints, directions } = data;
 
         document.getElementById("totalDistance").textContent = `${route.TotalDistance} km`;
         document.getElementById("estTime").textContent = `${Math.floor(route.EstimatedTime / 60)}h ${route.EstimatedTime % 60}m`;
@@ -220,12 +215,8 @@
           createMarker: () => null,
         }).addTo(map);
 
-        startMarker = L.marker(waypointCoordinates[0], {
-          title: "Start Point"
-        }).addTo(map);
-        endMarker = L.marker(waypointCoordinates[waypointCoordinates.length - 1], {
-          title: "End Point"
-        }).addTo(map);
+        startMarker = L.marker(waypointCoordinates[0], { title: "Start Point" }).addTo(map);
+        endMarker = L.marker(waypointCoordinates[waypointCoordinates.length - 1], { title: "End Point" }).addTo(map);
 
         const directionsList = document.getElementById("routeDirectionsList");
         directionsList.innerHTML = "";
