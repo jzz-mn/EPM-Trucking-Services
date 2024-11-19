@@ -6,6 +6,7 @@ $_SESSION['reset_theme'] = true;
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
+// If user is already logged in, redirect them
 if (isset($_SESSION['UserID'])) {
   switch ($_SESSION['Role']) {
     case 'SuperAdmin':
@@ -16,6 +17,7 @@ if (isset($_SESSION['UserID'])) {
       header("Location: ../employee/home.php");
       break;
     default:
+      // Optional: Handle unknown roles
       header("Location: ../login.php");
       break;
   }
@@ -24,66 +26,118 @@ if (isset($_SESSION['UserID'])) {
 
 include '../includes/db_connection.php';
 
+// Initialize messages
 $error_message = "";
 $success_message = "Please enter your credentials to continue.";
 
-// Maximum failed attempts and lockout duration
-define('MAX_FAILED_ATTEMPTS', 5);
-define('LOCKOUT_DURATION', 15 * 60); // 15 minutes
-
+// Check if form data has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Ensure the keys 'EmailAddress' and 'Password' exist before accessing them
   if (isset($_POST['EmailAddress']) && isset($_POST['Password'])) {
+    // Get form data and trim whitespace
     $email = trim($_POST['EmailAddress']);
     $password = trim($_POST['Password']);
 
+    // Validate input
     if (empty($email) || empty($password)) {
       $error_message = "Please enter both email and password.";
     } else {
+      // Prepare the SQL statement to prevent SQL injection
       $sql = "SELECT * FROM useraccounts WHERE EmailAddress = ? LIMIT 1";
       if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("s", $email);
+        $stmt->bind_param("s", $email); // Bind email to the query
         $stmt->execute();
         $result = $stmt->get_result();
 
+        // Check if user was found
         if ($result->num_rows > 0) {
           $row = $result->fetch_assoc();
-          $storedPassword = $row['Password'];
-          $failed_attempts = $row['failed_attempts'];
-          $lockout_until = $row['lockout_until'];
 
-          // Check if account is locked
-          if ($lockout_until && strtotime($lockout_until) > time()) {
-            $error_message = "Your account is locked. Please try again after " . date("H:i:s", strtotime($lockout_until)) . ".";
+          // **NEW CODE STARTS HERE**
+          // Check if the account is locked
+          $lockoutUntil = $row['LockoutUntil'];
+
+          if ($lockoutUntil != null && strtotime($lockoutUntil) > time()) {
+            // Account is locked
+            $remaining = strtotime($lockoutUntil) - time();
+            $minutes = ceil($remaining / 60);
+            $error_message = "Your account is locked due to multiple failed login attempts. Please try again in $minutes minute(s).";
           } else {
-            // Reset lockout if applicable
-            if ($lockout_until && strtotime($lockout_until) <= time()) {
-              $failed_attempts = 0;
-              $update_sql = "UPDATE useraccounts SET failed_attempts = 0, lockout_until = NULL WHERE EmailAddress = ?";
-              $update_stmt = $conn->prepare($update_sql);
-              $update_stmt->bind_param("s", $email);
-              $update_stmt->execute();
-            }
-
-            // Validate password
-            if (password_verify($password, $storedPassword)) {
-              loginUser($row, $conn);
-            } else {
-              // Increment failed attempts
-              $failed_attempts++;
-              $lockout_until = NULL;
-
-              if ($failed_attempts >= MAX_FAILED_ATTEMPTS) {
-                $lockout_until = date("Y-m-d H:i:s", time() + LOCKOUT_DURATION);
-                $error_message = "Too many failed login attempts. Your account is locked for 15 minutes.";
-              } else {
-                $error_message = "Invalid email or password!";
+            // Account is not locked, proceed with login attempt
+            // If LockoutUntil has passed, reset FailedLoginAttempts and LockoutUntil
+            if ($lockoutUntil != null) {
+              // Reset FailedLoginAttempts and LockoutUntil
+              $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = 0, LockoutUntil = NULL WHERE UserID = ?";
+              if ($update_stmt = $conn->prepare($update_sql)) {
+                $update_stmt->bind_param("i", $row['UserID']);
+                $update_stmt->execute();
+                $update_stmt->close();
               }
+            }
+            // **NEW CODE ENDS HERE**
 
-              // Update database
-              $update_sql = "UPDATE useraccounts SET failed_attempts = ?, lockout_until = ? WHERE EmailAddress = ?";
-              $update_stmt = $conn->prepare($update_sql);
-              $update_stmt->bind_param("iss", $failed_attempts, $lockout_until, $email);
-              $update_stmt->execute();
+            // Check if the account is activated
+            if (strtoupper($row['ActivationStatus']) !== 'ACTIVATED') {
+              $error_message = "Your account is not activated. Please check your email for the activation link.";
+            } else {
+              $storedPassword = $row['Password'];
+
+              // Check if the stored password is hashed
+              if (password_get_info($storedPassword)['algo'] !== 0) {
+                // Password is hashed, use password_verify()
+                if (password_verify($password, $storedPassword)) {
+                  // **NEW CODE STARTS HERE**
+                  // Reset FailedLoginAttempts and LockoutUntil
+                  $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = 0, LockoutUntil = NULL WHERE UserID = ?";
+                  if ($update_stmt = $conn->prepare($update_sql)) {
+                    $update_stmt->bind_param("i", $row['UserID']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                  }
+                  // **NEW CODE ENDS HERE**
+                  // Successful login
+                  loginUser($row, $conn);
+                } else {
+                  // **NEW CODE STARTS HERE**
+                  // Handle failed login attempt
+                  handleFailedLoginAttempt($row, $error_message, $conn);
+                  // **NEW CODE ENDS HERE**
+                }
+              } else {
+                // Password is not hashed, compare plaintext
+                if ($password === $storedPassword) {
+                  // Successful login
+
+                  // Hash the plaintext password and update the database
+                  $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                  $update_sql = "UPDATE useraccounts SET Password = ? WHERE UserID = ?";
+                  if ($update_stmt = $conn->prepare($update_sql)) {
+                    $update_stmt->bind_param("si", $hashedPassword, $row['UserID']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                  }
+
+                  // Update the $row['Password'] to the hashed password for future use
+                  $row['Password'] = $hashedPassword;
+
+                  // **NEW CODE STARTS HERE**
+                  // Reset FailedLoginAttempts and LockoutUntil
+                  $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = 0, LockoutUntil = NULL WHERE UserID = ?";
+                  if ($update_stmt = $conn->prepare($update_sql)) {
+                    $update_stmt->bind_param("i", $row['UserID']);
+                    $update_stmt->execute();
+                    $update_stmt->close();
+                  }
+                  // **NEW CODE ENDS HERE**
+
+                  loginUser($row, $conn);
+                } else {
+                  // **NEW CODE STARTS HERE**
+                  // Handle failed login attempt
+                  handleFailedLoginAttempt($row, $error_message, $conn);
+                  // **NEW CODE ENDS HERE**
+                }
+              }
             }
           }
         } else {
@@ -92,47 +146,115 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt->close();
       } else {
+        // Handle preparation error
         $error_message = "An error occurred. Please try again later.";
         error_log("Failed to prepare user selection statement: " . $conn->error);
       }
     }
   } else {
+    // If fields are missing, output an error message
     $error_message = "Please fill in both the email and password fields.";
   }
 }
 
 $conn->close();
 
+// Function to handle successful login
 function loginUser($userData, $conn)
 {
+  // Regenerate session ID to prevent session fixation
   session_regenerate_id(true);
+
+  // Set session variables
   $_SESSION['UserID'] = $userData['UserID'];
   $_SESSION['Username'] = $userData['Username'];
   $_SESSION['Role'] = $userData['Role'];
   $_SESSION['EmailAddress'] = $userData['EmailAddress'];
 
+  // **NEW CODE STARTS HERE**
+  // Reset FailedLoginAttempts and LockoutUntil
+  $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = 0, LockoutUntil = NULL WHERE UserID = ?";
+  if ($update_stmt = $conn->prepare($update_sql)) {
+    $update_stmt->bind_param("i", $userData['UserID']);
+    $update_stmt->execute();
+    $update_stmt->close();
+  }
+  // **NEW CODE ENDS HERE**
+
+  // **EXISTING CODE**
+  // Store last_seen_logid in session
+  $_SESSION['last_seen_logid'] = isset($userData['last_seen_logid']) ? intval($userData['last_seen_logid']) : 0;
+
+  // Update LastLogin timestamp
   $current_timestamp = date("Y-m-d H:i:s");
-  $update_sql = "UPDATE useraccounts SET LastLogin = ?, failed_attempts = 0, lockout_until = NULL WHERE UserID = ?";
-  $update_stmt = $conn->prepare($update_sql);
-  $update_stmt->bind_param("si", $current_timestamp, $userData['UserID']);
-  $update_stmt->execute();
+  $update_sql = "UPDATE useraccounts SET LastLogin = ? WHERE UserID = ?";
+  if ($update_stmt = $conn->prepare($update_sql)) {
+    $update_stmt->bind_param("si", $current_timestamp, $userData['UserID']);
+    $update_stmt->execute();
+    $update_stmt->close();
+  }
 
+  // Insert activity log
   $action = "Logged In";
-  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
-  $insert_stmt = $conn->prepare($insert_sql);
-  $insert_stmt->bind_param("is", $userData['UserID'], $action);
-  $insert_stmt->execute();
 
+  // Prepare the INSERT statement
+  $insert_sql = "INSERT INTO activitylogs (UserID, Action, TimeStamp) VALUES (?, ?, NOW())";
+  if ($insert_stmt = $conn->prepare($insert_sql)) {
+    $insert_stmt->bind_param("is", $userData['UserID'], $action);
+    if (!$insert_stmt->execute()) {
+      // Handle insertion error (optional)
+      error_log("Failed to insert activity log: " . $insert_stmt->error);
+    }
+    $insert_stmt->close();
+  } else {
+    // Handle preparation error (optional)
+    error_log("Failed to prepare activity log insertion: " . $conn->error);
+  }
+
+  // Redirect to the appropriate home page based on role
   if ($userData['Role'] === 'SuperAdmin' || $userData['Role'] === 'Officer') {
     header("Location: ../officer/home.php");
   } elseif ($userData['Role'] === 'Employee') {
     header("Location: ../employee/home.php");
   } else {
+    // Handle unknown role
     global $error_message;
     $error_message = "User role not recognized!";
   }
   exit();
 }
+
+// **NEW FUNCTION STARTS HERE**
+// Function to handle failed login attempts
+function handleFailedLoginAttempt($userData, &$error_message, $conn)
+{
+  $failedAttempts = $userData['FailedLoginAttempts'] + 1;
+  $lockoutThreshold = 5; // Number of allowed attempts
+  $lockoutDuration = 15; // Lockout duration in minutes
+
+  if ($failedAttempts >= $lockoutThreshold) {
+    // Lock the account
+    $lockoutUntil = date("Y-m-d H:i:s", strtotime("+$lockoutDuration minutes"));
+    $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = ?, LockoutUntil = ? WHERE UserID = ?";
+    if ($update_stmt = $conn->prepare($update_sql)) {
+      $update_stmt->bind_param("isi", $failedAttempts, $lockoutUntil, $userData['UserID']);
+      $update_stmt->execute();
+      $update_stmt->close();
+    }
+    $error_message = "Your account is locked due to multiple failed login attempts. Please try again after $lockoutDuration minutes.";
+  } else {
+    // Update FailedLoginAttempts
+    $update_sql = "UPDATE useraccounts SET FailedLoginAttempts = ? WHERE UserID = ?";
+    if ($update_stmt = $conn->prepare($update_sql)) {
+      $update_stmt->bind_param("ii", $failedAttempts, $userData['UserID']);
+      $update_stmt->execute();
+      $update_stmt->close();
+    }
+    $remainingAttempts = $lockoutThreshold - $failedAttempts;
+    $error_message = "Invalid email or password! You have $remainingAttempts remaining attempt(s) before your account is locked.";
+  }
+}
+// **NEW FUNCTION ENDS HERE**
 ?>
 
 
@@ -171,6 +293,7 @@ function loginUser($userData, $conn)
                 <a href="" class="text-nowrap logo-img d-block w-100 mb-4">
                   <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20" alt="Logo-Dark" />
                 </a>
+
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Sign In</h2>
 
                 <!-- Displaying messages based on success or error -->
