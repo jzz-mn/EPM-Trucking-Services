@@ -618,6 +618,9 @@
                     <input type="number" class="form-control" id="rateAmount" name="rateAmount" step="0.01" required>
                   </div>
 
+                  <div id="clusterWarning" style="display: none;"></div>
+
+
                   <div class="d-flex justify-content-end">
                     <button type="button" class="btn bg-danger-subtle text-danger" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary ms-2">Add Cluster</button>
@@ -1897,6 +1900,36 @@
         });
       });
     </script>
+    <script>
+      document.getElementById('addClusterForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent form submission
+
+        const formData = new FormData(this);
+
+        fetch('add_cluster.php', {
+            method: 'POST',
+            body: formData,
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === 'error') {
+              // Show warning message inside the modal
+              const warningDiv = document.getElementById('clusterWarning');
+              warningDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+              warningDiv.style.display = 'block';
+            } else if (data.status === 'success') {
+              // Show success message and close the modal
+              alert(data.message);
+              location.reload(); // Reload the page
+            }
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+      });
+    </script>
+
+
 
 
     <!----------- Theme function -------------->

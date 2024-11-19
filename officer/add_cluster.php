@@ -2,6 +2,8 @@
 include '../includes/db_connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $response = ['status' => '', 'message' => ''];
+
     $uniqueClusterID = $_POST['uniqueClusterID'];
     $clusterSelection = $_POST['clusterSelection'];
     $tonner = $_POST['tonner'];
@@ -9,49 +11,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $fuelPrice = $_POST['fuelPrice'];
     $rateAmount = $_POST['rateAmount'];
 
+    $clusterCategory = '';
+    $locationsInCluster = '';
+
     if ($clusterSelection == 'existing') {
-        // For existing clusters, get the selected ClusterID and ClusterCategory, LocationsInCluster
-        $clusterID = $_POST['existingClusterID'];
         $clusterCategory = $_POST['existingClusterCategory'];
         $locationsInCluster = $_POST['existingLocationsInCluster'];
-
-        // Insert the cluster data
-        $query = "INSERT INTO clusters (UniqueClusterID, ClusterID, Tonner, KMRADIUS, FuelPrice, RateAmount) 
-                  VALUES ('$uniqueClusterID', '$clusterID', '$tonner', '$kmRadius', '$fuelPrice', '$rateAmount')";
-
-        // Execute the insert query
-        if (mysqli_query($conn, $query)) {
-            // Update the ClusterCategory and LocationsInCluster fields for the existing cluster
-            $updateQuery = "UPDATE clusters SET ClusterCategory = '$clusterCategory', LocationsInCluster = '$locationsInCluster'
-                            WHERE ClusterID = '$clusterID'";
-            mysqli_query($conn, $updateQuery);
-            $_SESSION['message'] = "Cluster updated successfully.";
-        } else {
-            echo "Error: " . mysqli_error($conn);
-        }
+        $clusterID = $_POST['existingClusterID'];
     } else {
-        // For new clusters, generate a new ClusterID and include ClusterCategory and LocationsInCluster
-        $newClusterCategory = $_POST['newClusterCategory'];
-        $newLocationsInCluster = $_POST['newLocationsInCluster'];
+        $clusterCategory = $_POST['newClusterCategory'];
+        $locationsInCluster = $_POST['newLocationsInCluster'];
+    }
 
-        // Generate the next ClusterID by getting the last ClusterID and incrementing it
-        $result = mysqli_query($conn, "SELECT MAX(ClusterID) AS maxID FROM clusters");
-        $row = mysqli_fetch_assoc($result);
-        $newClusterID = $row['maxID'] + 1;
+    // Query to check for duplicates
+    $checkQuery = "
+        SELECT * FROM clusters 
+        WHERE ClusterCategory = '$clusterCategory'
+        AND LocationsInCluster = '$locationsInCluster'
+        AND Tonner = '$tonner'
+        AND KMRADIUS = '$kmRadius'
+        AND FuelPrice = '$fuelPrice'
+        AND RateAmount = '$rateAmount'
+    ";
+    $checkResult = mysqli_query($conn, $checkQuery);
 
-        // Insert a new cluster with ClusterCategory and LocationsInCluster
-        $query = "INSERT INTO clusters (UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount) 
-                  VALUES ('$uniqueClusterID', '$newClusterID', '$newClusterCategory', '$newLocationsInCluster', '$tonner', '$kmRadius', '$fuelPrice', '$rateAmount')";
+    if (mysqli_num_rows($checkResult) > 0) {
+        $response['status'] = 'error';
+        $response['message'] = 'The cluster you are trying to add already exists.';
+    } else {
+        if ($clusterSelection == 'existing') {
+            $query = "INSERT INTO clusters (UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount) 
+                      VALUES ('$uniqueClusterID', '$clusterID', '$clusterCategory', '$locationsInCluster', '$tonner', '$kmRadius', '$fuelPrice', '$rateAmount')";
 
-        // Execute the insert query
-        if (mysqli_query($conn, $query)) {
-            $_SESSION['message'] = "New cluster added successfully.";
+            if (mysqli_query($conn, $query)) {
+                $response['status'] = 'success';
+                $response['message'] = 'Cluster updated successfully.';
+            } else {
+                $response['status'] = 'error';
+                $response['message'] = 'Error updating cluster: ' . mysqli_error($conn);
+            }
         } else {
-            echo "Error: " . mysqli_error($conn);
+            $result = mysqli_query($conn, "SELECT MAX(ClusterID) AS maxID FROM clusters");
+            $row = mysqli_fetch_assoc($result);
+            $newClusterID = $row['maxID'] + 1;
+
+            $query = "INSERT INTO clusters (UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount) 
+                      VALUES ('$uniqueClusterID', '$newClusterID', '$clusterCategory', '$locationsInCluster', '$tonner', '$kmRadius', '$fuelPrice', '$rateAmount')";
+
+            if (mysqli_query($conn, $query)) {
+                $response['status'] = 'success';
+                $response['message'] = 'New cluster added successfully.';
+            } else {
+                $response['status'] = 'error';
+                $response['message'] = 'Error adding new cluster: ' . mysqli_error($conn);
+            }
         }
     }
 
-    // Redirect after the operation
-    header("Location: trucks.php");
+    // Send response as JSON
+    echo json_encode($response);
     mysqli_close($conn);
+    exit;
 }
+?>
