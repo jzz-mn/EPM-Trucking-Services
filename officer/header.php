@@ -206,7 +206,7 @@ if (!empty($sql_all_notifications)) {
             <div>
                 <div class="brand-logo d-flex align-items-center">
                     <a href="../officer/home.php" class="text-nowrap logo-img">
-                        <img src="../assetsEPM/logos/epm-logo-no-bg-light.png" alt="Logo" class="img-fluid"
+                        <img src="../assetsEPM/logos/epm-logo-no-bg1.png" alt="Logo" class="img-fluid logo-image"
                             style="max-width: 146px; height: auto;">
                     </a>
                 </div>
@@ -428,8 +428,8 @@ if (!empty($sql_all_notifications)) {
 
                         <div class="d-block d-lg-none py-9 py-xl-0">
                             <a href="../officer/home.php" class="text-nowrap logo-img">
-                                <img src="../assetsEPM/logos/epm-logo-no-bg.png" alt="Logo" class="img-fluid"
-                                    style="max-width: 146px; height: auto;">
+                                <img src="../assetsEPM/logos/epm-logo-no-bg1.png" alt="Logo"
+                                    class="img-fluid logo-image" style="max-width: 146px; height: auto;">
                             </a>
                         </div>
                         <a class="navbar-toggler p-0 border-0 nav-icon-hover-bg rounded-circle"
@@ -1107,6 +1107,58 @@ if (!empty($sql_all_notifications)) {
                         document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
                         document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
                     }
+                    document.addEventListener("DOMContentLoaded", function () {
+                        const savedTheme = localStorage.getItem("theme");
+                        if (savedTheme) {
+                            document.documentElement.setAttribute("data-bs-theme", savedTheme);
+                            toggleIcons(savedTheme);
+                            updateLogo(savedTheme);
+                        } else {
+                            const currentTheme = document.documentElement.getAttribute("data-bs-theme") || 'light';
+                            updateLogo(currentTheme);
+                        }
+
+                        // Add click events for theme toggle buttons
+                        document.querySelectorAll(".dark-layout").forEach((element) => {
+                            element.addEventListener("click", () => {
+                                setTheme("dark");
+                            });
+                        });
+
+                        document.querySelectorAll(".light-layout").forEach((element) => {
+                            element.addEventListener("click", () => {
+                                setTheme("light");
+                            });
+                        });
+                    });
+
+                    // Function to set theme and save preference in localStorage
+                    function setTheme(theme) {
+                        document.documentElement.setAttribute("data-bs-theme", theme);
+                        localStorage.setItem("theme", theme);
+                        toggleIcons(theme);
+                        updateLogo(theme);
+                    }
+
+                    // Toggle icons based on theme
+                    function toggleIcons(theme) {
+                        const isDark = theme === "dark";
+                        document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
+                        document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
+                    }
+
+                    // Function to update the logo images based on theme
+                    function updateLogo(theme) {
+                        const logoImages = document.querySelectorAll('.logo-image');
+                        logoImages.forEach(img => {
+                            if (theme === 'light') {
+                                img.src = '../assetsEPM/logos/epm-logo-no-bg1.png';
+                            } else if (theme === 'dark') {
+                                img.src = '../assetsEPM/logos/epm-logo-no-bg-light.png';
+                            }
+                        });
+                    }
+
                 </script>
 
                 <?php
