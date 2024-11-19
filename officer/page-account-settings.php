@@ -6,7 +6,7 @@ include '../includes/db_connection.php';
 
 if (!isset($_SESSION['UserID'])) {
     // Redirect to login page if no session exists
-    header('location: ../login/login.php');
+    header('location: ../index.php');
     exit();
 }
 

@@ -4,7 +4,7 @@ include '../includes/db_connection.php';
 
 // Ensure the user is logged in
 if (!isset($_SESSION['UserID'])) {
-    header("Location: ../login/login.php");
+    header("Location: ../index.php");
     exit();
 }
 

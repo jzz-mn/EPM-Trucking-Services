@@ -81,6 +81,6 @@ session_destroy();
 $conn->close();
 
 // Redirect to login page
-header("Location: ../login/login.php");
+header("Location: ../index.php");
 exit();
 ?>

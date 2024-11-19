@@ -11,20 +11,20 @@ if (isset($_SESSION['UserID'])) {
   switch ($_SESSION['Role']) {
     case 'SuperAdmin':
     case 'Officer':
-      header("Location: ../officer/home.php");
+      header("Location: officer/home.php");
       break;
     case 'Employee':
-      header("Location: ../employee/home.php");
+      header("Location: employee/home.php");
       break;
     default:
       // Optional: Handle unknown roles
-      header("Location: ../login.php");
+      header("Location: index.php");
       break;
   }
   exit();
 }
 
-include '../includes/db_connection.php';
+include 'includes/db_connection.php';
 
 // Initialize messages
 $error_message = "";
@@ -213,9 +213,9 @@ function loginUser($userData, $conn)
 
   // Redirect to the appropriate home page based on role
   if ($userData['Role'] === 'SuperAdmin' || $userData['Role'] === 'Officer') {
-    header("Location: ../officer/home.php");
+    header("Location: officer/home.php");
   } elseif ($userData['Role'] === 'Employee') {
-    header("Location: ../employee/home.php");
+    header("Location: employee/home.php");
   } else {
     // Handle unknown role
     global $error_message;
@@ -268,10 +268,10 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon icon -->
-  <link rel="shortcut icon" type="image/png" href="../assetsEPM/logos/epm-logo.png" />
+  <link rel="shortcut icon" type="image/png" href="assetsEPM/logos/epm-logo.png" />
 
   <!-- Core Css -->
-  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
 
   <title>EPM Sign In</title>
 </head>
@@ -279,7 +279,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
 <body>
   <!-- Preloader -->
   <div class="preloader">
-    <img src="../assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+    <img src="assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
   </div>
   <div id="main-wrapper">
     <div class="position-relative overflow-hidden radial-gradient min-vh-100 w-100">
@@ -291,7 +291,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
             <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
               <div class="col-12 auth-card">
                 <a href="" class="text-nowrap logo-img d-block w-100 mb-4">
-                  <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20" alt="Logo-Dark" />
+                  <img src="assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20" alt="Logo-Dark" />
                 </a>
 
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Sign In</h2>
@@ -301,7 +301,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
                   <?php echo (!empty($error_message)) ? $error_message : $success_message; ?>
                 </p>
 
-                <form action="login.php" method="POST">
+                <form action="index.php" method="POST">
                   <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
                     <input type="email" class="form-control" id="email" name="EmailAddress" required />
@@ -332,7 +332,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
                     }
                   </style>
                   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <a class="text-danger fw-medium" href="../login/forgot_password.php">Forgot Password?</a>
+                    <a class="text-danger fw-medium" href="login/forgot_password.php">Forgot Password?</a>
                   </div>
                   <button type="submit" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Sign In</button>
                 </form>
@@ -342,7 +342,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
 
           <div class="col-lg-6 col-xl-7 col-xxl-8 position-relative overflow-hidden bg-dark d-none d-lg-block">
             <div class="position-absolute top-0 start-0 w-100 h-100">
-              <img src="../assetsEPM/images/epm-background.png" class="w-100 h-100 object-fit-cover"
+              <img src="assetsEPM/images/epm-background.png" class="w-100 h-100 object-fit-cover"
                 alt="Background Image" />
             </div>
 
@@ -380,11 +380,11 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
 
 
   <!-- Import JS Files -->
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-  <script src="../assets/js/theme/app.init.js"></script>
-  <script src="../assets/js/theme/theme.js"></script>
-  <script src="../assets/js/theme/app.min.js"></script>
+  <script src="assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/libs/simplebar/dist/simplebar.min.js"></script>
+  <script src="assets/js/theme/app.init.js"></script>
+  <script src="assets/js/theme/theme.js"></script>
+  <script src="assets/js/theme/app.min.js"></script>
   <!-- Icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>

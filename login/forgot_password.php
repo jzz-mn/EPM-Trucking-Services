@@ -151,10 +151,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                       <input type="email" class="form-control" id="EmailAddress" name="EmailAddress" required>
                     </div>
                     <button type="submit" class="btn btn-muted w-100 py-8 mb-3">Reset Password</button>
-                    <a href="../login/login.php" class="text-primary w-100 text-center d-block">Back to Login</a>
+                    <a href="../index.php" class="text-primary w-100 text-center d-block">Back to Login</a>
                   </form>
                 <?php else: ?>
-                  <a href="../login/login.php" class="text-primary w-100 text-center d-block">Back to Login</a>
+                  <a href="../index.php" class="text-primary w-100 text-center d-block">Back to Login</a>
                 <?php endif; ?>
               </div>
             </div>

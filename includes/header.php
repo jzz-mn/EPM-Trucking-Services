@@ -338,7 +338,7 @@
 
                   // Check if the user is not logged in
                   if (!isset($_SESSION['UserID'])) {
-                    header('location: ../login/login.php');
+                    header('location: ../index.php');
                     exit();
                   }
 
@@ -382,7 +382,7 @@
                           <a href="../super-admin/page-account-settings.php" class="p-2 dropdown-item h6 rounded-1">
                             My Profile
                           </a>
-                          <a href="../login/login.php" class="p-2 dropdown-item h6 rounded-1">
+                          <a href="../index.php" class="p-2 dropdown-item h6 rounded-1">
                             Sign Out
                           </a>
                         </div>

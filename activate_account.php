@@ -152,7 +152,7 @@ if (isset($_GET['token'])) {
                                         }
                                     </style>
                                 <?php else: ?>
-                                    <a href="login/login.php" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Go to
+                                    <a href="index.php" class="btn btn-muted w-100 py-8 mb-4 rounded-2">Go to
                                         Login</a>
                                 <?php endif; ?>
 

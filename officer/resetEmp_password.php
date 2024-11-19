@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->Subject = 'Reset Your Password';
             $mail->Body = "Dear $firstName,<br><br>
                               Your password has been reset. Please click the link below to activate your account and set your new password:<br><br>
-                              <a href='$activationLink'>Reset Password</a><br><br>
+                              Link: <a href='$activationLink'>Reset Password</a><br><br>
                               If you did not request this, please contact support immediately.<br><br>
                               Best regards,<br>
                               EPM Trucking Services";

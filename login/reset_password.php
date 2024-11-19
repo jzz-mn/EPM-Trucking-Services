@@ -121,7 +121,7 @@ if (isset($_GET['token'])) {
                                         class="text-primary w-100 text-center d-block">Request a new reset link</a>
                                 <?php elseif (!empty($success_message)): ?>
                                     <p class="mb-4 text-success"><?php echo $success_message; ?></p>
-                                    <a href="../login/login.php" class="text-primary w-100 text-center d-block">Back to
+                                    <a href="../index.php" class="text-primary w-100 text-center d-block">Back to
                                         Login</a>
                                 <?php else: ?>
                                     <p class="mb-4">Please enter your new password below.</p>

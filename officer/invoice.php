@@ -5,7 +5,7 @@ include '../includes/db_connection.php';
 // Ensure the user is logged in
 if (!isset($_SESSION['UserID'])) {
   // Redirect to login page if not authenticated
-  header("Location: ../login/login.php");
+  header("Location: ../index.php");
   exit();
 }
 
