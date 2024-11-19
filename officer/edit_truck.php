@@ -2,16 +2,17 @@
 include '../includes/db_connection.php';
 
 // Check if the request is a POST method and the required data is present
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['truckId'], $_POST['plateNumber'], $_POST['truckBrand'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['truckId'], $_POST['plateNumber'], $_POST['truckBrand'], $_POST['truckStatus'])) {
     // Get the data from the form
     $truckId = $_POST['truckId'];
     $plateNumber = $_POST['plateNumber'];
     $truckBrand = $_POST['truckBrand'];
+    $truckStatus = $_POST['truckStatus'];
 
     // Prepare the SQL query to update the truck record
-    $query = "UPDATE trucksinfo SET PlateNo = ?, TruckBrand = ? WHERE TruckID = ?";
+    $query = "UPDATE trucksinfo SET PlateNo = ?, TruckBrand = ?, TruckStatus = ? WHERE TruckID = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('ssi', $plateNumber, $truckBrand, $truckId);  // Bind the parameters
+    $stmt->bind_param('sssi', $plateNumber, $truckBrand, $truckStatus, $truckId);  // Bind the parameters
 
     // Execute the query and check if it was successful
     if ($stmt->execute()) {

@@ -94,11 +94,14 @@ $result = $stmt->get_result();
                             <select class="form-select" id="truck-select" name="truck_id" required>
                               <option value="" disabled selected>Select a truck</option>
                               <?php
-                              $truck_query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+                              $truck_query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus FROM trucksinfo";
                               $truck_result = $conn->query($truck_query);
                               if ($truck_result->num_rows > 0) {
                                 while ($truck = $truck_result->fetch_assoc()) {
-                                  echo '<option value="' . $truck['TruckID'] . '">' . $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . '</option>';
+                                  $disabled = $truck['TruckStatus'] === 'Deactivated' ? 'disabled' : '';
+                                  echo '<option value="' . $truck['TruckID'] . '" ' . $disabled . '>';
+                                  echo $truck['PlateNo'] . ' - ' . $truck['TruckBrand'] . ' (' . $truck['TruckStatus'] . ')';
+                                  echo '</option>';
                                 }
                               } else {
                                 echo '<option value="">No trucks available</option>';
@@ -106,6 +109,7 @@ $result = $stmt->get_result();
                               ?>
                             </select>
                           </div>
+
                           <div class="col-lg-12">
                             <div class="mb-3">
                               <label for="maintenanceCategory" class="form-label">Category</label>
@@ -194,6 +198,30 @@ $result = $stmt->get_result();
       $result = $stmt->get_result();
       ?>
 
+      <?php
+      include '../includes/db_connection.php';
+
+      if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $truckId = $_POST['truck_id'];
+
+        // Check if the selected truck is deactivated
+        $truck_check_query = "SELECT TruckStatus FROM trucksinfo WHERE TruckID = ?";
+        $stmt = $conn->prepare($truck_check_query);
+        $stmt->bind_param("i", $truckId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $truck = $result->fetch_assoc();
+
+        if ($truck && $truck['TruckStatus'] === 'Deactivated') {
+          // Return an error if the truck is deactivated
+          echo "Error: The selected truck is deactivated and cannot be used.";
+          exit;
+        }
+
+        // Proceed with adding the maintenance record
+        // Your code to insert the maintenance record into the database
+      }
+      ?>
 
 
       <div class="card">

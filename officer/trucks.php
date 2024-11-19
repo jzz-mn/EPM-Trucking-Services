@@ -270,6 +270,13 @@
                               </div>
                             </div>
 
+                            <div class="col-lg-4">
+                              <div class="mb-3">
+                                <label for="maintenanceLoggedBy" class="form-label">Logged By</label>
+                                <input type="text" class="form-control" id="maintenanceLoggedBy" name="maintenanceLoggedBy" readonly>
+                              </div>
+                            </div>
+
                             <div class="col-12">
                               <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                                 <button type="button" class="btn bg-danger-subtle text-danger"
@@ -416,6 +423,19 @@
                                   placeholder="Enter Truck Brand">
                               </div>
                             </div>
+
+                            <!-- Truck Status -->
+                            <div class="col-lg-4">
+                              <div class="mb-3">
+                                <label for="truckStatus" class="form-label">Truck Status</label>
+                                <select class="form-select" id="truckStatus" name="truckStatus" required>
+                                  <option value="" disabled selected>Select Truck Status</option>
+                                  <option value="Activated">Activated</option>
+                                  <option value="Deactivated">Deactivated</option>
+                                </select>
+                              </div>
+                            </div>
+
                             <!-- Submit and Cancel Buttons -->
                             <div class="col-12">
                               <div class="d-flex justify-content-end mt-4 gap-3">
@@ -460,8 +480,15 @@
                   </div>
                   <div class="mb-3">
                     <label for="tonner" class="form-label">Tonner</label>
-                    <input type="number" class="form-control" id="tonner" name="tonner" required>
+                    <select class="form-select" id="tonner" name="tonner" required>
+                      <option value="" disabled selected>Select Tonner</option>
+                      <option value="1000">1000</option>
+                      <option value="2000">2000</option>
+                      <option value="3000">3000</option>
+                      <option value="4000">4000</option>
+                    </select>
                   </div>
+
                   <div class="mb-3">
                     <label for="kmRadius" class="form-label">KM Radius</label>
                     <input type="number" class="form-control" id="kmRadius" name="kmRadius" required>
@@ -569,8 +596,15 @@
                   <!-- Shared Fields -->
                   <div class="mb-3">
                     <label for="tonner" class="form-label">Tonner</label>
-                    <input type="number" class="form-control" id="tonner" name="tonner" required>
+                    <select class="form-select" id="tonner" name="tonner" required>
+                      <option value="" disabled selected>Select Tonner</option>
+                      <option value="1000">1000</option>
+                      <option value="2000">2000</option>
+                      <option value="3000">3000</option>
+                      <option value="4000">4000</option>
+                    </select>
                   </div>
+
                   <div class="mb-3">
                     <label for="kmRadius" class="form-label">KM Radius</label>
                     <input type="number" class="form-control" id="kmRadius" name="kmRadius" required>
@@ -672,7 +706,7 @@
                     <!-- Maintenance Table -->
                     <?php
                     include '../includes/db_connection.php';
-                    $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount FROM truckmaintenance";
+                    $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy FROM truckmaintenance";
                     $result = $conn->query($query);
                     ?>
                     <div class="table-responsive">
@@ -686,6 +720,7 @@
                             <th onclick="sortMaintenanceTable(3)">Category</th>
                             <th onclick="sortMaintenanceTable(4)">Description</th>
                             <th onclick="sortMaintenanceTable(5)">Amount</th>
+                            <th onclick="sortMaintenanceTable(6)">Logged by</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
@@ -701,6 +736,7 @@
                               echo "<td>" . $row['Category'] . "</td>";
                               echo "<td>" . $row['Description'] . "</td>";
                               echo "<td>" . $row['Amount'] . "</td>";
+                              echo "<td>" . $row['LoggedBy'] . "</td>";
                               echo "<td>";
                               echo "<a href='#' class='me-3 text-primary edit-maintenance-btn' data-bs-toggle='modal' data-maintenance='" . $maintenanceData . "'>";
                               echo "<i class='fs-4 ti ti-edit'></i></a>";
@@ -829,7 +865,7 @@
                   <!-- Trucks Table -->
                   <?php
                   include '../includes/db_connection.php';
-                  $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+                  $query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus FROM trucksinfo";
                   $result = $conn->query($query);
                   ?>
                   <div class="py-3">
@@ -840,6 +876,7 @@
                             <th onclick="sortTrucksTable(0)">Truck ID</th>
                             <th onclick="sortTrucksTable(1)">Plate Number</th>
                             <th onclick="sortTrucksTable(2)">Truck Brand</th>
+                            <th onclick="sortTrucksTable(3)">Truck Status</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
@@ -852,6 +889,7 @@
                               echo "<td>" . $row['TruckID'] . "</td>";
                               echo "<td>" . $row['PlateNo'] . "</td>";
                               echo "<td>" . $row['TruckBrand'] . "</td>";
+                              echo "<td>" . $row['TruckStatus'] . "</td>";
                               echo "<td>";
                               // Add a data-attribute to store the row data and attach the edit button
                               echo "<a href='#' class='me-3 text-primary edit-truck-btn' data-bs-toggle='modal' data-truck='" . htmlspecialchars($truckData) . "'>";
@@ -1000,6 +1038,7 @@
             document.getElementById("maintenanceCategory").value = maintenance.Category;
             document.getElementById("maintenanceDescription").value = maintenance.Description;
             document.getElementById("maintenanceAmount").value = maintenance.Amount;
+            document.getElementById("maintenanceLoggedBy").value = maintenance.LoggedBy;
           }
 
           // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
@@ -1066,6 +1105,10 @@
                 document.getElementById('plateNumber').value = data.PlateNo;
                 document.getElementById('truckBrand').value = data.TruckBrand;
 
+                // Set the truck status in the dropdown
+                const truckStatusDropdown = document.getElementById('truckStatus');
+                truckStatusDropdown.value = data.TruckStatus;
+
                 // Open the modal
                 const updateModal = new bootstrap.Modal(document.getElementById('updateTrucksRecordModal'));
                 updateModal.show();
@@ -1079,6 +1122,7 @@
         });
       });
     </script>
+
 
 
     <script>
@@ -1740,7 +1784,22 @@
                 document.getElementById('clusterID').value = data.UniqueClusterID;
                 document.getElementById('clusterCategory').value = data.ClusterCategory;
                 document.getElementById('locationsInCluster').value = data.LocationsInCluster;
-                document.getElementById('tonner').value = data.Tonner;
+
+                // Set the value for the dropdown
+                const tonnerSelect = document.getElementById('tonner');
+                const tonnerValue = data.Tonner;
+                if (tonnerSelect) {
+                  tonnerSelect.value = tonnerValue; // Set the dropdown value
+                  if (tonnerSelect.value !== tonnerValue) {
+                    console.warn('Tonner value not found in the dropdown. Setting it dynamically:', tonnerValue);
+                    const newOption = document.createElement('option');
+                    newOption.value = tonnerValue;
+                    newOption.textContent = tonnerValue;
+                    tonnerSelect.appendChild(newOption); // Add the new option to the dropdown
+                    tonnerSelect.value = tonnerValue; // Set the newly added option as selected
+                  }
+                }
+
                 document.getElementById('kmRadius').value = data.KMRADIUS;
                 document.getElementById('fuelPrice').value = data.FuelPrice;
                 document.getElementById('rateAmount').value = data.RateAmount;
@@ -1757,6 +1816,7 @@
         });
       });
     </script>
+
     <script>
       // Handle cluster selection changes
       document.getElementById('clusterSelection').addEventListener('change', function() {

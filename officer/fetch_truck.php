@@ -5,7 +5,7 @@ if (isset($_GET['truckId'])) {
     $truckId = $_GET['truckId'];
 
     // Prepare a query to fetch the truck details
-    $query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo WHERE TruckID = ?";
+    $query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus FROM trucksinfo WHERE TruckID = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $truckId);
 
