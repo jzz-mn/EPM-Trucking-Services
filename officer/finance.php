@@ -199,7 +199,7 @@ include '../includes/db_connection.php';
                       include '../includes/db_connection.php';
 
                       // Fetch data from the expenses table
-                      $query = "SELECT * FROM expenses";
+                      $query = "SELECT * FROM expenses ORDER BY ExpenseID DESC";
                       $result = mysqli_query($conn, $query);
 
                       if (mysqli_num_rows($result) > 0) {
@@ -486,7 +486,8 @@ include '../includes/db_connection.php';
                       include '../includes/db_connection.php';
 
                       // Fetch data from the fuel table
-                      $sql = "SELECT FuelID, Date, Liters, UnitPrice, FuelType, Amount FROM fuel";
+                      $sql = "SELECT FuelID, Date, Liters, UnitPrice, FuelType, Amount FROM fuel
+                      ORDER BY FuelID DESC";
                       $result = $conn->query($sql);
 
                       if ($result->num_rows > 0) {

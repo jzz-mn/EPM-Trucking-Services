@@ -706,7 +706,8 @@
                     <!-- Maintenance Table -->
                     <?php
                     include '../includes/db_connection.php';
-                    $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy FROM truckmaintenance";
+                    $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy FROM truckmaintenance
+                    ORDER BY MaintenanceID DESC";
                     $result = $conn->query($query);
                     ?>
                     <div class="table-responsive">
@@ -792,7 +793,8 @@
                     <!-- Transactions Table -->
                     <?php
                     include '../includes/db_connection.php';
-                    $query = "SELECT TransactionID, TransactionGroupID, TransactionDate, DRno, OutletName, Qty, KGs FROM transactions";
+                    $query = "SELECT TransactionID, TransactionGroupID, TransactionDate, DRno, OutletName, Qty, KGs FROM transactions
+                    ORDER BY TransactionID DESC";
                     $result = $conn->query($query);
                     ?>
                     <div class="table-responsive">
@@ -865,7 +867,8 @@
                   <!-- Trucks Table -->
                   <?php
                   include '../includes/db_connection.php';
-                  $query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus FROM trucksinfo";
+                  $query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus FROM trucksinfo
+                  ORDER BY TruckID DESC";
                   $result = $conn->query($query);
                   ?>
                   <div class="py-3">
@@ -948,7 +951,8 @@
                         </thead>
                         <tbody id="clustersTableBody">
                           <?php
-                          $query = "SELECT UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount FROM clusters";
+                          $query = "SELECT UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount FROM clusters
+                          ORDER BY UniqueClusterID DESC";
                           $result = $conn->query($query);
                           if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {

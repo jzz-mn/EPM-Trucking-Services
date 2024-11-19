@@ -389,7 +389,10 @@ if (isset($_SESSION['success_message'])) {
       include '../includes/db_connection.php';
 
       // Fetch employee data from database
-      $sql = "SELECT EmployeeID, FirstName, MiddleInitial, LastName, Gender, Position, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate FROM employees";
+      $sql = "SELECT EmployeeID, FirstName, MiddleInitial, LastName, Gender, Position, DateOfBirth, Address, MobileNo, EmailAddress, EmploymentDate 
+      FROM employees
+      ORDER BY EmployeeID
+      DESC";
       $result = $conn->query($sql);
       ?>
       <div class="card card-body mb-0">
