@@ -109,131 +109,209 @@ include '../includes/db_connection.php';
                         <h5 class="card-title">Predicted Maintenance Needs</h5>
                         <canvas id="maintenancePredictionChart"></canvas>
                         <script>
-                            // Simulated data for predictions
-                            const maintenanceLabels = ["January", "February", "March", "April", "May", "June"];
-                            const maintenanceData = [1, 0, 1, 0, 1, 1]; // Simulate predictions (1 = Yes, 0 = No)
-
-                            const ctxPrediction = document.getElementById('maintenancePredictionChart').getContext('2d');
-                            new Chart(ctxPrediction, {
-                                type: 'bar',
-                                data: {
-                                    labels: maintenanceLabels,
-                                    datasets: [{
-                                        label: 'Predicted Maintenance Needed',
-                                        data: maintenanceData,
-                                        backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    plugins: {
-                                        legend: {
-                                            position: 'top'
+                            async function fetchMaintenancePredictions() {
+                                try {
+                                    const response = await fetch('http://localhost:5000/predict_maintenance', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
                                         },
+                                        body: JSON.stringify({
+                                            Year: new Date().getFullYear(), // Current year
+                                            TruckID: 0 // Fetch for all trucks
+                                        }),
+                                    });
+
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+
+                                    const data = await response.json();
+
+                                    if (data.error) {
+                                        console.error("Error in response:", data.error);
+                                        return [];
+                                    }
+
+                                    console.log("Predictions fetched:", data.predictions); // Debugging
+                                    return data.predictions || [];
+                                } catch (error) {
+                                    console.error("Error fetching predictions:", error);
+                                    return [];
+                                }
+                            }
+
+                            async function renderMaintenancePredictionChart() {
+                                const predictions = await fetchMaintenancePredictions();
+
+                                if (predictions.length === 0) {
+                                    document.getElementById("maintenancePredictionChart").parentNode.innerHTML += `
+            <p class="text-center mt-3">No prediction data available.</p>`;
+                                    return;
+                                }
+
+                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const maintenanceData = Array(12).fill(0);
+                                const trucksPerMonth = Array(12).fill("").map(() => []);
+
+                                predictions.forEach(prediction => {
+                                    const monthIndex = prediction.Month - 1;
+                                    if (prediction.MaintenanceStatus === "Yes") {
+                                        maintenanceData[monthIndex] += 1;
+                                        trucksPerMonth[monthIndex].push(`TruckID: ${prediction.TruckID}`);
+                                    }
+                                });
+
+                                if (maintenanceData.every(value => value === 0)) {
+                                    const ctxParent = document.getElementById('maintenancePredictionChart').parentNode;
+                                    ctxParent.innerHTML += `
+            <p class="text-center mt-3">
+                No trucks require maintenance for the selected year. 
+                This could indicate:
+                <ul>
+                    <li>Trucks are well-maintained.</li>
+                    <li>The model predicts no upcoming maintenance issues based on current data.</li>
+                </ul>
+            </p>`;
+                                    return;
+                                }
+
+                                const ctx = document.getElementById('maintenancePredictionChart').getContext('2d');
+                                new Chart(ctx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: months,
+                                        datasets: [{
+                                            label: 'Trucks Requiring Maintenance',
+                                            data: maintenanceData,
+                                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                            borderColor: 'rgba(255, 99, 132, 1)',
+                                            borderWidth: 1
+                                        }]
                                     },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            title: {
-                                                display: true,
-                                                text: 'Maintenance Needed (1 = Yes, 0 = No)'
+                                    options: {
+                                        responsive: true,
+                                        plugins: {
+                                            tooltip: {
+                                                callbacks: {
+                                                    afterBody: (tooltipItems) => {
+                                                        const monthIndex = tooltipItems[0].dataIndex;
+                                                        return trucksPerMonth[monthIndex].join(", ");
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                title: {
+                                                    display: true,
+                                                    text: 'Number of Trucks Requiring Maintenance'
+                                                }
+                                            },
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Month'
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
+                            // Initialize the chart rendering
+                            renderMaintenancePredictionChart();
                         </script>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row mt-4">
-            <!-- Top 5 Trucks with Highest Maintenance Costs -->
-            <div class="col-lg-6">
-                <div class="card bg-primary-subtle overflow-hidden shadow-none">
-                    <div class="card-body">
-                        <h5 class="card-title">Top 5 Trucks with Highest Maintenance Costs</h5>
-                        <?php
-                        $query = "SELECT t.TruckBrand, t.TruckID, SUM(m.Amount) AS TotalMaintenanceCost 
+            <div class="row mt-4">
+                <!-- Top Trucks with Highest Maintenance Costs -->
+                <div class="col-lg-6">
+                    <div class="card bg-primary-subtle overflow-hidden shadow-none">
+                        <div class="card-body">
+                            <h5 class="card-title">Top Trucks with Highest Maintenance Costs</h5>
+                            <?php
+                            $query = "SELECT t.TruckBrand, t.TruckID, SUM(m.Amount) AS TotalMaintenanceCost 
                                   FROM truckmaintenance m 
                                   JOIN trucksinfo t ON m.TruckID = t.TruckID 
                                   GROUP BY t.TruckBrand, t.TruckID
                                   ORDER BY TotalMaintenanceCost DESC 
                                   LIMIT 5;";
-                        $result = mysqli_query($conn, $query);
+                            $result = mysqli_query($conn, $query);
 
-                        if (!$result) {
-                            echo "Error: " . mysqli_error($conn);
-                        }
+                            if (!$result) {
+                                echo "Error: " . mysqli_error($conn);
+                            }
 
-                        $topTrucks = [];
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            $topTrucks[] = $row;
-                        }
-                        ?>
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-primary">
-                                <tr>
-                                    <th>Truck Brand</th>
-                                    <th>Truck ID</th>
-                                    <th>Total Cost</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($topTrucks as $truck): ?>
+                            $topTrucks = [];
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                $topTrucks[] = $row;
+                            }
+                            ?>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-primary">
                                     <tr>
-                                        <td><?php echo $truck['TruckBrand']; ?></td>
-                                        <td><?php echo $truck['TruckID']; ?></td>
-                                        <td><?php echo number_format($truck['TotalMaintenanceCost'], 2); ?></td>
+                                        <th>Truck Brand</th>
+                                        <th>Truck ID</th>
+                                        <th>Total Cost</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($topTrucks as $truck): ?>
+                                        <tr>
+                                            <td><?php echo $truck['TruckBrand']; ?></td>
+                                            <td><?php echo $truck['TruckID']; ?></td>
+                                            <td><?php echo number_format($truck['TotalMaintenanceCost'], 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Truck Maintenance Cost Summary -->
-            <div class="col-lg-6">
-                <div class="card bg-info-subtle overflow-hidden shadow-none">
-                    <div class="card-body">
-                        <h5 class="card-title">Truck Maintenance Cost Summary</h5>
-                        <?php
-                        $summaryQuery = "SELECT 
+                <!-- Truck Maintenance Cost Summary -->
+                <div class="col-lg-6">
+                    <div class="card bg-info-subtle overflow-hidden shadow-none">
+                        <div class="card-body">
+                            <h5 class="card-title">Truck Maintenance Cost Summary</h5>
+                            <?php
+                            $summaryQuery = "SELECT 
                                          COUNT(DISTINCT TruckID) AS TotalTrucks,
                                          SUM(Amount) AS TotalCost,
                                          AVG(Amount) AS AvgCost
                                          FROM truckmaintenance 
                                          WHERE Amount > 0.00";
-                        $summaryResult = mysqli_query($conn, $summaryQuery);
+                            $summaryResult = mysqli_query($conn, $summaryQuery);
 
-                        if (!$summaryResult) {
-                            echo "Error: " . mysqli_error($conn);
-                        }
+                            if (!$summaryResult) {
+                                echo "Error: " . mysqli_error($conn);
+                            }
 
-                        $summaryData = mysqli_fetch_assoc($summaryResult);
-                        ?>
-                        <p><strong>Total Trucks with Maintenance:</strong> <?php echo $summaryData['TotalTrucks']; ?></p>
-                        <p><strong>Total Maintenance Cost:</strong> <?php echo number_format($summaryData['TotalCost'], 2); ?></p>
-                        <p><strong>Average Maintenance Cost per Truck:</strong> <?php echo number_format($summaryData['AvgCost'], 2); ?></p>
+                            $summaryData = mysqli_fetch_assoc($summaryResult);
+                            ?>
+                            <p><strong>Total Trucks with Maintenance:</strong> <?php echo $summaryData['TotalTrucks']; ?></p>
+                            <p><strong>Total Maintenance Cost:</strong> <?php echo number_format($summaryData['TotalCost'], 2); ?></p>
+                            <p><strong>Average Maintenance Cost per Truck:</strong> <?php echo number_format($summaryData['AvgCost'], 2); ?></p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="../assets/js/vendor.min.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-<script src="../assets/js/apps/productDetail.js"></script>
-</body>
+    <script src="../assets/js/vendor.min.js"></script>
+    <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+    <script src="../assets/js/theme/app.init.js"></script>
+    <script src="../assets/js/theme/theme.js"></script>
+    <script src="../assets/js/theme/app.min.js"></script>
+    <script src="../assets/js/theme/sidebarmenu-default.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+    <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+    <script src="../assets/js/apps/productDetail.js"></script>
+    </body>
 
-</html>
+    </html>

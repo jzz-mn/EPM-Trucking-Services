@@ -5,16 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics - Route Optimization</title>
-  
+
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="../assets/libs/bootstrap/dist/css/bootstrap.min.css">
-  
+
   <!-- Bootstrap Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
-  
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-  
+
   <!-- Custom Styles -->
   <style>
     #map {
@@ -25,7 +25,8 @@
     }
 
     .leaflet-top.leaflet-right {
-      display: none !important; /* Hide the route details in the map view */
+      display: none !important;
+      /* Hide the route details in the map view */
     }
   </style>
 </head>
@@ -43,9 +44,9 @@
       // Include sidebar for navigation
       $sidebar_path = '../officer/sidebar.php';
       if (file_exists($sidebar_path)) {
-          include $sidebar_path;
+        include $sidebar_path;
       } else {
-          echo "<!-- Sidebar not found: $sidebar_path -->";
+        echo "<!-- Sidebar not found: $sidebar_path -->";
       }
       ?>
 
@@ -53,7 +54,7 @@
         <div class="row align-items-center">
           <div class="col-12">
             <div class="d-sm-flex align-items-center justify-content-between">
-              <h4 class="mb-4 mb-sm-0 card-title">Analytics - Route Optimization</h4>
+              <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
               <nav aria-label="breadcrumb" class="ms-auto">
                 <ol class="breadcrumb">
                   <li class="breadcrumb-item d-flex align-items-center">
@@ -68,7 +69,7 @@
         </div>
       </div>
 
-      <h5 class="border-bottom py-2 px-4 mb-4">Route Optimization</h5>
+      <h5 class="border-bottom py-2 px-4 mb-4">Routes</h5>
 
       <div class="row">
         <!-- Control Panel -->
@@ -81,10 +82,13 @@
                 <select id="routeSelect" class="form-select">
                   <option value="">Select a route...</option>
                   <?php
-                  $query = "SELECT RouteID, StartLocation, EndLocation FROM route_optimization ORDER BY StartLocation";
+                  $query = "SELECT ro.RouteID, wg.GroupName 
+                            FROM route_optimization ro 
+                            JOIN waypoint_groups wg ON ro.WaypointGroupID = wg.WaypointGroupID 
+                            ORDER BY wg.GroupName";
                   $result = mysqli_query($conn, $query);
                   while ($row = mysqli_fetch_assoc($result)) {
-                    echo "<option value='{$row['RouteID']}'>{$row['StartLocation']} → {$row['EndLocation']}</option>";
+                    echo "<option value='{$row['RouteID']}'>{$row['GroupName']}</option>";
                   }
                   ?>
                 </select>
@@ -119,24 +123,23 @@
   </div>
 
   <!-- Directions Modal -->
-<div class="modal fade" id="directionsModal" tabindex="-1" aria-labelledby="directionsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="directionsModalLabel">Route Directions</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="mapModal" style="height: 400px; display: none;"></div>
-        <ol id="routeDirectionsList" class="mt-3"></ol>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+  <div class="modal fade" id="directionsModal" tabindex="-1" aria-labelledby="directionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="directionsModalLabel">Route Directions</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="mapModal" style="height: 400px; display: none;"></div>
+          <ol id="routeDirectionsList" class="mt-3"></ol>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
 
   <!-- Required Libraries -->
   <script src="../assets/js/vendor.min.js"></script>
@@ -197,51 +200,61 @@
           throw new Error(data.error || "No data found for the selected route.");
         }
 
-        const { route, waypoints, directions } = data;
+        const {
+          route,
+          waypoints
+        } = data;
 
-        document.getElementById("totalDistance").textContent = `${route.TotalDistance} km`;
+        if (!waypoints || waypoints.length < 2) {
+          throw new Error("At least two waypoints are required to calculate a route.");
+        }
+
+        // Update route statistics
+        document.getElementById("totalDistance").textContent = `${route.TotalDistance.toFixed(2)} km`;
         document.getElementById("estTime").textContent = `${Math.floor(route.EstimatedTime / 60)}h ${route.EstimatedTime % 60}m`;
-        document.getElementById("estFuel").textContent = `${route.EstimatedFuel} L`;
+        document.getElementById("estFuel").textContent = `${route.EstimatedFuel.toFixed(2)} L`;
         document.getElementById("estCost").textContent = route.TotalCost ? `₱${parseFloat(route.TotalCost).toFixed(2)}` : "-";
 
+        // Clear existing map routes and markers
         clearMap();
 
-        const waypointCoordinates = waypoints.map((wp) => L.latLng(wp.Latitude, wp.Longitude));
+        // Prepare waypoints for the map
+        const waypointCoordinates = waypoints.map(wp => L.latLng(wp.Latitude, wp.Longitude));
+
+        // Add route to map using waypoints
         routingControl = L.Routing.control({
           waypoints: waypointCoordinates,
           routeWhileDragging: false,
           fitSelectedRoutes: true,
           showAlternatives: false,
-          createMarker: () => null,
+          lineOptions: {
+            styles: [{
+              color: "blue",
+              weight: 4
+            }]
+          },
+          createMarker: (i, wp) => {
+            return L.marker(wp.latLng, {
+              title: waypoints[i].LocationName
+            });
+          }
         }).addTo(map);
 
-        startMarker = L.marker(waypointCoordinates[0], { title: "Start Point" }).addTo(map);
-        endMarker = L.marker(waypointCoordinates[waypointCoordinates.length - 1], { title: "End Point" }).addTo(map);
-
+        // Populate the directions list (only for start and end points)
         const directionsList = document.getElementById("routeDirectionsList");
         directionsList.innerHTML = "";
-        directions.forEach((step) => {
+        waypoints.forEach((wp, index) => {
           const listItem = document.createElement("li");
-          listItem.textContent = step;
+          listItem.textContent = `${index + 1}. ${wp.LocationName}`;
           directionsList.appendChild(listItem);
         });
-
-        mapModal.eachLayer((layer) => mapModal.removeLayer(layer));
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors",
-        }).addTo(mapModal);
-        L.Routing.control({
-          waypoints: waypointCoordinates,
-          routeWhileDragging: false,
-          fitSelectedRoutes: true,
-          showAlternatives: false,
-          createMarker: () => null,
-        }).addTo(mapModal);
       } catch (error) {
         console.error("Error calculating route:", error);
-        alert("Error calculating route.");
+        alert(error.message || "Error calculating route.");
       }
     }
+
+
 
     document.addEventListener("DOMContentLoaded", () => {
       initMap();

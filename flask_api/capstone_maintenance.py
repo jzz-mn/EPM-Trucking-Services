@@ -1,69 +1,105 @@
 import joblib
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
 
 # Load the saved maintenance model
-model = joblib.load('maintenance_model.joblib')
+model = joblib.load('maintenance_model.joblib')  # Updated model filename
 
-<<<<<<< Updated upstream
-# Database connection URI (adjust based on your setup)
 DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
-=======
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
-# = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
->>>>>>> Stashed changes
 engine = create_engine(DATABASE_URI)
 
 def calculate_features(truck_id, year, month):
     """
-    Calculates maintenance count, trip count, fuel usage, and monthly expenses for a given truck.
+    Calculates features required for predicting maintenance.
     """
     with engine.connect() as connection:
-        # Maintenance count in the past year
-        maintenance_count_query = f"""
-            SELECT COUNT(*) FROM truckmaintenance
-            WHERE TruckID = {truck_id} AND Year = {year}
-        """
-        maintenance_count = connection.execute(maintenance_count_query).scalar()
-        
-        # Trip count in the last year
-        trip_count_query = f"""
-            SELECT COUNT(*) FROM transactiongroup
-            WHERE TruckID = {truck_id} AND YEAR(Date) = {year}
-        """
-        trip_count = connection.execute(trip_count_query).scalar()
+        # Fetch the last maintenance year
+        last_maintenance_query = text("""
+            SELECT MAX(Year) AS LastMaintenanceYear
+            FROM truckmaintenance
+            WHERE TruckID = :truck_id
+        """)
+        last_maintenance_year = connection.execute(last_maintenance_query, {"truck_id": truck_id}).scalar()
+        if last_maintenance_year is None:
+            last_maintenance_year = year  # Default to the current year if no data
 
-        # Fuel usage for the month
-        fuel_usage_query = f"""
-            SELECT SUM(Liters) FROM fuel
-            WHERE FuelID IN (SELECT FuelID FROM expenses WHERE ExpenseID IN 
-                             (SELECT ExpenseID FROM transactiongroup WHERE TruckID = {truck_id}))
-            AND MONTH(Date) = {month} AND YEAR(Date) = {year}
-        """
-        fuel_usage = connection.execute(fuel_usage_query).scalar() or 0
+        time_since_last_maintenance = year - last_maintenance_year
 
-        # Monthly expenses
-        monthly_expense_query = f"""
-            SELECT SUM(TotalExpense) FROM expenses
-            WHERE FuelID IN (SELECT FuelID FROM transactiongroup WHERE TruckID = {truck_id})
-            AND MONTH(Date) = {month} AND YEAR(Date) = {year}
-        """
-        monthly_expense = connection.execute(monthly_expense_query).scalar() or 0
+        # Fetch average load
+        avg_load_query = text("""
+            SELECT AVG(TotalKGs) AS AvgLoad
+            FROM transactiongroup
+            WHERE TruckID = :truck_id AND YEAR(Date) = :year
+        """)
+        average_load = connection.execute(avg_load_query, {"truck_id": truck_id, "year": year}).scalar()
 
-    return maintenance_count, trip_count, fuel_usage, monthly_expense
+        # Handle invalid or missing data
+        if average_load is None:
+            average_load = 0  # Default to 0 if no data is available
+        else:
+            average_load = float(average_load)  # Ensure it's a float
 
-def predict_maintenance(truck_id, year, month, description_encoded):
+    return time_since_last_maintenance, average_load
+
+
+def predict_maintenance(truck_id, year, month, connection):
     """
     Predict maintenance needs using calculated features.
     """
-    maintenance_count, trip_count, fuel_usage, monthly_expense = calculate_features(truck_id, year, month)
-    
-    # Prepare the input data as per the model's requirements
-    input_data = pd.DataFrame([[truck_id, year, month, description_encoded, maintenance_count, trip_count, fuel_usage, monthly_expense]], 
-                              columns=['TruckID', 'Year', 'Month', 'DescriptionEncoded', 'MaintenanceCount', 'TripCount', 'FuelUsage', 'MonthlyExpense'])
-    
+    def calculate_features(truck_id, year, month, connection):
+        """
+        Calculates features required for predicting maintenance.
+        """
+        # Fetch the last maintenance year
+        last_maintenance_query = text("""
+            SELECT MAX(Year) AS LastMaintenanceYear
+            FROM truckmaintenance
+            WHERE TruckID = :truck_id
+        """)
+        last_maintenance_year = connection.execute(last_maintenance_query, {"truck_id": truck_id}).scalar()
+        if last_maintenance_year is None:
+            last_maintenance_year = year  # Default to the current year if no data
+
+        time_since_last_maintenance = year - last_maintenance_year
+
+        # Fetch average load
+        avg_load_query = text("""
+            SELECT AVG(TotalKGs) AS AvgLoad
+            FROM transactiongroup
+            WHERE TruckID = :truck_id AND YEAR(Date) = :year
+        """)
+        average_load = connection.execute(avg_load_query, {"truck_id": truck_id, "year": year}).scalar()
+
+        # Handle invalid or missing data
+        if average_load is None:
+            average_load = 0  # Default to 0 if no data is available
+        else:
+            average_load = float(average_load)  # Ensure it's a float
+
+        return time_since_last_maintenance, average_load
+
+    # Calculate required features
+    time_since_last_maintenance, average_load = calculate_features(truck_id, year, month, connection)
+
+    # Prepare input data for the model
+    input_data = pd.DataFrame([[time_since_last_maintenance, average_load]], 
+                              columns=['TimeSinceLastMaintenance', 'AverageLoad'])
+
+    # Ensure all columns are numeric
+    input_data = input_data.astype(float)
+
     # Perform prediction
     prediction = model.predict(input_data)
-    
-    # Return the prediction (0 or 1)
-    return int(prediction[0])
+
+    return {
+        "TruckID": truck_id,
+        "Year": year,
+        "Month": month,
+        "MaintenanceStatus": "Yes" if prediction[0] == 1 else "No",
+        "Reason": "High average load and/or long gap since last maintenance." if prediction[0] == 1 else
+                  "Truck usage and maintenance gap are within acceptable limits."
+    }
+
+

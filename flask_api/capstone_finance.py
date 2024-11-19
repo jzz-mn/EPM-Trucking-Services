@@ -11,12 +11,8 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_absolute_percent
 import joblib
 
 # Database connection using SQLAlchemy
-<<<<<<< Updated upstream
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'  # Update with your MySQL credentials if needed
-=======
 DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
 #DATABASE_URI = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
->>>>>>> Stashed changes
 engine = create_engine(DATABASE_URI)
 
 # Fetch data from the `transactiongroup` table
