@@ -24,6 +24,10 @@ except Exception as e:
 
 # Database setup
 DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+<<<<<<< Updated upstream
+=======
+#DATABASE_URI = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
+>>>>>>> Stashed changes
 engine = create_engine(DATABASE_URI)
 
 def get_historical_data():
