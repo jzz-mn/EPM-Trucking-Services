@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 # Load the saved maintenance model
 model = joblib.load('maintenance_model.joblib')
 
-# Database connection URI (adjust based on your setup)
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+#DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+DATABASE_URI = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
 engine = create_engine(DATABASE_URI)
 
 def calculate_features(truck_id, year, month):

@@ -23,7 +23,8 @@ except Exception as e:
     model = None
 
 # Database setup
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+#DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+DATABASE_URI = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
 engine = create_engine(DATABASE_URI)
 
 def get_historical_data():
