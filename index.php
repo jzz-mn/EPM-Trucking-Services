@@ -279,7 +279,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
 <body>
   <!-- Preloader -->
   <div class="preloader">
-    <img src="assets/images/logos/favicon.png" alt="loader" class="lds-ripple img-fluid" />
+    <img src="assetsEPM/logos/epm-logo.png" alt="loader" class="lds-ripple img-fluid" />
   </div>
   <div id="main-wrapper">
     <div class="position-relative overflow-hidden radial-gradient min-vh-100 w-100">

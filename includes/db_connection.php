@@ -1,5 +1,5 @@
 <?php
-/*
+
  // Database configuration
  $host = "localhost";  // or "127.0.0.1"
  $usernameDB = "root";   // your MySQL username
@@ -13,8 +13,8 @@
  if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
  }
-*/
 
+/*
 $host = "ixnzh1cxch6rtdrx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com";  // JawsDB host
 $usernameDB = "p7apqmgbef3tu2d6";  // JawsDB username
 $password = "lu8uvpzjm27qbtlq";    // JawsDB password
@@ -26,5 +26,5 @@ $conn = new mysqli($host, $usernameDB, $password, $database);
 if ($conn->connect_error) {
    die("Connection failed: " . $conn->connect_error);
 }
-
+*/
 ?>
