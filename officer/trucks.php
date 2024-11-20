@@ -806,12 +806,11 @@
                         <thead>
                           <tr>
                             <th onclick="sortTransactionsTable(0)">Transaction ID</th>
-                            <th onclick="sortTransactionsTable(1)">Transaction Group ID</th>
-                            <th onclick="sortTransactionsTable(2)">Transaction Date</th>
-                            <th onclick="sortTransactionsTable(3)">DR No</th>
-                            <th onclick="sortTransactionsTable(4)">Outlet Name</th>
-                            <th onclick="sortTransactionsTable(5)">Qty</th>
-                            <th onclick="sortTransactionsTable(6)">KGs</th>
+                            <th onclick="sortTransactionsTable(1)">Transaction Date</th>
+                            <th onclick="sortTransactionsTable(2)">DR No</th>
+                            <th onclick="sortTransactionsTable(3)">Outlet Name</th>
+                            <th onclick="sortTransactionsTable(4)">Qty</th>
+                            <th onclick="sortTransactionsTable(5)">KGs</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
@@ -821,7 +820,6 @@
                             $transactionData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                             echo "<tr>";
                             echo "<td>" . $row['TransactionID'] . "</td>";
-                            echo "<td>" . $row['TransactionGroupID'] . "</td>";
                             echo "<td>" . $row['TransactionDate'] . "</td>";
                             echo "<td>" . $row['DRno'] . "</td>";
                             echo "<td>" . $row['OutletName'] . "</td>";
