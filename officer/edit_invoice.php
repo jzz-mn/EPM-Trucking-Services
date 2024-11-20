@@ -1170,7 +1170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 // Fetch all trucks from trucksinfo table
-$truckQuery = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+$truckQuery = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo WHERE TruckStatus = 'Activated'";
 $truckStmt = $conn->prepare($truckQuery);
 if (!$truckStmt) {
     echo "Failed to prepare truck query: " . $conn->error;

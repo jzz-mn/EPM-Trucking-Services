@@ -23,7 +23,9 @@ $errors = [];
 $success = false;
 
 // Fetch necessary data for dropdowns
-$truck_query = "SELECT TruckID, PlateNo, TruckBrand FROM trucksinfo";
+$truck_query = "SELECT TruckID, PlateNo, TruckBrand, TruckStatus 
+              FROM trucksinfo 
+              WHERE TruckStatus = 'Activated'";
 $truck_result = $conn->query($truck_query);
 
 // Handle form submissions
