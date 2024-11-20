@@ -475,7 +475,7 @@ include '../includes/db_connection.php';
                         <th onclick="sortFuelTable(0)">Fuel ID</th>
                         <th onclick="sortFuelTable(1)">Date</th>
                         <th onclick="sortFuelTable(2)">Liters</th>
-                        <th onclick="sortFuelTable(3)">Fuel Price</th>
+                        <th onclick="sortFuelTable(3)">Unit Price</th>
                         <th onclick="sortFuelTable(4)">Fuel Type</th>
                         <th onclick="sortFuelTable(5)">Amount</th>
                         <th>Actions</th>
@@ -562,7 +562,7 @@ include '../includes/db_connection.php';
                                   <!-- Unit Price -->
                                   <div class="col-lg-4">
                                     <div class="mb-3">
-                                      <label for="updateUnitPrice" class="form-label">Fuel Price</label>
+                                      <label for="updateUnitPrice" class="form-label">Unit Price</label>
                                       <input type="number" class="form-control" id="updateUnitPrice"
                                         name="updateUnitPrice" step="0.01" oninput="computeFuelAmount()">
                                     </div>
