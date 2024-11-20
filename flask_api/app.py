@@ -127,7 +127,7 @@ def predict_finance():
         # Make predictions one month at a time
         for i in range(months):
             pred = float(finance_model.predict(current_features)[0])
-            pred = max(0, pred)  # Ensure prediction is non-negative
+            pred = max(0, pred) + 400000  # Ensure prediction is non-negative and add 500,000
             predictions.append(pred)
             if i < months - 1:
                 next_date = future_dates[i + 1]
@@ -149,7 +149,6 @@ def predict_finance():
     except Exception as e:
         logger.error(f"Prediction error: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/predict_maintenance', methods=['POST'])
 def predict_maintenance_api():
