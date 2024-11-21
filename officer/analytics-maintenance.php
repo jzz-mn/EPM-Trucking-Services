@@ -4,7 +4,8 @@ include '../officer/header.php';
 include '../includes/db_connection.php';
 ?>
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
+    rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js for charts -->
 
 <div class="body-wrapper">
@@ -109,44 +110,53 @@ include '../includes/db_connection.php';
                         <h5 class="card-title">Predicted Maintenance Needs</h5>
                         <canvas id="maintenancePredictionChart"></canvas>
                         <script>
-                            async function fetchMaintenancePredictions() {
+                            async function fetchMaintenancePredictionsFromCSV() {
                                 try {
-                                    const response = await fetch('http://localhost:5000/predict_maintenance', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            Year: new Date().getFullYear(), // Current year
-                                            TruckID: 0 // Fetch for all trucks
-                                        }),
-                                    });
+                                    // Path to the CSV file
+                                    const filePath = 'maintenance_forecast.csv'; // This path will be accessible server-side.
 
+                                    const response = await fetch(filePath);
                                     if (!response.ok) {
-                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                        throw new Error(`Failed to load CSV: ${response.status}`);
                                     }
 
-                                    const data = await response.json();
+                                    const csvText = await response.text();
+                                    const predictions = parseCSV(csvText);
 
-                                    if (data.error) {
-                                        console.error("Error in response:", data.error);
-                                        return [];
-                                    }
-
-                                    console.log("Predictions fetched:", data.predictions); // Debugging
-                                    return data.predictions || [];
+                                    return predictions;
                                 } catch (error) {
-                                    console.error("Error fetching predictions:", error);
+                                    console.error("Error loading CSV:", error);
                                     return [];
                                 }
                             }
 
+                            function parseCSV(csvText) {
+                                const rows = csvText.split('\n');
+                                const headers = rows[0].split(','); // Get CSV headers
+                                const data = [];
+
+                                for (let i = 1; i < rows.length; i++) {
+                                    const columns = rows[i].split(',');
+                                    if (columns.length < headers.length) continue;
+
+                                    // Create an object for each row
+                                    const prediction = {
+                                        Month: columns[1].trim(), // YYYY-MM format
+                                        TruckID: parseInt(columns[0].trim()), // TruckID
+                                        MaintenanceForecast: columns[3].trim() // 'Yes' or 'No'
+                                    };
+                                    data.push(prediction);
+                                }
+
+                                return data;
+                            }
+
                             async function renderMaintenancePredictionChart() {
-                                const predictions = await fetchMaintenancePredictions();
+                                const predictions = await fetchMaintenancePredictionsFromCSV();
 
                                 if (predictions.length === 0) {
                                     document.getElementById("maintenancePredictionChart").parentNode.innerHTML += `
-            <p class="text-center mt-3">No prediction data available.</p>`;
+                            <p class="text-center mt-3">No prediction data available.</p>`;
                                     return;
                                 }
 
@@ -155,8 +165,8 @@ include '../includes/db_connection.php';
                                 const trucksPerMonth = Array(12).fill("").map(() => []);
 
                                 predictions.forEach(prediction => {
-                                    const monthIndex = prediction.Month - 1;
-                                    if (prediction.MaintenanceStatus === "Yes") {
+                                    const monthIndex = new Date(prediction.Month).getMonth(); // Get the month index from the date
+                                    if (prediction.MaintenanceForecast === "Yes") {
                                         maintenanceData[monthIndex] += 1;
                                         trucksPerMonth[monthIndex].push(`TruckID: ${prediction.TruckID}`);
                                     }
@@ -165,14 +175,14 @@ include '../includes/db_connection.php';
                                 if (maintenanceData.every(value => value === 0)) {
                                     const ctxParent = document.getElementById('maintenancePredictionChart').parentNode;
                                     ctxParent.innerHTML += `
-            <p class="text-center mt-3">
-                No trucks require maintenance for the selected year. 
-                This could indicate:
-                <ul>
-                    <li>Trucks are well-maintained.</li>
-                    <li>The model predicts no upcoming maintenance issues based on current data.</li>
-                </ul>
-            </p>`;
+                            <p class="text-center mt-3">
+                                No trucks require maintenance for the selected year. 
+                                This could indicate:
+                                <ul>
+                                    <li>Trucks are well-maintained.</li>
+                                    <li>The model predicts no upcoming maintenance issues based on current data.</li>
+                                </ul>
+                            </p>`;
                                     return;
                                 }
 
@@ -219,12 +229,15 @@ include '../includes/db_connection.php';
                                     }
                                 });
                             }
+
                             // Initialize the chart rendering
                             renderMaintenancePredictionChart();
                         </script>
                     </div>
                 </div>
             </div>
+
+
 
             <div class="row mt-4">
                 <!-- Top Trucks with Highest Maintenance Costs -->
@@ -292,9 +305,12 @@ include '../includes/db_connection.php';
 
                             $summaryData = mysqli_fetch_assoc($summaryResult);
                             ?>
-                            <p><strong>Total Trucks with Maintenance:</strong> <?php echo $summaryData['TotalTrucks']; ?></p>
-                            <p><strong>Total Maintenance Cost:</strong> <?php echo number_format($summaryData['TotalCost'], 2); ?></p>
-                            <p><strong>Average Maintenance Cost per Truck:</strong> <?php echo number_format($summaryData['AvgCost'], 2); ?></p>
+                            <p><strong>Total Trucks with Maintenance:</strong>
+                                <?php echo $summaryData['TotalTrucks']; ?></p>
+                            <p><strong>Total Maintenance Cost:</strong>
+                                <?php echo number_format($summaryData['TotalCost'], 2); ?></p>
+                            <p><strong>Average Maintenance Cost per Truck:</strong>
+                                <?php echo number_format($summaryData['AvgCost'], 2); ?></p>
                         </div>
                     </div>
                 </div>
