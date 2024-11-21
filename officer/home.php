@@ -263,6 +263,43 @@ if (isset($_GET['action'])) {
       echo json_encode($data);
       exit;
 
+
+      // *** getTruckDistributionData ***
+    case 'getTruckDistributionData':
+      // Ensure startDate and endDate are set
+      if (!$startDateEscaped || !$endDateEscaped) {
+        echo json_encode(['error' => 'Invalid date range']);
+        exit;
+      }
+
+      // Query to count transactions per TruckID within the date range
+      $query = "SELECT tg.TruckID, t.PlateNo, COUNT(*) as TransactionCount
+                FROM transactiongroup tg
+                JOIN trucksinfo t ON tg.TruckID = t.TruckID
+                WHERE tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
+                GROUP BY tg.TruckID, t.PlateNo
+                ORDER BY TransactionCount DESC";
+
+      $result = mysqli_query($conn, $query);
+
+      if (!$result) {
+        echo json_encode(['error' => 'Database query failed']);
+        exit;
+      }
+
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        // Use PlateNo as the label for TruckID in the output
+        $data[] = ['x' => $row['PlateNo'], 'y' => (int) $row['TransactionCount']];
+      }
+
+      echo json_encode($data);
+      exit;
+
+
+    default:
+      echo json_encode(['error' => 'Invalid action']);
+      exit;
   }
 }
 
@@ -332,14 +369,14 @@ include 'dashboard.php';
               <div class="col-md-4 text-end">
                 <div class="btn-group mb-2" role="group" aria-label="Date Filters">
                   <button type="submit" name="filter" value="year" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'year')
-                    echo 'active'; ?>">Year</button>
+                                                                                                    echo 'active'; ?>">Year</button>
                   <button type="submit" name="filter" value="month" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'month')
-                    echo 'active'; ?>">Month</button>
+                                                                                                      echo 'active'; ?>">Month</button>
                   <button type="submit" name="filter" value="week" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'week')
-                    echo 'active'; ?>">Week</button>
+                                                                                                    echo 'active'; ?>">Week</button>
                   <!-- Custom Button to Trigger Modal -->
                   <button type="button" class="btn btn-outline-primary <?php if (isset($_GET['filter']) && $_GET['filter'] == 'custom')
-                    echo 'active'; ?>" data-bs-toggle="modal" data-bs-target="#customDateModal">
+                                                                          echo 'active'; ?>" data-bs-toggle="modal" data-bs-target="#customDateModal">
                     Custom
                   </button>
                 </div>
@@ -428,6 +465,7 @@ include 'dashboard.php';
                   </div>
                 </div>
               </div>
+
               <!-- Add more cards if needed -->
             </div>
           </div>
@@ -486,6 +524,16 @@ include 'dashboard.php';
               </div>
             </div>
           </div>
+          <!-- *** Truck Usage Distribution *** -->
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Truck Usage Distribution</h5>
+                <div id="truck-distribution-chart"></div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -500,341 +548,366 @@ include 'dashboard.php';
 
 <!-- JavaScript to Handle Charts -->
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
 
-    // List of metrics
-    const metrics = ['expenses', 'revenue', 'profit', 'transactions', 'fuel'];
+        // List of metrics including the new truckDistribution
+        const metrics = ['expenses', 'revenue', 'profit', 'transactions', 'fuel', 'truckDistribution']; // Added 'truckDistribution'
 
-    metrics.forEach(metric => {
-      fetchAndRenderChart(metric);
-    });
+        metrics.forEach(metric => {
+          fetchAndRenderChart(metric);
+        });
 
-    function fetchAndRenderChart(metric) {
-      // Determine action and container ID based on metric
-      let action = '';
-      let containerId = '';
-      switch (metric) {
-        case 'expenses':
-          action = 'getExpensesData';
-          containerId = 'expenses-chart';
-          break;
-        case 'revenue':
-          action = 'getRevenueData';
-          containerId = 'revenue-chart';
-          break;
-        case 'profit':
-          action = 'getProfitData';
-          containerId = 'profit-chart';
-          break;
-        case 'transactions':
-          action = 'getTransactionsData';
-          containerId = 'transactions-chart';
-          break;
-        case 'fuel':
-          action = 'getFuelData';
-          containerId = 'fuel-chart';
-          break;
-        default:
-          console.error('Unknown metric:', metric);
-          return;
-      }
-
-      // Get current filter parameters from the URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const filter = urlParams.get('filter') || 'year'; // Default to 'year' if not set
-      const startDate = urlParams.get('start_date') || '';
-      const endDate = urlParams.get('end_date') || '';
-
-      // Build the AJAX URL
-      let ajaxURL = `home.php?action=${action}&filter=${filter}`;
-      if (filter === 'custom') {
-        ajaxURL += `&start_date=${startDate}&end_date=${endDate}`;
-      }
-
-      // Fetch data via AJAX
-      fetch(ajaxURL)
-        .then(response => response.json())
-        .then(data => {
-          // Prepare data for ApexCharts
-          let chartOptions = {};
-
-          // Configure chart options based on metric
+        function fetchAndRenderChart(metric) {
+          // Determine action and container ID based on metric
+          let action = '';
+          let containerId = '';
           switch (metric) {
             case 'expenses':
-              chartOptions = {
-                chart: {
-                  type: 'line', // Change chart type to line
-                  height: 350
-                },
-                stroke: {
-                  curve: 'smooth'  // Smooth curve
-                },
-                markers: {
-                  size: 4  // Data points shown as circles
-                },
-                series: [
-                  {
-                    name: 'Salary Amount',
-                    data: data.SalaryAmount.map(item => item.y)
-                  },
-                  {
-                    name: 'Mobile Amount',
-                    data: data.MobileAmount.map(item => item.y)
-                  },
-                  {
-                    name: 'Other Amount',
-                    data: data.OtherAmount.map(item => item.y)
-                  },
-                  {
-                    name: 'Fuel Amount',
-                    data: data.FuelAmount.map(item => item.y)
-                  }
-                ],
-                xaxis: {
-                  categories: data.SalaryAmount.map(item => item.x), // Use the date from the first series
-                  title: {
-                    text: 'Date'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Amount (₱)'
-                  }
-                },
-                title: {
-                  text: 'Expenses and Fuel Over Time',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return '₱' + val.toFixed(2);
-                    }
-                  }
-                }
-              };
-
+              action = 'getExpensesData';
+              containerId = 'expenses-chart';
               break;
-
             case 'revenue':
-              chartOptions = {
-                chart: {
-                  type: 'line',
-                  height: 350
-                },
-                series: [{
-                  name: 'Total Revenue',
-                  data: data.map(item => item.y)
-                }],
-                xaxis: {
-                  categories: data.map(item => item.x),
-                  title: {
-                    text: 'Date'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Amount (₱)'
-                  }
-                },
-                title: {
-                  text: 'Revenue Trends',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return '₱' + val.toFixed(2);
-                    }
-                  }
-                }
-              };
+              action = 'getRevenueData';
+              containerId = 'revenue-chart';
               break;
-
             case 'profit':
-              chartOptions = {
-                chart: {
-                  type: 'area',
-                  height: 350
-                },
-                series: [{
-                  name: 'Total Profit',
-                  data: data.map(item => item.y)
-                }],
-                xaxis: {
-                  categories: data.map(item => item.x),
-                  title: {
-                    text: 'Date'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Amount (₱)'
-                  }
-                },
-                title: {
-                  text: 'Profit Margins',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return '₱' + val.toFixed(2);
-                    }
-                  }
-                }
-              };
+              action = 'getProfitData';
+              containerId = 'profit-chart';
               break;
-
             case 'transactions':
-              chartOptions = {
-                chart: {
-                  type: 'area', // Line area chart
-                  height: 350,
-                  toolbar: {
-                    show: false // Optionally hide toolbar for clean design
-                  }
-                },
-                series: [{
-                  name: 'Total Transactions',
-                  data: data.map(item => item.y)
-                }],
-                colors: ['#00D1B2'], // Set the line and area color (you can use any color code)
-                fill: {
-                  type: 'gradient', // Use gradient fill for the area under the line
-                  gradient: {
-                    shade: 'light', // Shade of the gradient
-                    gradientToColors: ['#FF9A8B'], // Color at the top of the area
-                    opacityFrom: 0.3, // Opacity of the starting gradient
-                    opacityTo: 0.1, // Opacity of the ending gradient
-                    stops: [0, 100] // Gradient stops
-                  }
-                },
-                xaxis: {
-                  categories: data.map(item => item.x), // Dates from the data
-                  title: {
-                    text: 'Date'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Total Transactions'
-                  }
-                },
-                title: {
-                  text: 'Transactions Over Time',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return val; // Display transaction count
-                    }
-                  }
-                }
-              };
+              action = 'getTransactionsData';
+              containerId = 'transactions-chart';
               break;
-
             case 'fuel':
-              chartOptions = {
-                chart: {
-                  type: 'bar',
-                  height: 350
-                },
-                series: [{
-                  name: 'Fuel Consumption (Liters)',
-                  data: data.map(item => item.y)
-                }],
-                xaxis: {
-                  categories: data.map(item => item.x),
-                  title: {
-                    text: 'Date'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Liters'
-                  }
-                },
-                title: {
-                  text: 'Fuel Consumption Over Time',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return val + ' L';
-                    }
-                  }
-                }
-              };
+              action = 'getFuelData';
+              containerId = 'fuel-chart';
               break;
-
+            case 'truckDistribution': // *** New Case ***
+              action = 'getTruckDistributionData';
+              containerId = 'truck-distribution-chart';
+              break;
             default:
-              chartOptions = {
-                chart: {
-                  type: 'bar',
-                  height: 350
-                },
-                series: [{
-                  name: 'Data',
-                  data: data.map(item => item.y)
-                }],
-                xaxis: {
-                  categories: data.map(item => item.x),
-                  title: {
-                    text: 'Category'
-                  },
-                  labels: {
-                    rotate: -45
-                  }
-                },
-                yaxis: {
-                  title: {
-                    text: 'Value'
-                  }
-                },
-                title: {
-                  text: 'Details',
-                  align: 'center'
-                },
-                tooltip: {
-                  y: {
-                    formatter: function (val) {
-                      return val;
-                    }
-                  }
-                }
-              };
+              console.error('Unknown metric:', metric);
+              return;
           }
 
-          // Create ApexChart
-          let chartContainer = document.getElementById(containerId);
-          let apexChart = new ApexCharts(chartContainer, chartOptions);
-          apexChart.render();
-        })
-        .catch(error => {
-          console.error('Error fetching data for ' + metric + ':', error);
-          let chartContainer = document.getElementById(containerId);
-          chartContainer.innerHTML = '<p>Error loading data.</p>';
+          // Get current filter parameters from the URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const filter = urlParams.get('filter') || 'year'; // Default to 'year' if not set
+          const startDate = urlParams.get('start_date') || '';
+          const endDate = urlParams.get('end_date') || '';
+
+          // Build the AJAX URL
+          let ajaxURL = `home.php?action=${action}&filter=${filter}`;
+          if (filter === 'custom') {
+            ajaxURL += `&start_date=${startDate}&end_date=${endDate}`;
+          }
+
+          // Fetch data via AJAX
+          fetch(ajaxURL)
+            .then(response => response.json())
+            .then(data => {
+                // Prepare data for ApexCharts
+                let chartOptions = {};
+
+                // Configure chart options based on metric
+                switch (metric) {
+                  case 'expenses':
+                    chartOptions = {
+                      chart: {
+                        type: 'line', // Change chart type to line
+                        height: 350
+                      },
+                      stroke: {
+                        curve: 'smooth' // Smooth curve
+                      },
+                      markers: {
+                        size: 4 // Data points shown as circles
+                      },
+                      series: [{
+                          name: 'Salary Amount',
+                          data: data.SalaryAmount.map(item => item.y)
+                        },
+                        {
+                          name: 'Mobile Amount',
+                          data: data.MobileAmount.map(item => item.y)
+                        },
+                        {
+                          name: 'Other Amount',
+                          data: data.OtherAmount.map(item => item.y)
+                        },
+                        {
+                          name: 'Fuel Amount',
+                          data: data.FuelAmount.map(item => item.y)
+                        }
+                      ],
+                      xaxis: {
+                        categories: data.SalaryAmount.map(item => item.x), // Use the date from the first series
+                        title: {
+                          text: 'Date'
+                        },
+                        labels: {
+                          rotate: -45
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Amount (₱)'
+                        }
+                      },
+                      title: {
+                        text: 'Expenses and Fuel Over Time',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return '₱' + val.toFixed(2);
+                          }
+                        }
+                      }
+                    };
+                    break;
+
+                  case 'revenue':
+                    chartOptions = {
+                      chart: {
+                        type: 'line',
+                        height: 350
+                      },
+                      series: [{
+                        name: 'Total Revenue',
+                        data: data.map(item => item.y)
+                      }],
+                      xaxis: {
+                        categories: data.map(item => item.x),
+                        title: {
+                          text: 'Date'
+                        },
+                        labels: {
+                          rotate: -45
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Amount (₱)'
+                        }
+                      },
+                      title: {
+                        text: 'Revenue Trends',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return '₱' + val.toFixed(2);
+                          }
+                        }
+                      }
+                    };
+                    break;
+
+                  case 'profit':
+                    chartOptions = {
+                      chart: {
+                        type: 'area',
+                        height: 350
+                      },
+                      series: [{
+                        name: 'Total Profit',
+                        data: data.map(item => item.y)
+                      }],
+                      xaxis: {
+                        categories: data.map(item => item.x),
+                        title: {
+                          text: 'Date'
+                        },
+                        labels: {
+                          rotate: -45
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Amount (₱)'
+                        }
+                      },
+                      title: {
+                        text: 'Profit Margins',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return '₱' + val.toFixed(2);
+                          }
+                        }
+                      }
+                    };
+                    break;
+
+                  case 'transactions':
+                    chartOptions = {
+                      chart: {
+                        type: 'area', // Line area chart
+                        height: 350,
+                        toolbar: {
+                          show: false // Optionally hide toolbar for clean design
+                        }
+                      },
+                      series: [{
+                        name: 'Total Transactions',
+                        data: data.map(item => item.y)
+                      }],
+                      colors: ['#00D1B2'], // Set the line and area color (you can use any color code)
+                      fill: {
+                        type: 'gradient', // Use gradient fill for the area under the line
+                        gradient: {
+                          shade: 'light', // Shade of the gradient
+                          gradientToColors: ['#FF9A8B'], // Color at the top of the area
+                          opacityFrom: 0.3, // Opacity of the starting gradient
+                          opacityTo: 0.1, // Opacity of the ending gradient
+                          stops: [0, 100] // Gradient stops
+                        }
+                      },
+                      xaxis: {
+                        categories: data.map(item => item.x), // Dates from the data
+                        title: {
+                          text: 'Date'
+                        },
+                        labels: {
+                          rotate: -45
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Total Transactions'
+                        }
+                      },
+                      title: {
+                        text: 'Transactions Over Time',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return val; // Display transaction count
+                          }
+                        }
+                      }
+                    };
+                    break;
+
+                  case 'fuel':
+                    chartOptions = {
+                      chart: {
+                        type: 'bar',
+                        height: 350
+                      },
+                      series: [{
+                        name: 'Fuel Consumption (Liters)',
+                        data: data.map(item => item.y)
+                      }],
+                      xaxis: {
+                        categories: data.map(item => item.x),
+                        title: {
+                          text: 'Date'
+                        },
+                        labels: {
+                          rotate: -45
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Liters'
+                        }
+                      },
+                      title: {
+                        text: 'Fuel Consumption Over Time',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return val + ' L';
+                          }
+                        }
+                      }
+                    };
+                    break;
+
+                  case 'truckDistribution': // *** Truck Distribution Chart ***
+                    chartOptions = {
+                      chart: {
+                        type: 'bar',
+                        height: 350
+                      },
+                      series: [{
+                        name: 'Number of Transactions',
+                        data: data.map(item => item.y) // Use the transaction count for the series
+                      }],
+                      xaxis: {
+                        categories: data.map(item => item.x), // Use PlateNo for x-axis labels
+                        title: {
+                          text: 'Plate Number' // Update x-axis title
+                        },
+                        labels: {
+                          rotate: -45 // Rotate for better visibility
+                        }
+                      },
+                      yaxis: {
+                        title: {
+                          text: 'Number of Transactions'
+                        }
+                      },
+                      title: {
+                        text: 'Truck Usage Over Time',
+                        align: 'center'
+                      },
+                      tooltip: {
+                        y: {
+                          formatter: function(val) {
+                            return val + ' transactions'; // Tooltip showing transaction count
+                          }
+                        }
+                      },
+                      plotOptions: {
+                        bar: {
+                          distributed: true, // Different colors for each bar (optional)
+                          dataLabels: {
+                            position: 'top', // Data labels on top
+                          },
+                        }
+                      },
+                      dataLabels: {
+                        enabled: true,
+                        formatter: function(val) {
+                          return val; // Show transaction count in labels
+                        },
+                        offsetY: -20,
+                        style: {
+                          fontSize: '12px',
+                          colors: ["#304758"] // Optional label color
+                        }
+                      }
+                    };
+                    break;
+                  }
+
+                    // Create ApexChart
+                    let chartContainer = document.getElementById(containerId);
+                    if (!chartContainer) {
+                      console.error('Chart container not found:', containerId);
+                      return;
+                    }
+
+                    // Clear any existing chart to prevent duplicates
+                    chartContainer.innerHTML = '';
+
+                    let apexChart = new ApexCharts(chartContainer, chartOptions);
+                    apexChart.render();
+                });
+            }
         });
-    }
-  });
 </script>
 
 <!-- Include your footer -->
