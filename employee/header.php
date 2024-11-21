@@ -71,7 +71,7 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
       <!-- Start Vertical Layout Sidebar -->
       <div>
         <div class="brand-logo d-flex align-items-center">
-          <a href="../employee/home.php" class="text-nowrap logo-img">
+          <a href="../employee/maintenance.php" class="text-nowrap logo-img">
             <img src="../assets/images/logos/epm-logo-no-bg.png" alt="Logo" />
           </a>
         </div>
@@ -79,29 +79,18 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
         <!-- Dashboard -->
         <nav class="sidebar-nav scroll-sidebar" data-simplebar>
           <ul class="sidebar-menu" id="sidebarnav">
-            <!-- Home -->
-            <li class="nav-small-cap">
-              <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
-              <span class="hide-menu">Menu</span>
-            </li>
             <!-- Dashboard -->
             <li class="sidebar-item">
               <a id="get-url" aria-expanded="false">
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link" href="../employee/home.php" aria-expanded="false">
-                <iconify-icon icon="mdi:home-outline"></iconify-icon>
-                <span class="hide-menu">Home</span>
-              </a>
-            </li>
-
-            <li class="sidebar-item">
-              <a class="sidebar-link" href="../employee/maintenance.php">
+              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'maintenance.php' ? 'active' : ''; ?>" href="../employee/maintenance.php" aria-expanded="false">
                 <iconify-icon icon="mdi:truck-outline"></iconify-icon>
                 <span class="hide-menu">Maintenance</span>
               </a>
             </li>
+
 
           </ul>
         </nav>

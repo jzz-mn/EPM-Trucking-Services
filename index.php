@@ -14,7 +14,7 @@ if (isset($_SESSION['UserID'])) {
       header("Location: ../officer/home.php");
       break;
     case 'Employee':
-      header("Location: ../employee/home.php");
+      header("Location: ../employee/maintenance.php");
       break;
     default:
       // Optional: Handle unknown roles
@@ -215,7 +215,7 @@ function loginUser($userData, $conn)
   if ($userData['Role'] === 'SuperAdmin' || $userData['Role'] === 'Officer') {
     header("Location: officer/home.php");
   } elseif ($userData['Role'] === 'Employee') {
-    header("Location: employee/home.php");
+    header("Location: employee/maintenance.php");
   } else {
     // Handle unknown role
     global $error_message;
