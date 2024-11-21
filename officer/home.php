@@ -164,7 +164,7 @@ if (isset($_GET['action'])) {
         $totalExpense = (float) $row['TotalExpense'];
         $fuelAmount = (float) $row['FuelAmount'];
 
-        $totalRevenue = $rateAmount + $totalExpense;
+        $totalRevenue = $rateAmount;
 
         $data[] = ['x' => $period, 'y' => $totalRevenue];
       }
