@@ -113,81 +113,137 @@ if (isset($_GET['action'])) {
 
 
     case 'getRevenueData':
-      // Fetch revenue trends over time
-      $query = "SELECT Date, SUM(Amount) as RateAmount FROM transactiongroup WHERE Date BETWEEN '$startDateEscaped' AND '$endDateEscaped' GROUP BY Date ORDER BY Date ASC";
-      $result = mysqli_query($conn, $query);
-      $data = [];
-      while ($row = mysqli_fetch_assoc($result)) {
-        // Total Revenue = RateAmount + TotalExpenses
-        // Fetch totalExpenses for the date
-        $date = $row['Date'];
-        $queryExpense = "SELECT IFNULL(SUM(TotalExpense), 0) as TotalExpense FROM expenses WHERE Date = '$date'";
-        $resultExpense = mysqli_query($conn, $queryExpense);
-        $rowExpense = mysqli_fetch_assoc($resultExpense);
-        $totalExpense = $rowExpense['TotalExpense'];
+      // Calculate the date range in days
+      $dateRange = (strtotime($endDateEscaped) - strtotime($startDateEscaped)) / (60 * 60 * 24); // Total days
 
-        $queryFuel = "SELECT IFNULL(SUM(Amount), 0) as FuelAmount FROM fuel WHERE Date = '$date'";
-        $resultFuel = mysqli_query($conn, $queryFuel);
-        $rowFuel = mysqli_fetch_assoc($resultFuel);
-        $fuelAmount = $rowFuel['FuelAmount'];
-
-        $totalExpense += $fuelAmount;
-
-        $totalRevenue = $row['RateAmount'] + $totalExpense;
-
-        $data[] = ['x' => $date, 'y' => (float) $totalRevenue];
-      }
-
-      // Sort data by date
-      usort($data, function ($a, $b) {
-        return strtotime($a['x']) - strtotime($b['x']);
-      });
-
-      echo json_encode($data);
-      exit;
-
-    case 'getProfitData':
-      // Aggregating data by month if too many records
-      $dateRange = (strtotime($endDateEscaped) - strtotime($startDateEscaped)) / (60 * 60 * 24); // Calculate date range in days
-
+      // Determine aggregation level based on date range
       if ($dateRange > 30) {
         // Aggregate by month
-        $query = "SELECT DATE_FORMAT(tg.Date, '%Y-%m') as Month, SUM(tg.Amount) as Revenue, 
-                    IFNULL(SUM(e.TotalExpense),0) + IFNULL(SUM(f.Amount),0) as Expenses
-                    FROM transactiongroup tg
-                    LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
-                    LEFT JOIN fuel f ON e.FuelID = f.FuelID
-                    WHERE tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
-                    GROUP BY Month
-                    ORDER BY Month ASC";
+        $dateFormat = '%Y-%m'; // Year-Month format
+        $groupBy = "DATE_FORMAT(tg.Date, '$dateFormat')";
+        $xLabel = "Month";
       } else {
-        // Fetch data by day
-        $query = "SELECT tg.Date, SUM(tg.Amount) as Revenue, 
-                    IFNULL(SUM(e.TotalExpense),0) + IFNULL(SUM(f.Amount),0) as Expenses
-                    FROM transactiongroup tg
-                    LEFT JOIN expenses e ON tg.ExpenseID = e.ExpenseID
-                    LEFT JOIN fuel f ON e.FuelID = f.FuelID
-                    WHERE tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
-                    GROUP BY tg.Date
-                    ORDER BY tg.Date ASC";
+        // Aggregate by day
+        $dateFormat = '%Y-%m-%d'; // Year-Month-Day format
+        $groupBy = "tg.Date";
+        $xLabel = "Date";
       }
+
+      // SQL Query to aggregate RateAmount, TotalExpense, and FuelAmount
+      $query = "
+          SELECT 
+            $groupBy as Period,
+            SUM(tg.Amount) as RateAmount,
+            IFNULL(SUM(e.TotalExpense), 0) as TotalExpense,
+            IFNULL(SUM(f.Amount), 0) as FuelAmount
+          FROM 
+            transactiongroup tg
+          LEFT JOIN 
+            expenses e ON tg.ExpenseID = e.ExpenseID
+          LEFT JOIN 
+            fuel f ON e.FuelID = f.FuelID
+          WHERE 
+            tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
+          GROUP BY 
+            Period
+          ORDER BY 
+            Period ASC
+        ";
 
       $result = mysqli_query($conn, $query);
-      $data = [];
-
-      while ($row = mysqli_fetch_assoc($result)) {
-        $profit = (float) $row['Revenue'] - ((float) $row['Expenses']);
-        $date = isset($row['Month']) ? $row['Month'] : $row['Date'];
-        $data[] = ['x' => $date, 'y' => $profit];
+      if (!$result) {
+        // Handle query error
+        echo json_encode(['error' => 'Database query failed: ' . mysqli_error($conn)]);
+        exit;
       }
 
-      // Sort data by date
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $period = $row['Period'];
+        $rateAmount = (float) $row['RateAmount'];
+        $totalExpense = (float) $row['TotalExpense'];
+        $fuelAmount = (float) $row['FuelAmount'];
+
+        $totalRevenue = $rateAmount + $totalExpense;
+
+        $data[] = ['x' => $period, 'y' => $totalRevenue];
+      }
+
+      // Sort data by date (already sorted in query, but added for safety)
       usort($data, function ($a, $b) {
         return strtotime($a['x']) - strtotime($b['x']);
       });
 
       echo json_encode($data);
       exit;
+
+
+    case 'getProfitData':
+      // Calculate the date range in days
+      $dateRange = ($endDate && $startDate) ? (strtotime($endDateEscaped) - strtotime($startDateEscaped)) / (60 * 60 * 24) : 0; // Total days
+
+      // Determine aggregation level based on date range
+      if ($dateRange > 30) {
+        // Aggregate by month
+        $dateFormat = '%Y-%m'; // Year-Month format
+        $groupBy = "DATE_FORMAT(tg.Date, '$dateFormat')";
+        $periodLabel = "Month";
+      } else {
+        // Aggregate by day
+        $dateFormat = '%Y-%m-%d'; // Year-Month-Day format
+        $groupBy = "tg.Date";
+        $periodLabel = "Date";
+      }
+
+      // SQL Query to aggregate RateAmount, TotalExpense, and FuelAmount
+      $query = "
+            SELECT 
+                $groupBy as Period,
+                SUM(tg.Amount) as RateAmount,
+                IFNULL(SUM(e.TotalExpense), 0) as TotalExpense,
+                IFNULL(SUM(f.Amount), 0) as FuelAmount
+            FROM 
+                transactiongroup tg
+            LEFT JOIN 
+                expenses e ON tg.ExpenseID = e.ExpenseID
+            LEFT JOIN 
+                fuel f ON e.FuelID = f.FuelID
+            WHERE 
+                tg.Date BETWEEN '$startDateEscaped' AND '$endDateEscaped'
+            GROUP BY 
+                Period
+            ORDER BY 
+                Period ASC
+        ";
+
+      $result = mysqli_query($conn, $query);
+      if (!$result) {
+        // Handle query error
+        echo json_encode(['error' => 'Database query failed: ' . mysqli_error($conn)]);
+        exit;
+      }
+
+      $data = [];
+      while ($row = mysqli_fetch_assoc($result)) {
+        $period = $row['Period'];
+        $rateAmount = (float) $row['RateAmount'];
+        $totalExpense = (float) $row['TotalExpense'];
+        $fuelAmount = (float) $row['FuelAmount'];
+
+        // Correct Profit Calculation: Profit = RateAmount - (TotalExpense + FuelAmount)
+        $profit = ($rateAmount - $totalExpense);
+
+        $data[] = ['x' => $period, 'y' => $profit];
+      }
+
+      // Sort data by date (already sorted in query, but added for safety)
+      usort($data, function ($a, $b) {
+        return strtotime($a['x']) - strtotime($b['x']);
+      });
+
+      echo json_encode($data);
+      exit;
+
 
 
     case 'getTransactionsData':
