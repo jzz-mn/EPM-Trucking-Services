@@ -75,7 +75,7 @@ if (isset($_SESSION['success_message'])) {
                       </div>
                       <script>
                         // Preview selected profile picture in the Add Employee modal
-                        document.getElementById('addProfilePicture').addEventListener('change', function (event) {
+                        document.getElementById('addProfilePicture').addEventListener('change', function(event) {
                           const [file] = event.target.files;
                           if (file) {
                             document.getElementById('previewAdd').src = URL.createObjectURL(file);
@@ -266,7 +266,7 @@ if (isset($_SESSION['success_message'])) {
                       </div>
                       <script>
                         // Preview selected profile picture in the Edit Employee modal
-                        document.getElementById('editProfilePicture').addEventListener('change', function (event) {
+                        document.getElementById('editProfilePicture').addEventListener('change', function(event) {
                           const [file] = event.target.files;
                           if (file) {
                             document.getElementById('previewEdit').src = URL.createObjectURL(file);
@@ -460,7 +460,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 
                 // Fetch the user's profile picture
                 $userImageSrc = '../assets/images/profile/user-1.jpg'; // Default placeholder
-            
+
                 if (!empty($row['UserImage'])) {
                   // Detect the MIME type
                   $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -518,75 +518,70 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     // Get the form reference
     const addEmployeeForm = document.getElementById('addEmployeeForm');
 
-    // Get the modal elements
-    const submissionModal = new bootstrap.Modal(document.getElementById('submissionModal'), {
-      keyboard: false,
-      backdrop: 'static'
-    });
-    const addEmployeeModal = new bootstrap.Modal(document.getElementById('addContactModal')); // Reference to Add Employee modal
-    const modalMessage = document.getElementById('modalMessage');
-    const loadingSpinner = document.getElementById('loadingSpinner'); // Only use this as the success icon
-
-    // Function to change spinner to check icon
-    function changeSpinnerToCheck() {
-      loadingSpinner.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>'; // Replace spinner with checkmark
-    }
-
     // When the form is submitted
-    addEmployeeForm.addEventListener('submit', function (e) {
+    addEmployeeForm.addEventListener('submit', function(e) {
       e.preventDefault(); // Prevent the default form submission
 
-      // Close the Add Employee modal
-      addEmployeeModal.hide();
-
-      // Reset the modal state for loading
-      loadingSpinner.style.display = 'block'; // Ensure spinner is shown on submission
-      modalMessage.textContent = 'Submitting your request, please wait...';
-      modalMessage.style.fontSize = '1.5rem'; // Enlarging the font size
-
-      // Show modal and display "Submitting..." message
-      submissionModal.show();
+      // Show the SweetAlert2 loading dialog
+      Swal.fire({
+        title: 'Submitting Your Request',
+        text: 'Please wait while we process your submission...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading(); // Show loading spinner
+        }
+      });
 
       // Use Fetch API to submit the form via POST request
       const formData = new FormData(addEmployeeForm);
 
       fetch('add_employee.php', {
-        method: 'POST',
-        body: formData,
-      })
+          method: 'POST',
+          body: formData,
+        })
         .then(response => response.json()) // Parse the response as JSON
         .then(data => {
           if (data.success) {
-            // Change the spinner to a checkmark on success
-            changeSpinnerToCheck();
-
-            // Update the message text
-            modalMessage.textContent = data.message;
-            modalMessage.style.fontSize = '1.5rem'; // Keep the text large
-
-            // Redirect to employees.php after 2 seconds
-            setTimeout(() => {
+            // On success, display a success SweetAlert
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: data.message,
+              confirmButtonText: 'OK',
+              timer: 2000, // Automatically close after 2 seconds
+              timerProgressBar: true
+            }).then(() => {
+              // Redirect to employees.php after success
               window.location.href = 'employees.php';
-            }, 2000);
+            });
           } else {
-            // If there's an error, hide the loading spinner and show the error message
-            loadingSpinner.style.display = 'none'; // Hide loading spinner
-            modalMessage.textContent = data.message;
+            // On failure, display an error SweetAlert
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message || 'An unexpected error occurred. Please try again.',
+              confirmButtonText: 'OK'
+            });
           }
         })
         .catch(error => {
           // Handle any unexpected errors
-          loadingSpinner.style.display = 'none'; // Hide loading spinner
-          modalMessage.textContent = 'An error occurred while submitting the form. Please try again.';
           console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Request Failed',
+            text: 'An error occurred while submitting the form. Please try again later.',
+            confirmButtonText: 'OK'
+          });
         });
     });
   });
 </script>
+
 
 <!-- Modal for Edit Submission and Success Message -->
 <div class="modal fade" id="editSubmissionModal" tabindex="-1" aria-labelledby="editSubmissionModalLabel"
@@ -614,10 +609,10 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     // When clicking the edit button, load employee details into the modal
     document.querySelectorAll('[data-bs-target="#editContactModal"]').forEach(button => {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const employeeID = this.getAttribute('data-id');
         fetch(`../officer/fetch_employee.php?id=${employeeID}`)
           .then(response => response.json())
@@ -673,7 +668,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
       editLoadingSpinner.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>'; // Replace spinner with checkmark
     }
 
-    editForm.addEventListener('submit', function (e) {
+    editForm.addEventListener('submit', function(e) {
       e.preventDefault(); // Prevent the form from submitting the traditional way
 
       // Close the Edit Employee Modal (editContactModal) before showing submission modal
@@ -693,9 +688,9 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
       const formData = new FormData(editForm);
 
       fetch('../officer/edit_employee.php', {
-        method: 'POST',
-        body: formData
-      })
+          method: 'POST',
+          body: formData
+        })
         .then(response => response.json())
         .then(data => {
           console.log('Server response:', data);
@@ -729,44 +724,93 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
   });
 </script>
 
+<!-- Include SweetAlert2 -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const resetPasswordButton = document.getElementById('resetPasswordButton');
 
-    resetPasswordButton.addEventListener('click', function () {
-      if (confirm('Are you sure you want to reset the password for this employee?')) {
-        const employeeID = document.getElementById('editEmployeeID').value;
+    resetPasswordButton.addEventListener('click', function() {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to reset the password for this employee?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, reset it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const employeeID = document.getElementById('editEmployeeID').value;
 
-        // Prepare form data with employeeID
-        const formData = new FormData();
-        formData.append('employeeID', employeeID);
-
-        fetch('../officer/resetEmp_password.php', {
-          method: 'POST',
-          body: formData
-        })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              alert('Password reset successfully!');
-              resetPasswordButton.classList.remove('bg-danger-subtle', 'text-danger');
-              resetPasswordButton.classList.add('btn-success', 'text-white');
-              resetPasswordButton.textContent = 'Password Reset';
-              resetPasswordButton.disabled = true; // Disable button after reset
-            } else {
-              alert('Error resetting password: ' + data.message);
+          // Show loading modal
+          Swal.fire({
+            title: 'Resetting Password...',
+            text: 'Please wait while we process your request.',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
             }
-          })
-          .catch(error => {
-            console.error('Error resetting password:', error);
           });
-      }
+
+          // Prepare form data with employeeID
+          const formData = new FormData();
+          formData.append('employeeID', employeeID);
+
+          // Send the fetch request
+          fetch('../officer/resetEmp_password.php', {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              Swal.close(); // Close the loading modal
+              if (data.success) {
+                // Success notification
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Password Reset Successfully!',
+                  text: 'An email has been sent to the employee.',
+                  confirmButtonText: 'OK'
+                });
+
+                // Update button UI
+                resetPasswordButton.classList.remove('bg-danger-subtle', 'text-danger');
+                resetPasswordButton.classList.add('btn-success', 'text-white');
+                resetPasswordButton.textContent = 'Password Reset';
+                resetPasswordButton.disabled = true; // Disable button after reset
+              } else {
+                // Error notification
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error!',
+                  text: data.message || 'An unexpected error occurred.',
+                  confirmButtonText: 'OK'
+                });
+              }
+            })
+            .catch(error => {
+              Swal.close(); // Close the loading modal
+              // Network error notification
+              Swal.fire({
+                icon: 'error',
+                title: 'Request Failed',
+                text: 'An error occurred while processing your request. Please try again later.',
+                confirmButtonText: 'OK'
+              });
+              console.error('Error resetting password:', error);
+            });
+        }
+      });
     });
   });
 </script>
 
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const currentPasswordInput = document.getElementById('editCurrentPasswordInput');
     const newPasswordInput = document.getElementById('editNewPasswordInput');
     const confirmNewPasswordInput = document.getElementById('editConfirmNewPasswordInput');
@@ -822,7 +866,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
     addEmployeeForm.reset(); // This will reset the form fields
     // Remove validation classes
     const formControls = addEmployeeForm.querySelectorAll('.form-control');
-    formControls.forEach(function (control) {
+    formControls.forEach(function(control) {
       control.classList.remove('is-valid', 'is-invalid');
     });
   }
@@ -839,9 +883,9 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 
     // AJAX request to check username
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -863,9 +907,9 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 
     // AJAX request to check email
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -892,11 +936,11 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
 
-    searchInput.addEventListener('input', function () {
+    searchInput.addEventListener('input', function() {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {
@@ -916,7 +960,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('input-search');
     const tableRows = document.querySelectorAll('#employeeTableBody tr');
     const table = document.getElementById('employeeTableBody');
@@ -945,7 +989,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
 
     // Add click event listener to each sortable header
     headers.forEach(header => {
-      header.addEventListener('click', function () {
+      header.addEventListener('click', function() {
         const column = this.getAttribute('data-sort');
 
         // Toggle sorting order if clicking on the same column
@@ -966,7 +1010,7 @@ LEFT JOIN useraccounts ua ON e.EmployeeID = ua.employeeID";
     });
 
     // Search functionality
-    searchInput.addEventListener('input', function () {
+    searchInput.addEventListener('input', function() {
       const searchValue = searchInput.value.toLowerCase();
 
       tableRows.forEach(row => {

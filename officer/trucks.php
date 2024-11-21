@@ -631,25 +631,6 @@
           </div>
         </div>
 
-        <!-- Delete Confirmation Modal -->
-        <div class="modal fade" id="deleteClusterModal" tabindex="-1" aria-labelledby="deleteClusterLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="deleteClusterLabel">Delete Cluster</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                Are you sure you want to delete this cluster?
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteCluster">Delete</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
 
 
 
@@ -1862,72 +1843,137 @@
           button.addEventListener("click", function() {
             const row = this.closest("tr");
             deleteClusterId = row.querySelector("td:first-child").textContent.trim(); // Get UniqueClusterID
-            const deleteModal = new bootstrap.Modal(document.getElementById("deleteClusterModal"));
-            deleteModal.show();
-          });
-        });
 
-        // Confirm deletion
-        document.getElementById("confirmDeleteCluster").addEventListener("click", function() {
-          if (deleteClusterId) {
-            fetch("delete_cluster.php", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `UniqueClusterID=${encodeURIComponent(deleteClusterId)}`,
-              })
-              .then((response) => {
-                if (!response.ok) {
-                  throw new Error(`HTTP error! Status: ${response.status}`);
+            // Show SweetAlert2 confirmation dialog
+            Swal.fire({
+              title: 'Are you sure?',
+              text: "Do you want to delete this cluster? This action cannot be undone.",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, delete it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                // Perform the delete action
+                if (deleteClusterId) {
+                  fetch("delete_cluster.php", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                      },
+                      body: `UniqueClusterID=${encodeURIComponent(deleteClusterId)}`,
+                    })
+                    .then((response) => {
+                      if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                      }
+                      return response.json(); // Parse JSON response
+                    })
+                    .then((data) => {
+                      if (data.success) {
+                        // Show success SweetAlert2
+                        Swal.fire({
+                          icon: 'success',
+                          title: 'Deleted!',
+                          text: data.message || 'The cluster has been deleted successfully.',
+                          confirmButtonText: 'OK',
+                          timer: 2000, // Automatically close after 2 seconds
+                          timerProgressBar: true
+                        }).then(() => {
+                          window.location.reload(); // Reload the page to reflect changes
+                        });
+                      } else {
+                        // Show error SweetAlert2
+                        Swal.fire({
+                          icon: 'error',
+                          title: 'Error',
+                          text: data.message || 'Failed to delete the cluster. Please try again.',
+                          confirmButtonText: 'OK'
+                        });
+                      }
+                    })
+                    .catch((error) => {
+                      console.error("Error:", error);
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Request Failed',
+                        text: 'An error occurred while processing your request. Please try again later.',
+                        confirmButtonText: 'OK'
+                      });
+                    });
                 }
-                return response.json(); // Parse JSON response
-              })
-              .then((data) => {
-                if (data.success) {
-                  // Refresh the page after successful deletion
-                  alert("Cluster deleted successfully.");
-                  window.location.reload(); // Reload the page
-                } else {
-                  alert("Error: " + data.message);
-                }
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-                alert(`An unexpected error occurred: ${error.message}`);
-              });
-          }
+              }
+            });
+          });
         });
       });
     </script>
+
     <script>
-      document.getElementById('addClusterForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form submission
+      document.addEventListener('DOMContentLoaded', function() {
+        // Attach the submit event listener to the form
+        document.getElementById('addClusterForm').addEventListener('submit', function(e) {
+          e.preventDefault(); // Prevent the default form submission
 
-        const formData = new FormData(this);
+          const formData = new FormData(this);
 
-        fetch('add_cluster.php', {
-            method: 'POST',
-            body: formData,
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === 'error') {
-              // Show warning message inside the modal
-              const warningDiv = document.getElementById('clusterWarning');
-              warningDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-              warningDiv.style.display = 'block';
-            } else if (data.status === 'success') {
-              // Show success message and close the modal
-              alert(data.message);
-              location.reload(); // Reload the page
+          // Show loading SweetAlert2
+          Swal.fire({
+            title: 'Submitting Your Cluster',
+            text: 'Please wait while we process your request...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
             }
-          })
-          .catch((error) => {
-            console.error('Error:', error);
           });
+
+          // Use Fetch API to submit the form via POST request
+          fetch('add_cluster.php', {
+              method: 'POST',
+              body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
+              Swal.close(); // Close the loading dialog
+
+              if (data.status === 'error') {
+                // Show error SweetAlert2
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: data.message || 'An unexpected error occurred.',
+                  confirmButtonText: 'OK'
+                });
+              } else if (data.status === 'success') {
+                // Show success SweetAlert2
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Success!',
+                  text: data.message || 'Cluster added successfully.',
+                  confirmButtonText: 'OK',
+                  timer: 2000, // Automatically close after 2 seconds
+                  timerProgressBar: true
+                }).then(() => {
+                  location.reload(); // Reload the page to reflect changes
+                });
+              }
+            })
+            .catch((error) => {
+              // Handle unexpected errors
+              console.error('Error:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Request Failed',
+                text: 'An error occurred while submitting the form. Please try again later.',
+                confirmButtonText: 'OK'
+              });
+            });
+        });
       });
     </script>
+
 
 
 

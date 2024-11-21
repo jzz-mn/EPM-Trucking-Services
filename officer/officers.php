@@ -71,7 +71,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                       </div>
                       <script>
                         // Preview selected profile picture in the Add Officer modal
-                        document.getElementById('addProfilePicture').addEventListener('change', function (event) {
+                        document.getElementById('addProfilePicture').addEventListener('change', function(event) {
                           const [file] = event.target.files;
                           if (file) {
                             document.getElementById('previewAdd').src = URL.createObjectURL(file);
@@ -232,7 +232,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
         }
 
         // Call the function on page load to set the initial state
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
           togglePasswordFields();
         });
       </script>
@@ -276,7 +276,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                       </div>
                       <script>
                         // Preview selected profile picture in the Edit Officer modal
-                        document.getElementById('editProfilePicture').addEventListener('change', function (event) {
+                        document.getElementById('editProfilePicture').addEventListener('change', function(event) {
                           const [file] = event.target.files;
                           if (file) {
                             document.getElementById('previewEdit').src = URL.createObjectURL(file);
@@ -483,7 +483,7 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
               }
               // Fetch the user's profile picture
               $userImageSrc = '../assets/images/profile/user-1.jpg'; // Default placeholder
-          
+
               if (!empty($row['UserImage'])) {
                 // Detect the MIME type
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -520,8 +520,8 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  $(document).ready(function () {
-    $('.edit-button').on('click', function () {
+  $(document).ready(function() {
+    $('.edit-button').on('click', function() {
       var officerID = $(this).data('officerid');
 
       $.ajax({
@@ -531,7 +531,7 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
           officerID: officerID
         },
         dataType: 'json',
-        success: function (data) {
+        success: function(data) {
           if (data.success) {
             // Populate the modal fields
             $('#editOfficerForm input[name="officerID"]').val(data.officer.OfficerID);
@@ -563,45 +563,95 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
             alert('Failed to fetch officer data.');
           }
         },
-        error: function () {
+        error: function() {
           alert('Error in AJAX request.');
         }
       });
     });
 
     // Handle "Reset Password" button click
-    $('#resetPasswordButton').on('click', function () {
-      var userID = $('#editOfficerForm input[name="userID"]').val();
+    const resetPasswordButton = document.getElementById('resetPasswordButton');
 
-      if (confirm('Are you sure you want to reset the password for this officer?')) {
-        // Send AJAX request to reset password
-        $.ajax({
-          url: 'reset_password.php',
-          type: 'POST',
-          dataType: 'json',
-          data: {
-            userID: userID,
-            role: 'Officer' // Indicate that this is an officer account
-          },
-          success: function (data) {
-            if (data.success) {
-              alert('Password reset successfully. An email has been sent to the officer.');
-            } else {
-              alert('Error resetting password: ' + data.message);
+    resetPasswordButton.addEventListener('click', function() {
+      // Confirmation dialog
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to reset the password for this officer?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, reset it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const officerID = document.getElementById('editOfficerForm').querySelector('input[name="officerID"]').value;
+
+          // Show loading modal
+          Swal.fire({
+            title: 'Resetting Password...',
+            text: 'Please wait while we process your request.',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
             }
-          },
-          error: function () {
-            alert('An error occurred while resetting the password.');
-          }
-        });
-      }
+          });
+
+          // Prepare form data with officerID
+          const formData = new FormData();
+          formData.append('officerID', officerID);
+
+          // Send the fetch request
+          fetch('../officer/reset_password.php', {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              Swal.close(); // Close the loading modal
+              if (data.success) {
+                // Success notification
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Password Reset Successfully!',
+                  text: 'An email has been sent to the officer.',
+                  confirmButtonText: 'OK'
+                });
+
+                // Update button UI
+                resetPasswordButton.classList.remove('bg-danger-subtle', 'text-danger');
+                resetPasswordButton.classList.add('btn-success', 'text-white');
+                resetPasswordButton.textContent = 'Password Reset';
+                resetPasswordButton.disabled = true; // Disable button after reset
+              } else {
+                // Error notification
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error!',
+                  text: data.message || 'An unexpected error occurred.',
+                  confirmButtonText: 'OK'
+                });
+              }
+            })
+            .catch(error => {
+              Swal.close(); // Close the loading modal
+              // Network error notification
+              Swal.fire({
+                icon: 'error',
+                title: 'Request Failed',
+                text: 'An error occurred while processing your request. Please try again later.',
+                confirmButtonText: 'OK'
+              });
+              console.error('Error resetting password:', error);
+            });
+        }
+      });
     });
   });
 </script>
 
 <script>
-  $(document).ready(function () {
-    $('#editOfficerForm').submit(function (event) {
+  $(document).ready(function() {
+    $('#editOfficerForm').submit(function(event) {
       event.preventDefault();
       var formData = new FormData(this);
 
@@ -612,7 +662,7 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
         dataType: "json",
         processData: false,
         contentType: false,
-        success: function (response) {
+        success: function(response) {
           if (response.user_message) {
             $('#editContactModal').modal('hide'); // Hide the modal if success
             window.location.href = "officers.php?message=Officer updated successfully"; // Redirect with success message
@@ -620,7 +670,7 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
             alert('Failed to update: ' + response.error);
           }
         },
-        error: function () {
+        error: function() {
           alert('Error updating officer.');
         }
       });
@@ -638,9 +688,9 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
 
     // AJAX request to check username
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const usernameInput = document.getElementById('usernameInput');
@@ -662,9 +712,9 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
 
     // AJAX request to check email
     fetch('check_user.php', {
-      method: 'POST',
-      body: formData,
-    })
+        method: 'POST',
+        body: formData,
+      })
       .then(response => response.text())
       .then(data => {
         const emailInput = document.getElementById('emailInput');
@@ -711,11 +761,11 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
 </script>
 
 <script>
-  document.getElementById('input-search').addEventListener('keyup', function () {
+  document.getElementById('input-search').addEventListener('keyup', function() {
     var searchTerm = this.value.toLowerCase();
     var tableRows = document.querySelectorAll('tbody tr');
 
-    tableRows.forEach(function (row) {
+    tableRows.forEach(function(row) {
       var nameCell = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
       var positionCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
       var statusCell = row.querySelector('td:nth-child(3)').textContent.toLowerCase();

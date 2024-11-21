@@ -189,6 +189,9 @@ if (!empty($sql_all_notifications)) {
 
     <!-- Icon-->
     <link rel="shortcut icon" type="image/png" href="../assetsEPM/logos/epm-logo.png" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <!-- Core Css -->
     <link rel="stylesheet" href="../assets/css/styles.css" />
@@ -257,7 +260,8 @@ if (!empty($sql_all_notifications)) {
                                     return isset($_SESSION['Role']) && $_SESSION['Role'] === $role;
                                 }
                                 ?>
-                                <?php if (isUserRole('SuperAdmin')): // Updated condition to include 'Officer' ?>
+                                <?php if (isUserRole('SuperAdmin')): // Updated condition to include 'Officer' 
+                                ?>
                                     <li class="sidebar-item">
                                         <a class="sidebar-link" href="../officer/officers.php">
                                             <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>
@@ -311,7 +315,8 @@ if (!empty($sql_all_notifications)) {
                                 <span class="hide-menu">Invoice</span>
                             </a>
                         </li>
-                        <?php if (isUserRole('SuperAdmin') || isUserRole('Officer')): // Updated condition to include 'Officer' ?>
+                        <?php if (isUserRole('SuperAdmin') || isUserRole('Officer')): // Updated condition to include 'Officer' 
+                        ?>
                             <li class="sidebar-item">
                                 <a class="sidebar-link" href="../officer/activity-logs.php">
                                     <iconify-icon icon="mdi:history"></iconify-icon>
@@ -874,7 +879,8 @@ if (!empty($sql_all_notifications)) {
                                     <!-- ------------------------------- -->
                                     <!-- start notification Dropdown (Horizontal Layout) -->
                                     <!-- ------------------------------- -->
-                                    <?php if ($isSuperAdmin || $isOfficer): // Only show notifications if user has access ?>
+                                    <?php if ($isSuperAdmin || $isOfficer): // Only show notifications if user has access 
+                                    ?>
                                         <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
                                             <a class="nav-link position-relative notification-icon"
                                                 href="javascript:void(0)" id="notificationDropdownHorizontal"
@@ -1005,7 +1011,7 @@ if (!empty($sql_all_notifications)) {
                 </div>
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
                 <script>
-                    document.addEventListener('DOMContentLoaded', function () {
+                    document.addEventListener('DOMContentLoaded', function() {
                         // Function to mark notifications as seen
                         function markNotificationsAsSeen(maxLogID, dropdownId) {
                             $.ajax({
@@ -1015,7 +1021,7 @@ if (!empty($sql_all_notifications)) {
                                     action: 'mark_seen',
                                     last_seen_logid: maxLogID
                                 },
-                                success: function (response) {
+                                success: function(response) {
                                     try {
                                         var res = JSON.parse(response);
                                         if (res.status === 'success') {
@@ -1031,36 +1037,37 @@ if (!empty($sql_all_notifications)) {
                                         console.error('Invalid JSON response');
                                     }
                                 },
-                                error: function () {
+                                error: function() {
                                     console.error('Failed to mark notifications as seen.');
                                 }
                             });
                         }
 
-                        <?php if ($isSuperAdmin || $isOfficer): // Only add event listeners if the user has access ?>
+                        <?php if ($isSuperAdmin || $isOfficer): // Only add event listeners if the user has access 
+                        ?>
                             // Handle click on notification icon (Vertical Layout)
-                            $('#notificationDropdown').on('click', function () {
+                            $('#notificationDropdown').on('click', function() {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdown');
                                 <?php endif; ?>
                             });
 
                             // Handle hover on notification icon (Vertical Layout)
-                            $('#notificationDropdown').on('mouseenter', function () {
+                            $('#notificationDropdown').on('mouseenter', function() {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdown');
                                 <?php endif; ?>
                             });
 
                             // Handle click on notification icon (Horizontal Layout)
-                            $('#notificationDropdownHorizontal').on('click', function () {
+                            $('#notificationDropdownHorizontal').on('click', function() {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdownHorizontal');
                                 <?php endif; ?>
                             });
 
                             // Handle hover on notification icon (Horizontal Layout)
-                            $('#notificationDropdownHorizontal').on('mouseenter', function () {
+                            $('#notificationDropdownHorizontal').on('mouseenter', function() {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdownHorizontal');
                                 <?php endif; ?>
@@ -1073,7 +1080,7 @@ if (!empty($sql_all_notifications)) {
 
                 <script>
                     // Load theme preference from localStorage
-                    document.addEventListener("DOMContentLoaded", function () {
+                    document.addEventListener("DOMContentLoaded", function() {
                         const savedTheme = localStorage.getItem("theme");
                         if (savedTheme) {
                             document.documentElement.setAttribute("data-bs-theme", savedTheme);
@@ -1107,7 +1114,7 @@ if (!empty($sql_all_notifications)) {
                         document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
                         document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
                     }
-                    document.addEventListener("DOMContentLoaded", function () {
+                    document.addEventListener("DOMContentLoaded", function() {
                         const savedTheme = localStorage.getItem("theme");
                         if (savedTheme) {
                             document.documentElement.setAttribute("data-bs-theme", savedTheme);
@@ -1158,7 +1165,6 @@ if (!empty($sql_all_notifications)) {
                             }
                         });
                     }
-
                 </script>
 
                 <?php
@@ -1172,7 +1178,7 @@ if (!empty($sql_all_notifications)) {
                         // Clear theme preference from localStorage
                         localStorage.removeItem("theme");
                         <?php $_SESSION['reset_theme'] = false; // Reset the flag 
-                            ?>
+                        ?>
                     <?php endif; ?>
                 </script>
 
