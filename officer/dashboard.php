@@ -72,20 +72,9 @@ if (!$resultTotalExpense) {
 $rowTotalExpense = mysqli_fetch_assoc($resultTotalExpense);
 $totalExpense = $rowTotalExpense['TotalExpense'];
 
-// Get total amount from fuel table
-$queryFuelAmount = "SELECT IFNULL(SUM(Amount), 0) AS FuelAmount FROM fuel $fuelWhere";
-$resultFuelAmount = mysqli_query($conn, $queryFuelAmount);
-if (!$resultFuelAmount) {
-    die("Query Failed (FuelAmount): " . mysqli_error($conn));
-}
-$rowFuelAmount = mysqli_fetch_assoc($resultFuelAmount);
-$fuelAmount = $rowFuelAmount['FuelAmount'];
-
-// Calculate total expenses
-$totalExpenses = $totalExpense + $fuelAmount;
 
 // Format the value for display
-$formattedExpenses = number_format($totalExpenses, 2);
+$formattedExpenses = number_format($totalExpense, 2);
 
 // --- Total Revenue Calculation ---
 
@@ -98,14 +87,14 @@ if (!$resultRateAmount) {
 $rowRateAmount = mysqli_fetch_assoc($resultRateAmount);
 $rateAmount = $rowRateAmount['RateAmount'];
 
-$totalRevenue = $rateAmount + $totalExpenses;
+$totalRevenue = $rateAmount;
 $formattedRevenue = number_format($totalRevenue, 2);
 
 
 // --- Total Profit Calculation ---
 
 // Profit = Revenue - Expenses
-$totalProfit = $totalRevenue - $totalExpenses;
+$totalProfit = ($totalRevenue - $totalExpense);
 $formattedProfit = number_format($totalProfit, 2);
 
 // --- Total Transactions ---
