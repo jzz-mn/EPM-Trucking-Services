@@ -204,7 +204,7 @@ include '../includes/db_connection.php';
                     });
 
                     function fetchRevenueForecast() {
-                        fetch('https://epm-analytics-13715bf8762f.herokuapp.com/predict_finance', { // Updated URL
+                        fetch('http://192.168.1.166:5000/predict_finance', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
