@@ -155,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($stmtUser->execute()) {
             // Send activation email
-            $activationLink = "https://epm-trucking-services-97f7106aa5cc.herokuapp.com/activate_account.php?token=$activationToken";
+            $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
 
             // Configure PHPMailer
             $mail = new PHPMailer(true);

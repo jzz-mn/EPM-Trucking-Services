@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           $updateStmt->bind_param("ssi", $token, $tokenExpiration, $user['UserID']);
           if ($updateStmt->execute()) {
             // Send password reset email
-            $resetLink = "https://epm-trucking-services-97f7106aa5cc.herokuapp.com/login/reset_password.php?token=$token";
+            $resetLink = "http://localhost/EPM-Trucking-Services/login/reset_password.php?token=$token";
 
             $mail = new PHPMailer(true);
             try {
