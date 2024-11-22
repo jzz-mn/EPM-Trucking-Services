@@ -7,7 +7,7 @@ from sqlalchemy.sql import text
 # Load the saved maintenance model
 model = joblib.load('maintenance_model.joblib')  # Updated model filename
 
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+DATABASE_URI = 'mysql://p7apqmgbef3tu2d6:qi0il5aezrqpsji6@ixnzh1cxch6rtdrx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/lnm4m0erp17734x3'
 engine = create_engine(DATABASE_URI)
 
 def calculate_features(truck_id, year, month):
