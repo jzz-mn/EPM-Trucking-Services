@@ -294,7 +294,7 @@ function handleFailedLoginAttempt($userData, &$error_message, $conn)
                   <img src="assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20" alt="Logo-Dark" />
                 </a>
 
-                <h2 class="mb-2 mt-4 fs-7 fw-bolder">Test Sign In</h2>
+                <h2 class="mb-2 mt-4 fs-7 fw-bolder">Sign In</h2>
 
                 <!-- Displaying messages based on success or error -->
                 <p class="mb-9 <?php echo (!empty($error_message)) ? 'text-danger' : ''; ?>">
