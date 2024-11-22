@@ -32,7 +32,7 @@ except Exception as e:
     maintenance_model = None
 
 # Database setup
-DATABASE_URI = 'mysql://p7apqmgbef3tu2d6:qi0il5aezrqpsji6@ixnzh1cxch6rtdrx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/lnm4m0erp17734x3'
+DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
 engine = create_engine(DATABASE_URI)
 
 
