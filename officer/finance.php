@@ -168,11 +168,10 @@ include '../includes/db_connection.php';
               <div class="table-controls mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="searchBar" class="form-control" placeholder="Search..."
-                      onkeyup="filterTable()" />
+                    <input type="text" id="searchBar" class="form-control" placeholder="Search..." />
                   </div>
                   <div class="col-md-4 text-end">
-                    <select id="rowsPerPage" class="form-select w-auto d-inline" onchange="changeRowsPerPage()">
+                    <select id="rowsPerPage" class="form-select w-auto d-inline">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
                       <option value="20">20 rows</option>
@@ -194,39 +193,7 @@ include '../includes/db_connection.php';
                         <th>Action</th>
                       </tr>
                     </thead>
-                    <tbody id="tableBody">
-                      <?php
-                      include '../includes/db_connection.php';
-
-                      // Fetch data from the expenses table
-                      $query = "SELECT * FROM expenses ORDER BY ExpenseID DESC";
-                      $result = mysqli_query($conn, $query);
-
-                      if (mysqli_num_rows($result) > 0) {
-                        while ($row = mysqli_fetch_assoc($result)) {
-                          // Prepare row data as JSON to be used in JavaScript for the modal
-                          $rowJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
-                          echo "<tr>";
-                          echo "<td>" . $row['ExpenseID'] . "</td>";
-                          echo "<td>" . $row['Date'] . "</td>";
-                          echo "<td>" . $row['SalaryAmount'] . "</td>";
-                          echo "<td>" . $row['MobileAmount'] . "</td>";
-                          echo "<td>" . $row['OtherAmount'] . "</td>";
-                          echo "<td>" . $row['TotalExpense'] . "</td>";
-                          echo "<td>";
-                          // Edit button inside the table row, opens a modal and populates form with selected row data
-                          echo "<a href='#' class='me-3 text-primary' data-bs-toggle='modal' data-bs-target='#editFuelExpenseModal' onclick='populateExpenseEditForm(" . $rowJson . ");'><i class='fs-4 ti ti-edit'></i></a>";
-                          // Delete button (example)
-                          echo "</td>";
-                          echo "</tr>";
-                        }
-                      } else {
-                        echo "<tr><td colspan='7'>No records found</td></tr>";
-                      }
-                      mysqli_close($conn);
-                      ?>
-
-                    </tbody>
+                    <tbody id="tableBody"></tbody>
                   </table>
                 </div>
                 <div
@@ -944,6 +911,185 @@ include '../includes/db_connection.php';
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      const tableBody = document.getElementById("tableBody");
+      const rowsPerPageSelect = document.getElementById("rowsPerPage");
+      const searchBar = document.getElementById("searchBar");
+      const paginationNumbers = document.getElementById("paginationNumbers");
+
+      let currentPage = 1;
+      let rowsPerPage = parseInt(rowsPerPageSelect.value);
+      let totalRecords = 0;
+
+      function loadTableData(page = 1, rowsPerPage = 10, search = "") {
+        const offset = (page - 1) * rowsPerPage;
+
+        fetch(`fetch_expenses.php?limit=${rowsPerPage}&offset=${offset}&search=${encodeURIComponent(search)}`)
+          .then((response) => response.json())
+          .then(({
+            data,
+            total
+          }) => {
+            totalRecords = total;
+
+            // Dynamically update totalPages
+            totalPages = Math.ceil(totalRecords / rowsPerPage);
+            document.getElementById("totalPages").textContent = totalPages;
+
+            if (data.length > 0) {
+              tableBody.innerHTML = ""; // Clear the table
+              data.forEach((row) => {
+                const tableRow = document.createElement("tr");
+                tableRow.innerHTML = `
+            <td>${row.ExpenseID}</td>
+            <td>${row.Date}</td>
+            <td>${row.SalaryAmount}</td>
+            <td>${row.MobileAmount}</td>
+            <td>${row.OtherAmount}</td>
+            <td>${row.TotalExpense}</td>
+            <td>
+              <a href="#" class="me-3 text-primary" data-bs-toggle="modal"
+                data-bs-target="#editFuelExpenseModal" onclick="populateExpenseEditForm(${JSON.stringify(row)})">
+                <i class="fs-4 ti ti-edit"></i>
+              </a>
+            </td>
+          `;
+                tableBody.appendChild(tableRow);
+              });
+
+              updatePagination(); // Update pagination
+            } else {
+              tableBody.innerHTML = "<tr><td colspan='7'>No records found</td></tr>";
+              paginationNumbers.innerHTML = ""; // Clear pagination
+            }
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      }
+
+
+      function updatePagination() {
+        paginationNumbers.innerHTML = ""; // Clear pagination
+        const totalPages = Math.ceil(totalRecords / rowsPerPage);
+
+        for (let i = 1; i <= totalPages; i++) {
+          const pageItem = document.createElement("li");
+          pageItem.classList.add("page-item");
+          if (i === currentPage) pageItem.classList.add("active");
+
+          const pageLink = document.createElement("button");
+          pageLink.classList.add("page-link");
+          pageLink.textContent = i;
+
+          pageLink.onclick = () => {
+            currentPage = i;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          };
+
+          pageItem.appendChild(pageLink);
+          paginationNumbers.appendChild(pageItem);
+        }
+      }
+
+      rowsPerPageSelect.addEventListener("change", () => {
+        rowsPerPage = parseInt(rowsPerPageSelect.value);
+        currentPage = 1; // Reset to the first page
+        loadTableData(currentPage, rowsPerPage, searchBar.value);
+      });
+
+      searchBar.addEventListener("input", () => {
+        currentPage = 1; // Reset to the first page
+        loadTableData(currentPage, rowsPerPage, searchBar.value);
+      });
+
+      loadTableData(currentPage, rowsPerPage); // Initial load
+
+      function updatePagination() {
+        paginationNumbers.innerHTML = ""; // Clear existing pagination numbers
+
+        totalPages = Math.ceil(totalRecords / rowsPerPage); // Ensure totalPages is calculated
+        document.getElementById("totalPages").textContent = totalPages; // Update the span
+
+        const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5; // Adjust visible pages for mobile view
+        const halfVisible = Math.floor(maxVisiblePages / 2);
+
+        let startPage = Math.max(currentPage - halfVisible, 1);
+        let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+
+        // Adjust if near start or end
+        if (endPage - startPage + 1 < maxVisiblePages) {
+          startPage = Math.max(endPage - maxVisiblePages + 1, 1);
+        }
+
+        // Add First and Previous Buttons (<< and <)
+        paginationNumbers.appendChild(
+          createPaginationItem("«", currentPage === 1, () => {
+            currentPage = 1;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          })
+        );
+
+        paginationNumbers.appendChild(
+          createPaginationItem("‹", currentPage === 1, () => {
+            currentPage--;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          })
+        );
+
+        // Add numbered page buttons
+        for (let i = startPage; i <= endPage; i++) {
+          const pageItem = document.createElement("li");
+          pageItem.classList.add("page-item");
+          if (i === currentPage) pageItem.classList.add("active");
+
+          const pageLink = document.createElement("button");
+          pageLink.classList.add("page-link");
+          pageLink.textContent = i;
+
+          pageLink.onclick = () => {
+            currentPage = i;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          };
+
+          pageItem.appendChild(pageLink);
+          paginationNumbers.appendChild(pageItem);
+        }
+
+        // Add Next and Last Buttons (> and >>)
+        paginationNumbers.appendChild(
+          createPaginationItem("›", currentPage === totalPages, () => {
+            currentPage++;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          })
+        );
+
+        paginationNumbers.appendChild(
+          createPaginationItem("»", currentPage === totalPages, () => {
+            currentPage = totalPages;
+            loadTableData(currentPage, rowsPerPage, searchBar.value);
+          })
+        );
+      }
+
+      function createPaginationItem(label, isDisabled, onClick) {
+        const pageItem = document.createElement("li");
+        pageItem.classList.add("page-item");
+        if (isDisabled) pageItem.classList.add("disabled");
+
+        const pageLink = document.createElement("button");
+        pageLink.classList.add("page-link");
+        pageLink.textContent = label;
+
+        if (!isDisabled) pageLink.onclick = onClick;
+
+        pageItem.appendChild(pageLink);
+        return pageItem;
+      }
+
+
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
       const theme = localStorage.getItem("theme") || "light";
       document.documentElement.setAttribute("data-bs-theme", theme);
       document.body.classList.toggle("dark-mode", theme === "dark");
@@ -968,19 +1114,65 @@ include '../includes/db_connection.php';
 
 
   <style>
-    th {
+    .dark-mode .pagination .page-item .page-link {
+      /* Dark background for pagination items */
+      color: #fff;
+      /* Light text for readability */
+    }
+
+    .dark-mode .pagination .page-item.active .page-link {
+      background-color: #0d6efd;
+      /* Highlight color for active page */
+      color: #fff;
+    }
+
+    .dark-mode .pagination .page-link:hover {
+      background-color: #555;
+      /* Slightly lighter on hover */
+    }
+
+    .sortable {
       cursor: pointer;
     }
 
-    /* Adding arrow after the column header text */
     .ascending::after {
       content: ' ↑';
-      /* Unicode for up arrow */
     }
 
     .descending::after {
       content: ' ↓';
-      /* Unicode for down arrow */
+    }
+
+    table td,
+    table th {
+      min-width: 100px;
+      /* Adjust as needed */
+      max-width: 200px;
+      /* Adjust based on your design */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pagination .page-item .page-link {
+      min-width: 35px;
+      height: 35px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      color: #000;
+      margin: 0 2px;
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: #0d6efd;
+      color: #fff;
+      border-radius: 50%;
+    }
+
+    .pagination .page-link:hover {
+      background-color: #e9ecef;
     }
   </style>
 
