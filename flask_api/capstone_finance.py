@@ -11,7 +11,7 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_absolute_percent
 import joblib
 
 # Database connection using SQLAlchemy
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
+DATABASE_URI = 'mysql://p7apqmgbef3tu2d6:qi0il5aezrqpsji6@ixnzh1cxch6rtdrx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/lnm4m0erp17734x3'
 #DATABASE_URI = 'mysql://yomcgjllbxmlasdo:vksqeuuooyotal92@u0zbt18wwjva9e0v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/kbapnyzlylrbyc47'
 engine = create_engine(DATABASE_URI)
 
