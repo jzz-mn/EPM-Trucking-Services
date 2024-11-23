@@ -1,22 +1,32 @@
 <?php
 session_start();
-include 'header.php';
+include '../officer/header.php';
+include '../includes/db_connection.php';
 ?>
 
-<link href="../assets/libs/apexcharts/dist/apexcharts.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
+    rel="stylesheet">
 
 <div class="body-wrapper">
     <div class="container-fluid">
-        <!-- Page Title -->
-        <div class="card card-body py-3 mb-4">
+        <?php
+        // Including sidebar if it exists
+        $sidebar_path = '../officer/sidebar.php';
+        if (file_exists($sidebar_path)) {
+            include $sidebar_path;
+        } else {
+            echo "<!-- Sidebar not found at $sidebar_path -->";
+        }
+        ?>
+        <div class="card card-body py-3">
             <div class="row align-items-center">
                 <div class="col-12">
                     <div class="d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">Finance Forecasting</h4>
+                        <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
                         <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item">
-                                    <a href="../officer/home.php" class="text-muted text-decoration-none">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item d-flex align-items-center">
+                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                                         <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                                     </a>
                                 </li>
@@ -27,498 +37,557 @@ include 'header.php';
             </div>
         </div>
 
-        <!-- Summary Cards Row -->
-        <div class="row mb-4">
-            <!-- Revenue Summary Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h6 class="card-title mb-0">Revenue Forecast</h6>
-                            <div class="accuracy-badge">
-                                <span class="badge bg-success revenue-mae">Loading...</span>
+        <h5 class="border-bottom py-2 px-4 mb-4">Finances</h5>
+        <div class="container-fluid p-0">
+            <div class="row">
+
+                <!-- Monthly and Yearly Trends Card -->
+                <div class="col-lg-6 mb-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="card-title mb-0">Monthly and Yearly Trends</h5>
+
+                                <!-- Year Dropdown Filter in the card -->
+                                <div class="dropdown">
+                                    <select id="yearFilter" class="form-select form-select-sm"
+                                        onchange="fetchTrendsData()" style="width: auto;">
+                                        <?php
+                                        // Determine the minimum year from both the invoices and expenses tables
+                                        $minYearQuery = "
+                            SELECT MIN(Year) as MinYear FROM (
+                                SELECT MIN(YEAR(BillingStartDate)) AS Year FROM invoices
+                                UNION
+                                SELECT MIN(YEAR(Date)) AS Year FROM expenses
+                            ) as YearRange";
+                                        $minYearResult = $conn->query($minYearQuery);
+                                        $minYearRow = $minYearResult->fetch_assoc();
+                                        $minYear = $minYearRow['MinYear'] ?? date('Y');
+
+                                        // Set the current year as the maximum year
+                                        $currentYear = date('Y');
+
+                                        // Populate dropdown from the minimum year to the current year
+                                        for ($year = $minYear; $year <= $currentYear; $year++) {
+                                            echo "<option value='$year'>$year</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
                             </div>
+                            <p class="card-subtitle mb-4">Revenue, Expenses, and Profit</p>
+                            <canvas id="monthlyYearlyTrendsChart" height="120"></canvas>
                         </div>
-                        <h4 class="mb-0 revenue-total">₱0.00</h4>
-                        <small class="text-muted">Predicted Monthly Average</small>
                     </div>
                 </div>
-            </div>
 
-            <!-- Expenses Summary Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h6 class="card-title mb-0">Expenses Forecast</h6>
-                            <div class="accuracy-badge">
-                                <span class="badge bg-primary expense-mae">Loading...</span>
-                            </div>
+
+                <script>
+                    // Initialize the chart
+                    let monthlyYearlyTrendsChart;
+
+                    // Function to fetch data based on the selected year
+                    function fetchTrendsData() {
+                        const selectedYear = document.getElementById('yearFilter').value;
+
+                        // AJAX request to get data for the selected year
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', `fetch_trends_data.php?year=${selectedYear}`, true);
+                        xhr.onload = function () {
+                            if (this.status === 200) {
+                                const data = JSON.parse(this.responseText);
+                                if (data && data.labels.length > 0) {
+                                    updateChart(data.labels, data.revenues, data.expenses, data.profits);
+                                } else {
+                                    alert('No data found for the selected year. Please choose another year.');
+                                }
+                            } else {
+                                console.error('Failed to fetch data');
+                            }
+                        };
+                        xhr.send();
+                    }
+
+                    // Function to update the chart with new data
+                    function updateChart(labels, revenues, expenses, profits) {
+                        if (monthlyYearlyTrendsChart) {
+                            monthlyYearlyTrendsChart.destroy();
+                        }
+
+                        const ctx = document.getElementById('monthlyYearlyTrendsChart').getContext('2d');
+                        monthlyYearlyTrendsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Revenue',
+                                    data: revenues,
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    fill: false,
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'Expenses',
+                                    data: expenses,
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    fill: false,
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'Profit',
+                                    data: profits,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    fill: false,
+                                    tension: 0.3
+                                }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    x: {
+                                        beginAtZero: false,
+                                        title: {
+                                            display: true,
+                                            text: 'Months'
+                                        },
+                                        ticks: {
+                                            callback: function (value, index) {
+                                                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                                                return months[index];
+                                            }
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Amount'
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return value.toLocaleString(); // Format with commas
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top'
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Initial fetch for the current year's data
+                    document.addEventListener('DOMContentLoaded', function () {
+                        fetchTrendsData();
+                    });
+                </script>
+
+                <!-- Revenue Forecast Card -->
+                <div class="col-lg-6 mb-5">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Revenue Forecast</h5>
+                            <p class="card-subtitle mb-0">Projected monthly revenue trends for the next 6 months</p>
+                            <canvas id="revenueForecastChart" width="400" height="200"></canvas>
                         </div>
-                        <h4 class="mb-0 expense-total">₱0.00</h4>
-                        <small class="text-muted">Predicted Monthly Average</small>
                     </div>
                 </div>
-            </div>
 
-            <!-- Profit Summary Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h6 class="card-title mb-0">Profit Forecast</h6>
-                            <div class="accuracy-badge">
-                                <span class="badge bg-warning profit-mae">Loading...</span>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        fetchRevenueForecast();
+                    });
+
+                    function fetchRevenueForecast() {
+                        fetch('http://127.0.0.1:5000/predict_finance', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                months: 6
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(err => {
+                                        throw new Error(err.error || `Server error: ${response.statusText}`);
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log("Forecast Data Fetched:", data);
+
+                                // Check if the data has the forecast field
+                                if (!data.forecast || !Array.isArray(data.forecast)) {
+                                    throw new Error('Invalid data format received from server');
+                                }
+
+                                const labels = data.forecast.map(item => item.month);
+                                const forecastedRevenue = data.forecast.map(item => item.predicted_revenue);
+
+                                renderRevenueForecastChart(labels, forecastedRevenue);
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                const canvas = document.getElementById('revenueForecastChart');
+                                const ctx = canvas.getContext('2d');
+                                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                ctx.font = '14px Arial';
+                                ctx.fillStyle = 'red';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(`Error: ${error.message}`, canvas.width / 2, canvas.height / 2);
+                            });
+                    }
+
+                    let revenueForecastChart;
+
+                    function renderRevenueForecastChart(labels, forecastData) {
+                        const ctx = document.getElementById('revenueForecastChart').getContext('2d');
+                        if (revenueForecastChart) {
+                            revenueForecastChart.destroy();
+                        }
+
+                        revenueForecastChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Forecasted Revenue',
+                                    data: forecastData,
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    fill: false,
+                                    borderDash: [5, 5]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Months'
+                                        }
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Revenue'
+                                        },
+                                        beginAtZero: true
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top'
+                                    }
+                                }
+                            }
+                        });
+                    }
+                </script>
+
+
+                <!-- Top Expenses Card -->
+                <div class="col-lg-6">
+                    <div class="card bg-secondary-subtle overflow-hidden shadow-none">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="card-title">Top 10 Expenses</h5>
+
+                                <!-- Year Dropdown Filter for Top Expenses -->
+                                <div class="dropdown">
+                                    <?php
+                                    // Determine the minimum year from the expenses and fuel tables
+                                    $minYearQuery = "
+            SELECT MIN(Year) as MinYear FROM (
+              SELECT MIN(YEAR(Date)) AS Year FROM expenses
+              UNION
+              SELECT MIN(YEAR(Date)) AS Year FROM fuel
+            ) as YearRange";
+                                    $minYearResult = $conn->query($minYearQuery);
+                                    $minYearRow = $minYearResult->fetch_assoc();
+                                    $minYear = $minYearRow['MinYear'] ?? date('Y');
+
+                                    // Set the current year as the maximum year
+                                    $currentYear = date('Y');
+                                    ?>
+                                    <select id="topExpensesYearFilter" class="form-select form-select-sm"
+                                        onchange="fetchTopExpensesData()" style="width: auto;">
+                                        <?php
+                                        // Populate dropdown from the minimum year to the current year
+                                        for ($year = $minYear; $year <= $currentYear; $year++) {
+                                            echo "<option value='$year'>$year</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="card-subtitle mb-4">Overview of the highest cost drivers including fuel</p>
+                            <canvas id="topExpensesChart" height="120"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    // Initialize the chart for top expenses
+                    let topExpensesChart;
+
+                    // Function to fetch top expenses data based on the selected year
+                    function fetchTopExpensesData() {
+                        const selectedYear = document.getElementById('topExpensesYearFilter').value;
+
+                        // AJAX request to get data for the selected year
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', `fetch_top_expenses_data.php?year=${selectedYear}`, true);
+                        xhr.onload = function () {
+                            if (this.status === 200) {
+                                const data = JSON.parse(this.responseText);
+                                updateTopExpensesChart(data.labels, data.datasets);
+                            } else {
+                                console.error('Failed to fetch top expenses data');
+                            }
+                        };
+                        xhr.send();
+                    }
+
+                    // Function to update the top expenses chart with new data
+                    function updateTopExpensesChart(labels, datasets) {
+                        if (topExpensesChart) {
+                            topExpensesChart.destroy();
+                        }
+
+                        const ctx = document.getElementById('topExpensesChart').getContext('2d');
+                        topExpensesChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: datasets.map((dataset, index) => ({
+                                    label: dataset.label,
+                                    data: dataset.data,
+                                    backgroundColor: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 0.6)`,
+                                    borderColor: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 1)`,
+                                    borderWidth: 1
+                                }))
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (tooltipItem) {
+                                                return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toLocaleString(); // Format with commas
+                                            }
+                                        }
+                                    },
+                                    legend: {
+                                        display: true,
+                                        position: 'top'
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        stacked: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Months'
+                                        }
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Total Expense Amount'
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return value.toLocaleString(); // Add commas for readability
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Initial fetch for the current year's data
+                    document.addEventListener('DOMContentLoaded', function () {
+                        fetchTopExpensesData();
+                    });
+                </script>
+
+                <!-- Fuel Expenses vs Revenue Card -->
+                <div class="col-lg-6">
+                    <div class="card bg-danger-subtle overflow-hidden shadow-none">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="card-title mb-0">Fuel Expenses vs. Revenue</h5>
+
+                                <!-- Year Filter Dropdown -->
+                                <div>
+                                    <select id="fuelRevenueYearFilter" class="form-select form-select-sm"
+                                        onchange="fetchFuelRevenueData()" style="width: auto;">
+                                        <?php
+                                        // Determine the minimum year from the fuel and invoices tables
+                                        $minYearQuery = "
+                  SELECT MIN(Year) as MinYear FROM (
+                    SELECT MIN(YEAR(Date)) AS Year FROM fuel
+                    UNION
+                    SELECT MIN(YEAR(BillingStartDate)) AS Year FROM invoices
+                  ) as YearRange";
+                                        $minYearResult = $conn->query($minYearQuery);
+                                        $minYearRow = $minYearResult->fetch_assoc();
+                                        $minYear = $minYearRow['MinYear'] ?? date('Y');
+                                        $currentYear = date('Y');
+
+                                        // Populate dropdown from the minimum year to the current year
+                                        for ($year = $minYear; $year <= $currentYear; $year++) {
+                                            echo "<option value='$year'>$year</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p class="card-subtitle">Analyze the relationship between fuel expenses and revenue over
+                                time.</p>
+                            <canvas id="fuelRevenueCorrelationChart" height="120"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for No Data -->
+                <div class="modal fade" id="noDataModal" tabindex="-1" aria-labelledby="noDataModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="noDataModalLabel">No Data Available</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                No data is available for the selected year. Please choose a different year.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
-                        <h4 class="mb-0 profit-total">₱0.00</h4>
-                        <small class="text-muted">Predicted Monthly Average</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Row -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <ul class="nav nav-tabs" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active" data-bs-toggle="tab" href="#revenue-tab">Revenue</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#expenses-tab">Expenses</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#profit-tab">Profit</a>
-                            </li>
-                        </ul>
-                        <div class="tab-content mt-4">
-                            <div class="tab-pane fade show active" id="revenue-tab">
-                                <div id="revenueChart"></div>
-                            </div>
-                            <div class="tab-pane fade" id="expenses-tab">
-                                <div id="expensesChart"></div>
-                            </div>
-                            <div class="tab-pane fade" id="profit-tab">
-                                <div id="profitChart"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <script>
+            // Function to fetch data for the selected year
+            function fetchFuelRevenueData() {
+                const selectedYear = document.getElementById('yearFilter').value;
 
-        <!-- Tables Row -->
-        <div class="row">
-            <!-- Revenue Table -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title fw-semibold mb-4">Revenue Forecast</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Month</th>
-                                        <th>Amount</th>
-                                        <th>±Error</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="revenueTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                fetch(`fetch_fuel_revenue_data.php?year=${selectedYear}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Fetched Data:', data); // Debugging log
+                        if (data.fuelExpenses.length > 0 && data.revenues.length > 0) {
+                            renderFuelRevenueChart(data.months, data.fuelExpenses, data.revenues);
+                        } else {
+                            alert("No data available for the selected year.");
+                            if (window.fuelRevenueChart) {
+                                window.fuelRevenueChart.destroy();
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+            }
 
-            <!-- Expenses Table -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title fw-semibold mb-4">Expenses Forecast</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Month</th>
-                                        <th>Amount</th>
-                                        <th>±Error</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="expensesTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            // Function to render the chart
+            function renderFuelRevenueChart(months, fuelExpenses, revenues) {
+                const ctx = document.getElementById('fuelRevenueCorrelationChart').getContext('2d');
+                if (window.fuelRevenueChart) {
+                    window.fuelRevenueChart.destroy();
+                }
 
-            <!-- Profit Table -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title fw-semibold mb-4">Profit Forecast</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Month</th>
-                                        <th>Amount</th>
-                                        <th>±Error</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="profitTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                window.fuelRevenueChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Fuel Expenses (PHP)',
+                            data: fuelExpenses,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false
+                        },
+                        {
+                            label: 'Revenue (PHP)',
+                            data: revenues,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: false
+                        }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Months'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Amount (PHP)'
+                                },
+                                ticks: {
+                                    callback: function (value) {
+                                        return value.toLocaleString(); // Format with commas for readability
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return `${context.dataset.label}: PHP ${context.raw.toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initial fetch when the page loads
+            document.addEventListener('DOMContentLoaded', fetchFuelRevenueData);
+        </script>
     </div>
 </div>
 
-<script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-<script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
+<script src="../assets/js/vendor.min.js"></script>
 <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<link href="../assets/libs/datatables/datatables.min.css" rel="stylesheet">
-<script src="../assets/libs/datatables/datatables.min.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Fetch predictions from API
-        const response = await fetch('http://127.0.0.1:5000/predict_finance', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch predictions');
-        }
-
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Failed to get prediction data');
-        }
-
-        // Update MAE badges
-        const revenueMae = data.metrics?.revenue_mae || 0;
-        const expenseMae = data.metrics?.expense_mae || 0;
-        
-        document.querySelector('.revenue-mae').textContent = 
-            `₱${revenueMae.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-        document.querySelector('.expense-mae').textContent = 
-            `₱${expenseMae.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-
-        // Format data for revenue chart
-        const revenueChartData = data.forecast.map(item => ({
-            x: new Date(item.month).getTime(),  // Convert to timestamp
-            y: parseFloat(item.revenue)
-        }));
-
-        // Revenue chart options
-        const revenueChartOptions = {
-            series: [{
-                name: 'Forecasted Revenue',
-                data: revenueChartData
-            }],
-            chart: {
-                height: 350,
-                type: 'line',
-                zoom: { enabled: true }
-            },
-            colors: ['#2e7d32'],
-            stroke: {
-                curve: 'smooth',
-                width: 2
-            },
-            xaxis: {
-                type: 'datetime',
-                labels: {
-                    datetimeFormatter: {
-                        year: 'yyyy',
-                        month: "MMM 'yy"
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Revenue (₱)'
-                },
-                labels: {
-                    formatter: function(value) {
-                        return '₱' + value.toLocaleString();
-                    }
-                }
-            }
-        };
-
-        // Create revenue chart
-        if (document.querySelector("#revenueChart")) {
-            const revenueChart = new ApexCharts(
-                document.querySelector("#revenueChart"), 
-                revenueChartOptions
-            );
-            revenueChart.render();
-        }
-
-        // Group by month for revenue
-        const monthlyRevenue = {};
-        data.forecast.forEach(item => {
-            const date = new Date(item.month);
-            const monthYear = date.toLocaleString('default', { 
-                year: 'numeric', 
-                month: 'long' 
-            });
-            monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + parseFloat(item.revenue);
-        });
-
-        // Create table rows for revenue
-        const revenueRows = Object.entries(monthlyRevenue)
-            .sort(([monthA], [monthB]) => new Date(monthA) - new Date(monthB))
-            .map(([month, revenue]) => `
-                <tr>
-                    <td>${month}</td>
-                    <td>₱${revenue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })}</td>
-                    <td>
-                        <span class="badge bg-success">±₱${revenueMae.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
-                    </td>
-                </tr>
-            `).join('');
-
-        // Update revenue table
-        const revenueTable = document.querySelector('#revenueTable');
-        if (revenueTable) {
-            revenueTable.innerHTML = revenueRows || '<tr><td colspan="3" class="text-center">No forecast data available</td></tr>';
-        }
-
-        // Format data for expenses chart
-        const expensesChartData = data.forecast.map(item => ({
-            x: new Date(item.month).getTime(),
-            y: parseFloat(item.expenses)
-        }));
-
-        // Expenses chart options
-        const expensesChartOptions = {
-            series: [{
-                name: 'Forecasted Expenses',
-                data: expensesChartData
-            }],
-            chart: {
-                height: 350,
-                type: 'line',
-                zoom: { enabled: true }
-            },
-            colors: ['#d32f2f'], // Red for expenses
-            stroke: {
-                curve: 'smooth',
-                width: 2
-            },
-            xaxis: {
-                type: 'datetime',
-                labels: {
-                    datetimeFormatter: {
-                        year: 'yyyy',
-                        month: "MMM 'yy"
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Expenses (₱)'
-                },
-                labels: {
-                    formatter: function(value) {
-                        return '₱' + value.toLocaleString();
-                    }
-                }
-            }
-        };
-
-        // Create expenses chart
-        if (document.querySelector("#expensesChart")) {
-            const expensesChart = new ApexCharts(
-                document.querySelector("#expensesChart"), 
-                expensesChartOptions
-            );
-            expensesChart.render();
-        }
-
-        // Group by month for expenses
-        const monthlyExpenses = {};
-        data.forecast.forEach(item => {
-            const date = new Date(item.month);
-            const monthYear = date.toLocaleString('default', { 
-                year: 'numeric', 
-                month: 'long' 
-            });
-            monthlyExpenses[monthYear] = (monthlyExpenses[monthYear] || 0) + parseFloat(item.expenses);
-        });
-
-        // Create table rows for expenses
-        const expensesRows = Object.entries(monthlyExpenses)
-            .sort(([monthA], [monthB]) => new Date(monthA) - new Date(monthB))
-            .map(([month, expenses]) => `
-                <tr>
-                    <td>${month}</td>
-                    <td>₱${expenses.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })}</td>
-                    <td>
-                        <span class="badge bg-primary">±₱${expenseMae.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
-                    </td>
-                </tr>
-            `).join('');
-
-        // Update expenses table
-        const expensesTable = document.querySelector('#expensesTable');
-        if (expensesTable) {
-            expensesTable.innerHTML = expensesRows || '<tr><td colspan="3" class="text-center">No forecast data available</td></tr>';
-        }
-
-        // Format data for profit chart
-        const profitChartData = data.forecast.map(item => ({
-            x: new Date(item.month).getTime(),
-            y: parseFloat(item.profit)
-        }));
-
-        // Profit chart options
-        const profitChartOptions = {
-            series: [{
-                name: 'Forecasted Profit',
-                data: profitChartData
-            }],
-            chart: {
-                height: 350,
-                type: 'line',
-                zoom: { enabled: true }
-            },
-            colors: ['#ffa726'], // Orange for profit
-            stroke: {
-                curve: 'smooth',
-                width: 2
-            },
-            xaxis: {
-                type: 'datetime',
-                labels: {
-                    datetimeFormatter: {
-                        year: 'yyyy',
-                        month: "MMM 'yy"
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Profit (₱)'
-                },
-                labels: {
-                    formatter: function(value) {
-                        return '₱' + value.toLocaleString();
-                    }
-                }
-            }
-        };
-
-        // Create profit chart
-        if (document.querySelector("#profitChart")) {
-            const profitChart = new ApexCharts(
-                document.querySelector("#profitChart"), 
-                profitChartOptions
-            );
-            profitChart.render();
-        }
-
-        // Update profit MAE badge
-        const profitMae = data.metrics?.profit_mae || 0;
-        document.querySelector('.profit-mae').textContent = 
-            `₱${profitMae.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
-
-        // Group by month for profit
-        const monthlyProfit = {};
-        data.forecast.forEach(item => {
-            const date = new Date(item.month);
-            const monthYear = date.toLocaleString('default', { 
-                year: 'numeric', 
-                month: 'long' 
-            });
-            monthlyProfit[monthYear] = (monthlyProfit[monthYear] || 0) + parseFloat(item.profit);
-        });
-
-        // Create table rows for profit
-        const profitRows = Object.entries(monthlyProfit)
-            .sort(([monthA], [monthB]) => new Date(monthA) - new Date(monthB))
-            .map(([month, profit]) => `
-                <tr>
-                    <td>${month}</td>
-                    <td>₱${profit.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    })}</td>
-                    <td>
-                        <span class="badge bg-warning">±₱${profitMae.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
-                    </td>
-                </tr>
-            `).join('');
-
-        // Update profit table
-        const profitTable = document.querySelector('#profitTable');
-        if (profitTable) {
-            profitTable.innerHTML = profitRows || '<tr><td colspan="3" class="text-center">No forecast data available</td></tr>';
-        }
-
-        // Add after loading the data
-        // Calculate and display averages
-        const calculateAverage = (data, key) => {
-            const sum = data.reduce((acc, item) => acc + parseFloat(item[key]), 0);
-            return sum / data.length;
-        };
-
-        const revenueAvg = calculateAverage(data.forecast, 'revenue');
-        const expenseAvg = calculateAverage(data.forecast, 'expenses');
-        const profitAvg = calculateAverage(data.forecast, 'profit');
-
-        updateElement('.revenue-total', `₱${revenueAvg.toLocaleString(undefined, {maximumFractionDigits: 2})}`);
-        updateElement('.expense-total', `₱${expenseAvg.toLocaleString(undefined, {maximumFractionDigits: 2})}`);
-        updateElement('.profit-total', `₱${profitAvg.toLocaleString(undefined, {maximumFractionDigits: 2})}`);
-
-        // Update MAE badges to show as percentages of the averages
-        document.querySelector('.revenue-mae').textContent = 
-            `±₱${revenueMae.toLocaleString(undefined, {maximumFractionDigits: 2})} (${((revenueMae/revenueAvg)*100).toFixed(1)}%)`;
-        document.querySelector('.expense-mae').textContent = 
-            `±₱${expenseMae.toLocaleString(undefined, {maximumFractionDigits: 2})} (${((expenseMae/expenseAvg)*100).toFixed(1)}%)`;
-        document.querySelector('.profit-mae').textContent = 
-            `±₱${profitMae.toLocaleString(undefined, {maximumFractionDigits: 2})} (${((profitMae/profitAvg)*100).toFixed(1)}%)`;
-
-    } catch (error) {
-        console.error('Error:', error);
-        const errorAlert = `
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                Failed to load predictions: ${error.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
-    }
-});
-
-function updateElement(selector, value) {
-    const element = document.querySelector(selector);
-    if (element) {
-        element.textContent = value;
-    } else {
-        console.warn(`Element not found: ${selector}`);
-    }
-}
-</script>
-
-<?php 
-include 'footer.php'; 
+<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+<script src="../assets/js/theme/app.init.js"></script>
+<script src="../assets/js/theme/theme.js"></script>
+<script src="../assets/js/theme/app.min.js"></script>
+<script src="../assets/js/theme/sidebarmenu-default.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+<script src="../assets/js/apps/productDetail.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<?php
+include '../officer/footer.php';
 ?>
