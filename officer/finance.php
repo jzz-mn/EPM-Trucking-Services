@@ -1,8 +1,15 @@
 <?php
 session_start();
+
+// Apply cache-control headers
+header("Cache-Control: public, max-age=3600"); // Cache for 1 hour
+header("Expires: " . gmdate("D, d M Y H:i:s", time() + 3600) . " GMT"); // Expiry time
+header("Pragma: cache"); // HTTP 1.0 compatibility
+
 include '../officer/header.php';
 include '../includes/db_connection.php';
 ?>
+
 <div class="body-wrapper">
   <div class="container-fluid">
     <div class="card card-body py-3">
