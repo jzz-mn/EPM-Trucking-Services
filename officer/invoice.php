@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
       // Query to fetch transactiongroup records
       $query = "
-                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, tg.TollFeeAmount
+                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, tg.TollFeeAmount, tg.Amount
                 FROM transactiongroup tg
                 WHERE tg.Date BETWEEN ? AND ?
             ";
@@ -71,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
             $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
             $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
+            $html .= '<td>' . number_format($row['Amount'], 2) . '</td>'; // Added Amount column
             $html .= '</tr>';
           }
           echo json_encode(['success' => true, 'html' => $html]);
@@ -132,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // **Step 2: Fetch TransactionGroup Records**
         $query = "
-          SELECT tg.TransactionGroupID, tg.RateAmount, tg.TollFeeAmount
+          SELECT tg.TransactionGroupID, tg.RateAmount, tg.TollFeeAmount, tg.Amount
           FROM transactiongroup tg
           JOIN expenses e ON tg.ExpenseID = e.ExpenseID
           WHERE tg.Date BETWEEN ? AND ?
@@ -149,11 +150,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Initialize totals
         $grossAmount = 0;
+        $amount = 0;
         $totalExpenses = 0;
         $transactionGroupIDs = array();
 
         while ($row = $result->fetch_assoc()) {
           $grossAmount += $row['RateAmount'];
+          $amount += $row['Amount'];
           $totalExpenses += $row['TollFeeAmount'];
           $transactionGroupIDs[] = $row['TransactionGroupID'];
         }
@@ -162,10 +165,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           throw new Exception('No transactions found for the selected date range.');
         }
 
-        // Calculate amounts
+        // Calculate amounts based on billedTo
+        $ewt = 0;
+        switch ($billedTo) {
+            case 'BOUNTY AGRO VENTURES INC.':
+            case 'BOUNTY FRESH FOOD INC.':
+                $ewt = $grossAmount * 0.02; 
+                break;
+            case 'CHOOKS TO GO INC.':
+                $ewt = $amount * 0.02; // Using the correct variable 'amount'
+                break;
+        }
+
         $vat = $grossAmount * 0.12;
         $totalAmount = $grossAmount + $vat;
-        $ewt = $totalAmount * 0.02;
         $amountNetOfTax = $totalAmount - $ewt;
         $addTollCharges = $totalExpenses;
         $netAmount = $amountNetOfTax + $addTollCharges;
@@ -430,7 +443,7 @@ include '../officer/header.php';
         <!-- Add Invoice Modal -->
         <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle"
           aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-dialog modal-dialog-centered modal" role="document"> <!-- Changed modal-lg to modal-sm -->
             <div class="modal-content">
               <div class="modal-header d-flex align-items-center bg-primary">
                 <h5 class="modal-title text-white fs-4">Add Invoice Details</h5>
@@ -453,8 +466,16 @@ include '../officer/header.php';
                         <label for="billedTo" class="form-label">Billed To</label>
                         <select class="form-select" id="billedTo" name="billedTo" required>
                           <option value="">Select Client</option>
-                          <option value="Bounty Plus">Bounty Plus</option>
-                          <option value="Chooks to Go">Chooks to Go</option>
+                          <?php
+                          // Fetch clients from the database
+                          $clientQuery = "SELECT clientID, clientName FROM client";
+                          $clientResult = $conn->query($clientQuery);
+                          if ($clientResult && $clientResult->num_rows > 0) {
+                            while ($client = $clientResult->fetch_assoc()) {
+                              echo '<option value="' . htmlspecialchars($client['clientName']) . '">' . htmlspecialchars($client['clientName']) . '</option>';
+                            }
+                          }
+                          ?>
                         </select>
                       </div>
                       <div class="col-12 mb-3">
@@ -475,7 +496,7 @@ include '../officer/header.php';
         <!-- Selected Records Modal -->
         <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
           aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 90%;">
+          <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 70%;">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="selectedRecordsModalLabel">Selected Transaction Groups</h5>
@@ -492,7 +513,7 @@ include '../officer/header.php';
                         <th>Rate Amount</th>
                         <th>Total KGs</th>
                         <th>Total Expense</th>
-                        <!-- Add other columns as needed -->
+                        <th>Amount</th> <!-- Added Amount column -->
                       </tr>
                     </thead>
                     <tbody>
