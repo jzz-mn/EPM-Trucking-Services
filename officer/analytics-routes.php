@@ -839,7 +839,7 @@ function showError(message) {
   }
 
   // Add your OpenAI API key configuration
-  const OPENAI_API_KEY = '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';
+  const OPENAI_API_KEY = '';
 
   async function getAISuggestions() {
     try {
