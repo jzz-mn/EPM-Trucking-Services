@@ -64,7 +64,7 @@ include '../includes/db_connection.php';
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div class="modal-content">
             <div class="modal-header d-flex align-items-center bg-primary">
-              <h5 class="modal-title text-white fs-4">Edit Fuel Expense</h5>
+              <h5 class="modal-title text-white fs-4">Edit Expense</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -752,14 +752,15 @@ include '../includes/db_connection.php';
     document.getElementById("nextExpenseID").value = "<?php echo $nextExpenseId; ?>";
 
     function populateExpenseEditForm(expense) {
-      // Set values in the modal based on the selected expense row
-      document.getElementById("updateExpenseID").value = expense.ExpenseID;
-      document.getElementById("updateDate").value = expense.Date;
-      document.getElementById("updateSalaryAmount").value = expense.SalaryAmount;
-      document.getElementById("updateMobileAmount").value = expense.MobileAmount;
-      document.getElementById("updateOtherAmount").value = expense.OtherAmount;
-      document.getElementById("updateTotalExpense").value = expense.TotalExpense;
+      // Populate the modal fields with the data from the selected row
+      document.getElementById("updateExpenseID").value = expense.ExpenseID || "";
+      document.getElementById("updateDate").value = expense.Date || "";
+      document.getElementById("updateSalaryAmount").value = expense.SalaryAmount || 0;
+      document.getElementById("updateMobileAmount").value = expense.MobileAmount || 0;
+      document.getElementById("updateOtherAmount").value = expense.OtherAmount || 0;
+      document.getElementById("updateTotalExpense").value = expense.TotalExpense || 0;
     }
+
 
     function computeTotalExpense() {
       // Get the values from the input fields
@@ -937,22 +938,23 @@ include '../includes/db_connection.php';
 
             if (data.length > 0) {
               tableBody.innerHTML = ""; // Clear the table
+              // Populate the table with fetched data
               data.forEach((row) => {
                 const tableRow = document.createElement("tr");
                 tableRow.innerHTML = `
-            <td>${row.ExpenseID}</td>
-            <td>${row.Date}</td>
-            <td>${row.SalaryAmount}</td>
-            <td>${row.MobileAmount}</td>
-            <td>${row.OtherAmount}</td>
-            <td>${row.TotalExpense}</td>
-            <td>
-              <a href="#" class="me-3 text-primary" data-bs-toggle="modal"
-                data-bs-target="#editFuelExpenseModal" onclick="populateExpenseEditForm(${JSON.stringify(row)})">
-                <i class="fs-4 ti ti-edit"></i>
-              </a>
-            </td>
-          `;
+    <td>${row.ExpenseID}</td>
+    <td>${row.Date}</td>
+    <td>${row.SalaryAmount}</td>
+    <td>${row.MobileAmount}</td>
+    <td>${row.OtherAmount}</td>
+    <td>${row.TotalExpense}</td>
+    <td>
+      <a href="#" class="me-3 text-primary" data-bs-toggle="modal"
+         data-bs-target="#editFuelExpenseModal" onclick='populateExpenseEditForm(${JSON.stringify(row)})'>
+        <i class="fs-4 ti ti-edit"></i>
+      </a>
+    </td>
+  `;
                 tableBody.appendChild(tableRow);
               });
 
