@@ -1009,7 +1009,9 @@ if (!empty($sql_all_notifications)) {
                     <!-- End Vertical Layout Header -->
 
                 </div>
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+                <script type="text/css" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         // Function to mark notifications as seen
