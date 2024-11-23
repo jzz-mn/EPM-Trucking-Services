@@ -202,7 +202,7 @@
                         <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
 
                         <!-- Place the updated form here -->
-                        <form method="POST" action="update_maintenance.php">
+                        <form id="editMaintenanceForm" method="POST" action="update_maintenance.php">
                           <div class="row">
                             <!-- Maintenance ID -->
                             <div class="col-lg-6">
@@ -892,7 +892,7 @@
                   </div>
                 </div>
 
-                <!-- Transactions Tab -->
+                <!-- CLUSTER Tab -->
                 <div class="tab-pane" id="clusters" role="tabpanel">
                   <div class="table-controls mb-3">
                     <div class="invoice-header d-flex align-items-center border-bottom pb-3">
@@ -982,7 +982,6 @@
                 </div>
 
 
-
               </div>
             </div>
           </div>
@@ -993,8 +992,9 @@
 
         <script>
           // Function to populate the Edit Maintenance modal with the selected record data
+          // Function to populate the Edit Maintenance modal with the selected record data
           function populateEditMaintenanceForm(maintenance) {
-            // Map month names to numbers
+            // Map month names to numbers (if necessary)
             const monthMap = {
               'January': '1',
               'February': '2',
@@ -1007,7 +1007,7 @@
               'September': '9',
               'October': '10',
               'November': '11',
-              'December': '12'
+              'December': '12',
             };
 
             let monthValue = maintenance.Month;
@@ -1017,30 +1017,35 @@
               monthValue = monthMap[monthValue];
             }
 
-            // Set values in the modal based on the selected maintenance row
+            // Populate modal fields with maintenance data
             document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
             document.getElementById("maintenanceYear").value = maintenance.Year;
-            document.getElementById("maintenanceMonth").value = monthValue; // Set month
+            document.getElementById("maintenanceMonth").value = monthValue;
             document.getElementById("maintenanceCategory").value = maintenance.Category;
             document.getElementById("maintenanceDescription").value = maintenance.Description;
             document.getElementById("maintenanceAmount").value = maintenance.Amount;
             document.getElementById("maintenanceLoggedBy").value = maintenance.LoggedBy;
+
+            // Show the modal
+            const updateModal = new bootstrap.Modal(document.getElementById('updateMaintenanceRecordModal'));
+            updateModal.show();
           }
 
-          // Attach the 'populateEditMaintenanceForm' function to the edit button in your table
+          // Attach the edit button functionality
           function attachMaintenanceEditButtons() {
             const editButtons = document.querySelectorAll('.edit-maintenance-btn');
             editButtons.forEach(button => {
               button.addEventListener('click', function() {
-                const maintenanceData = JSON.parse(this.dataset.maintenance); // Get data from data-attribute
-                populateEditMaintenanceForm(maintenanceData); // Populate modal with maintenance data
-                $('#updateMaintenanceRecordModal').modal('show'); // Show the modal
+                const maintenanceData = JSON.parse(this.dataset.maintenance);
+                populateEditMaintenanceForm(maintenanceData);
               });
             });
           }
 
-          // Execute this function when the document is fully loaded
-          document.addEventListener('DOMContentLoaded', attachMaintenanceEditButtons);
+          // Ensure the edit buttons are re-attached after the table is updated
+          document.addEventListener('DOMContentLoaded', () => {
+            attachMaintenanceEditButtons();
+          });
         </script>
         <script>
           // Function to populate the Edit Transaction modal with the selected record data1
@@ -1071,45 +1076,6 @@
         </script>
       </div>
     </div>
-
-    <script>
-      // Listen for clicks on edit buttons
-      document.querySelectorAll('.edit-truck-btn').forEach(button => {
-        button.addEventListener('click', function(event) {
-          event.preventDefault();
-
-          // Get TruckID from the data-transaction attribute
-          const truckId = JSON.parse(this.getAttribute('data-truck')).TruckID;
-
-          // Send an AJAX request to fetch truck data
-          fetch(`fetch_truck.php?truckId=${truckId}`)
-            .then(response => response.json())
-            .then(data => {
-              if (!data.error) {
-                // Prefill the form with the fetched data
-                document.getElementById('truckId').value = data.TruckID;
-                document.getElementById('plateNumber').value = data.PlateNo;
-                document.getElementById('truckBrand').value = data.TruckBrand;
-
-                // Set the truck status in the dropdown
-                const truckStatusDropdown = document.getElementById('truckStatus');
-                truckStatusDropdown.value = data.TruckStatus;
-
-                // Open the modal
-                const updateModal = new bootstrap.Modal(document.getElementById('updateTrucksRecordModal'));
-                updateModal.show();
-              } else {
-                alert(data.error);
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching truck data:', error);
-            });
-        });
-      });
-    </script>
-
-
 
     <script>
       function attachMaintenanceEditButtons() {
@@ -1337,6 +1303,161 @@
     </script>
 
 
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const maintenanceTableBody = document.getElementById("maintenanceTableBody");
+        const maintenanceSearchBar = document.getElementById("maintenanceSearchBar");
+        const maintenanceRowsPerPageSelect = document.getElementById("maintenanceRowsPerPage");
+        const maintenancePaginationNumbers = document.getElementById("maintenancePaginationNumbers");
+        const maintenanceTab = document.querySelector('[href="#maintenance"]');
+
+        let maintenanceCurrentPage = 1;
+        let maintenanceRowsPerPage = parseInt(maintenanceRowsPerPageSelect.value);
+        let maintenanceTotalRecords = 0;
+        let maintenanceDataLoaded = false;
+
+        // Function to load Maintenance data
+        function loadMaintenanceData(page = 1, rowsPerPage = 5, search = "") {
+          const offset = (page - 1) * rowsPerPage;
+
+          fetch(`fetch_maintenance.php?limit=${rowsPerPage}&offset=${offset}&search=${encodeURIComponent(search)}`)
+            .then((response) => response.json())
+            .then(({
+              data,
+              total
+            }) => {
+              maintenanceTotalRecords = total;
+              maintenanceTableBody.innerHTML = ""; // Clear the table
+
+              if (data.length > 0) {
+                data.forEach((row) => {
+                  const tableRow = document.createElement("tr");
+                  tableRow.innerHTML = `
+  <td>${row.MaintenanceID}</td>
+  <td>${row.Year}</td>
+  <td>${row.Month}</td>
+  <td>${row.Category}</td>
+  <td>${row.Description}</td>
+  <td>${row.Amount}</td>
+  <td>${row.LoggedBy}</td>
+  <td>
+    <a href="#" class="me-3 text-primary edit-maintenance-btn" data-bs-toggle="modal" data-maintenance='${JSON.stringify(row)}'>
+      <i class="fs-4 ti ti-edit"></i>
+    </a>
+  </td>
+`;
+
+                  maintenanceTableBody.appendChild(tableRow);
+                });
+              } else {
+                maintenanceTableBody.innerHTML = "<tr><td colspan='8' class='text-center'>No maintenance records found</td></tr>";
+              }
+
+              updateMaintenancePagination();
+            })
+            .catch((error) => console.error("Error fetching maintenance data:", error));
+        }
+
+        // Function to update Maintenance pagination
+        function updateMaintenancePagination() {
+          maintenancePaginationNumbers.innerHTML = ""; // Clear existing pagination
+
+          const totalPages = Math.ceil(maintenanceTotalRecords / maintenanceRowsPerPage);
+          const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5; // Adjust for mobile
+
+          if (totalPages > 1) {
+            // Create the '<<' and '<' buttons
+            maintenancePaginationNumbers.appendChild(createPaginationItem('«', maintenanceCurrentPage === 1, () => {
+              maintenanceCurrentPage = 1;
+              loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+            }));
+
+            maintenancePaginationNumbers.appendChild(createPaginationItem('‹', maintenanceCurrentPage === 1, () => {
+              if (maintenanceCurrentPage > 1) {
+                maintenanceCurrentPage--;
+                loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+              }
+            }));
+
+            let startPage = Math.max(1, maintenanceCurrentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+              startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+              const pageItem = document.createElement("li");
+              pageItem.classList.add("page-item");
+              if (i === maintenanceCurrentPage) pageItem.classList.add("active");
+
+              const pageLink = document.createElement("a");
+              pageLink.classList.add("page-link");
+              pageLink.textContent = i;
+              pageLink.style.cursor = 'pointer';
+              pageLink.addEventListener('click', () => {
+                maintenanceCurrentPage = i;
+                loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+              });
+
+              pageItem.appendChild(pageLink);
+              maintenancePaginationNumbers.appendChild(pageItem);
+            }
+
+            maintenancePaginationNumbers.appendChild(createPaginationItem('›', maintenanceCurrentPage === totalPages, () => {
+              if (maintenanceCurrentPage < totalPages) {
+                maintenanceCurrentPage++;
+                loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+              }
+            }));
+
+            maintenancePaginationNumbers.appendChild(createPaginationItem('»', maintenanceCurrentPage === totalPages, () => {
+              maintenanceCurrentPage = totalPages;
+              loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+            }));
+          }
+        }
+
+        function createPaginationItem(label, isDisabled, onClick) {
+          const pageItem = document.createElement("li");
+          pageItem.classList.add("page-item");
+          if (isDisabled) pageItem.classList.add("disabled");
+
+          const pageLink = document.createElement("a");
+          pageLink.classList.add("page-link");
+          pageLink.textContent = label;
+          pageLink.style.cursor = isDisabled ? 'default' : 'pointer';
+
+          if (!isDisabled) pageLink.addEventListener('click', onClick);
+
+          pageItem.appendChild(pageLink);
+          return pageItem;
+        }
+
+        // Load Maintenance data only when the Maintenance tab is active
+        maintenanceTab.addEventListener('shown.bs.tab', () => {
+          if (!maintenanceDataLoaded) {
+            loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+            maintenanceDataLoaded = true; // Ensure data is loaded only once per session
+          }
+        });
+
+        // Attach event listeners to filtering and rows per page controls
+        maintenanceSearchBar.addEventListener("input", () => {
+          maintenanceCurrentPage = 1;
+          loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+        });
+
+        maintenanceRowsPerPageSelect.addEventListener("change", () => {
+          maintenanceRowsPerPage = parseInt(maintenanceRowsPerPageSelect.value);
+          maintenanceCurrentPage = 1;
+          loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+        });
+      });
+    </script>
+
+
+
 
     <!------------------ Transactions function ----------------->
     <script>
@@ -1557,9 +1678,198 @@
       }
     </script>
 
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const transactionsTableBody = document.getElementById("transactionsTableBody");
+        const transactionsSearchBar = document.getElementById("transactionsSearchBar");
+        const transactionsRowsPerPageSelect = document.getElementById("transactionsRowsPerPage");
+        const transactionsPaginationNumbers = document.getElementById("transactionsPaginationNumbers");
+        const transactionsTab = document.querySelector('[href="#transactions"]');
+
+        let transactionsCurrentPage = 1;
+        let transactionsRowsPerPage = parseInt(transactionsRowsPerPageSelect.value);
+        let transactionsTotalRecords = 0;
+        let transactionsDataLoaded = false;
+
+        // Function to load Transactions data
+        function loadTransactionsData(page = 1, rowsPerPage = 5, search = "") {
+          const offset = (page - 1) * rowsPerPage;
+
+          fetch(`fetch_transactions.php?limit=${rowsPerPage}&offset=${offset}&search=${encodeURIComponent(search)}`)
+            .then((response) => response.json())
+            .then(({
+              data,
+              total
+            }) => {
+              transactionsTotalRecords = total;
+              transactionsTableBody.innerHTML = ""; // Clear the table
+
+              if (data.length > 0) {
+                data.forEach((row) => {
+                  const tableRow = document.createElement("tr");
+                  tableRow.innerHTML = `
+                <td>${row.TransactionID}</td>
+                <td>${row.TransactionDate}</td>
+                <td>${row.DRno}</td>
+                <td>${row.OutletName}</td>
+                <td>${row.Qty}</td>
+                <td>${row.KGs}</td>
+                <td>
+                  <a href="#" class="me-3 text-primary" data-bs-toggle="modal" data-bs-target="#editTransactionModal" onclick="populateEditTransactionForm(${JSON.stringify(row)})">
+                    <i class="fs-4 ti ti-edit"></i>
+                  </a>
+                </td>
+              `;
+                  transactionsTableBody.appendChild(tableRow);
+                });
+              } else {
+                transactionsTableBody.innerHTML = "<tr><td colspan='7' class='text-center'>No transactions found</td></tr>";
+              }
+
+              updateTransactionsPagination();
+            })
+            .catch((error) => console.error("Error fetching transactions data:", error));
+        }
+
+        // Function to update Transactions pagination
+        function updateTransactionsPagination() {
+          transactionsPaginationNumbers.innerHTML = ""; // Clear existing pagination
+
+          const totalPages = Math.ceil(transactionsTotalRecords / transactionsRowsPerPage);
+          const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5; // Adjust for mobile
+
+          if (totalPages > 1) {
+            // Create the '<<' and '<' buttons
+            transactionsPaginationNumbers.appendChild(createPaginationItem('«', transactionsCurrentPage === 1, () => {
+              transactionsCurrentPage = 1;
+              loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+            }));
+
+            transactionsPaginationNumbers.appendChild(createPaginationItem('‹', transactionsCurrentPage === 1, () => {
+              if (transactionsCurrentPage > 1) {
+                transactionsCurrentPage--;
+                loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+              }
+            }));
+
+            let startPage = Math.max(1, transactionsCurrentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+              startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+              const pageItem = document.createElement("li");
+              pageItem.classList.add("page-item");
+              if (i === transactionsCurrentPage) pageItem.classList.add("active");
+
+              const pageLink = document.createElement("a");
+              pageLink.classList.add("page-link");
+              pageLink.textContent = i;
+              pageLink.style.cursor = 'pointer';
+              pageLink.addEventListener('click', () => {
+                transactionsCurrentPage = i;
+                loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+              });
+
+              pageItem.appendChild(pageLink);
+              transactionsPaginationNumbers.appendChild(pageItem);
+            }
+
+            transactionsPaginationNumbers.appendChild(createPaginationItem('›', transactionsCurrentPage === totalPages, () => {
+              if (transactionsCurrentPage < totalPages) {
+                transactionsCurrentPage++;
+                loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+              }
+            }));
+
+            transactionsPaginationNumbers.appendChild(createPaginationItem('»', transactionsCurrentPage === totalPages, () => {
+              transactionsCurrentPage = totalPages;
+              loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+            }));
+          }
+        }
+
+        function createPaginationItem(label, isDisabled, onClick) {
+          const pageItem = document.createElement("li");
+          pageItem.classList.add("page-item");
+          if (isDisabled) pageItem.classList.add("disabled");
+
+          const pageLink = document.createElement("a");
+          pageLink.classList.add("page-link");
+          pageLink.textContent = label;
+          pageLink.style.cursor = isDisabled ? 'default' : 'pointer';
+
+          if (!isDisabled) pageLink.addEventListener('click', onClick);
+
+          pageItem.appendChild(pageLink);
+          return pageItem;
+        }
+
+        // Load Transactions data only when the Transactions tab is active
+        transactionsTab.addEventListener('shown.bs.tab', () => {
+          if (!transactionsDataLoaded) {
+            loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+            transactionsDataLoaded = true; // Ensure data is loaded only once per session
+          }
+        });
+
+        // Attach event listeners to filtering and rows per page controls
+        transactionsSearchBar.addEventListener("input", () => {
+          transactionsCurrentPage = 1;
+          loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+        });
+
+        transactionsRowsPerPageSelect.addEventListener("change", () => {
+          transactionsRowsPerPage = parseInt(transactionsRowsPerPageSelect.value);
+          transactionsCurrentPage = 1;
+          loadTransactionsData(transactionsCurrentPage, transactionsRowsPerPage, transactionsSearchBar.value);
+        });
+      });
+    </script>
+
+
 
 
     <!----------- Trucks function ---------------->
+
+    <script>
+      // Listen for clicks on edit buttons
+      document.querySelectorAll('.edit-truck-btn').forEach(button => {
+        button.addEventListener('click', function(event) {
+          event.preventDefault();
+
+          // Get TruckID from the data-transaction attribute
+          const truckId = JSON.parse(this.getAttribute('data-truck')).TruckID;
+
+          // Send an AJAX request to fetch truck data
+          fetch(`fetch_truck.php?truckId=${truckId}`)
+            .then(response => response.json())
+            .then(data => {
+              if (!data.error) {
+                // Prefill the form with the fetched data
+                document.getElementById('truckId').value = data.TruckID;
+                document.getElementById('plateNumber').value = data.PlateNo;
+                document.getElementById('truckBrand').value = data.TruckBrand;
+
+                // Set the truck status in the dropdown
+                const truckStatusDropdown = document.getElementById('truckStatus');
+                truckStatusDropdown.value = data.TruckStatus;
+
+                // Open the modal
+                const updateModal = new bootstrap.Modal(document.getElementById('updateTrucksRecordModal'));
+                updateModal.show();
+              } else {
+                alert(data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching truck data:', error);
+            });
+        });
+      });
+    </script>
 
     <script>
       // Sorting logic for Trucks Table
@@ -1973,8 +2283,6 @@
         });
       });
     </script>
-
-
 
 
 
