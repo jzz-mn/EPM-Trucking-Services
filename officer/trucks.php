@@ -1635,48 +1635,7 @@
         });
       }
     </script>
-    <script>
-      function filterTransactionsTable() {
-        let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
-        let table = document.getElementById("transactionsTable");
-        let rows = table.getElementsByTagName("tr");
-        let noDataFound = true; // Flag to check if no row matches the search criteria
 
-        for (let i = 1; i < rows.length; i++) { // Start from i=1 to skip the header row
-          let row = rows[i];
-          if (row.id !== "noTransactionsDataRow") {
-            row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
-
-            if (row.style.display === "") {
-              noDataFound = false;
-            }
-          }
-        }
-
-        document.getElementById("noTransactionsDataRow").style.display = noDataFound ? "" : "none";
-      }
-    </script>
-    <script>
-      function filterTransactionsTable() {
-        let input = document.getElementById("transactionsSearchBar").value.toLowerCase();
-        let table = document.getElementById("transactionsTable");
-        let rows = table.getElementsByTagName("tr");
-        let noDataFound = true; // Flag to check if no row matches the search criteria
-
-        for (let i = 1; i < rows.length; i++) { // Start from i=1 to skip the header row
-          let row = rows[i];
-          if (row.id !== "noTransactionsDataRow") {
-            row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
-
-            if (row.style.display === "") {
-              noDataFound = false;
-            }
-          }
-        }
-
-        document.getElementById("noTransactionsDataRow").style.display = noDataFound ? "" : "none";
-      }
-    </script>
 
     <script>
       document.addEventListener('DOMContentLoaded', function() {
