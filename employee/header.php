@@ -79,7 +79,11 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
         <!-- Dashboard -->
         <nav class="sidebar-nav scroll-sidebar" data-simplebar>
           <ul class="sidebar-menu" id="sidebarnav">
-            <!-- Dashboard -->
+
+            <li class="nav-small-cap">
+              <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
+              <span class="hide-menu">Menu</span>
+            </li>
             <li class="sidebar-item">
               <a id="get-url" aria-expanded="false">
               </a>
@@ -91,7 +95,12 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
               </a>
             </li>
 
-
+            <li class="sidebar-item">
+              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'view_maintenance.php' ?>" href="../employee/view_maintenance.php" aria-expanded="false">
+                <iconify-icon icon="mdi:truck-outline"></iconify-icon>
+                <span class="hide-menu">View Maintenance</span>
+              </a>
+            </li>
           </ul>
         </nav>
       </div>

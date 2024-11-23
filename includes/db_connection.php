@@ -1,4 +1,9 @@
 <?php
+// Retrieve connection details from environment variables
+$host = getenv('DB_HOST');
+$usernameDB = getenv('DB_USERNAME');
+$password = getenv('DB_PASSWORD');
+$database = getenv('DB_DATABASE');
 
  // Database configuration
  $host = "localhost";  // or "127.0.0.1"
@@ -26,5 +31,4 @@ $conn = new mysqli($host, $usernameDB, $password, $database);
 if ($conn->connect_error) {
    die("Connection failed: " . $conn->connect_error);
 }
-*/
 ?>

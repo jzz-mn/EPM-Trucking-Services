@@ -25,8 +25,8 @@ function insert_activity_log($conn, $userID, $action)
     }
 }
 
-// Helper function to calculate amounts with date range
-function calculate_amounts($conn, $billingStartDate, $billingEndDate)
+// Modify the calculate_amounts function to accept BilledTo
+function calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo)
 {
     // Fetch GrossAmount and AddTollCharges within the date range
     $query = "SELECT 
@@ -47,11 +47,28 @@ function calculate_amounts($conn, $billingStartDate, $billingEndDate)
     $grossAmount = $amounts['GrossAmount'] ?? 0;
     $addTollCharges = $amounts['AddTollCharges'] ?? 0;
 
-    // Calculate VAT, TotalAmount, EWT, AmountNetOfTax, NetAmount
+    // Calculate VAT
     $vat = $grossAmount * 0.12;
+
+    // Calculate TotalAmount
     $totalAmount = $grossAmount + $vat;
-    $ewt = $totalAmount * 0.02;
+
+    // Calculate EWT based on BilledTo
+    if ($billedTo == 'BOUNTY AGRO VENTURES INC.' || $billedTo == 'BOUNTY FRESH FOOD INC.') {
+        $ewt = $grossAmount * 0.02;
+    } else if ($billedTo == 'CHOOKS TO GO INC.') {
+        // Sum of Amount column in transactiongroup * 0.02
+        $sumAmount = $grossAmount + $addTollCharges;
+        $ewt = $sumAmount * 0.02;
+    } else {
+        // Default EWT calculation
+        $ewt = $grossAmount * 0.02;
+    }
+
+    // Calculate AmountNetOfTax
     $amountNetOfTax = $totalAmount - $ewt;
+
+    // Calculate NetAmount
     $netAmount = $amountNetOfTax + $addTollCharges;
 
     return [
@@ -64,6 +81,7 @@ function calculate_amounts($conn, $billingStartDate, $billingEndDate)
         'NetAmount' => $netAmount
     ];
 }
+
 
 // Function to fetch RateAmount based on ClusterID, FuelPrice, and Tonner
 function fetch_rate_amount($conn, $cluster_id, $fuel_price, $tonner)
@@ -210,14 +228,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 $stmt->close();
 
-                // Recalculate invoice amounts with the updated date range
-                $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+                // Recalculate invoice amounts with the updated date range and BilledTo
+                $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
+
+                // Update the invoice record with new amounts
                 $updateAmountsQuery = "
-                    UPDATE invoices
-                    SET GrossAmount = ?, VAT = ?, TotalAmount = ?, EWT = ?, AddTollCharges = ?, 
-                        AmountNetOfTax = ?, NetAmount = ?
-                    WHERE BillingInvoiceNo = ?
-                ";
+            UPDATE invoices
+            SET GrossAmount = ?, VAT = ?, TotalAmount = ?, EWT = ?, AddTollCharges = ?, 
+                AmountNetOfTax = ?, NetAmount = ?
+            WHERE BillingInvoiceNo = ?
+        ";
                 $stmt = $conn->prepare($updateAmountsQuery);
                 if (!$stmt) {
                     throw new Exception('Failed to prepare invoice amounts update query: ' . $conn->error);
@@ -238,13 +258,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 $stmt->close();
 
-                // Commit Transaction
+                // Commit Transaction and respond with updated amounts
                 $conn->commit();
-
-                // Log Activity
                 insert_activity_log($conn, $userID, "Updated Invoice No: $billingInvoiceNo");
 
                 echo json_encode(['success' => true, 'message' => 'Invoice updated successfully.', 'amounts' => $amounts]);
+                exit;
             } catch (Exception $e) {
                 $conn->rollback();
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -252,14 +271,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit;
         }
 
-        // Fetch Transaction Groups based on Date Range
+        // Inside the 'fetch_transaction_groups' action
         if ($_POST['action'] == 'fetch_transaction_groups') {
             $billingStartDate = $_POST['BillingStartDate'] ?? '';
             $billingEndDate = $_POST['BillingEndDate'] ?? '';
+            $billedTo = $_POST['BilledTo'] ?? '';
 
             // Validate Date Inputs
-            if (empty($billingStartDate) || empty($billingEndDate)) {
-                echo json_encode(['success' => false, 'message' => 'Billing Start Date and End Date are required.']);
+            if (empty($billingStartDate) || empty($billingEndDate) || empty($billedTo)) {
+                echo json_encode(['success' => false, 'message' => 'Billing Start Date, End Date, and Billed To are required.']);
                 exit;
             }
 
@@ -268,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit;
             }
 
-            // Fetch Transaction Groups within the date range, regardless of BillingInvoiceNo
+            // Fetch Transaction Groups within the date range
             $tgQuery = "SELECT * FROM transactiongroup WHERE Date BETWEEN ? AND ?";
             $stmt = $conn->prepare($tgQuery);
             if (!$stmt) {
@@ -285,12 +305,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             $stmt->close();
 
-            // Calculate updated amounts based on the current date range
-            $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+            // Recalculate amounts based on the current date range and BilledTo
+            $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
 
             echo json_encode(['success' => true, 'transactionGroups' => $transactionGroups, 'amounts' => $amounts]);
             exit;
         }
+
 
         // Update Transaction Group
         if ($_POST['action'] == 'update_transaction_group') {
@@ -454,10 +475,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $dateRow = $dateResult->fetch_assoc();
                     $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                     $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $billedTo = $_POST['BilledTo'] ?? '';
                     $stmt->close();
 
                     // Recalculate amounts based on the updated date range
-                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
 
                     // Update invoice amounts
                     $updateAmountsQuery = "
@@ -747,10 +769,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $dateRow = $dateResult->fetch_assoc();
                         $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                         $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                        $billedTo = $_POST['BilledTo'] ?? '';
                         $stmt->close();
 
                         // Recalculate amounts based on the updated date range
-                        $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+                        $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
 
                         // Update invoice amounts
                         $updateAmountsQuery = "
@@ -987,10 +1010,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $dateRow = $dateResult->fetch_assoc();
                     $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                     $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $billedTo = $_POST['BilledTo'] ?? '';
                     $stmt->close();
 
                     // Recalculate amounts based on the updated date range
-                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
 
                     // Update invoice amounts
                     $updateAmountsQuery = "
@@ -1113,10 +1137,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $dateRow = $dateResult->fetch_assoc();
                     $billingStartDate = $dateRow['BillingStartDate'] ?? '';
                     $billingEndDate = $dateRow['BillingEndDate'] ?? '';
+                    $billedTo = $_POST['BilledTo'] ?? '';
                     $stmt->close();
 
                     // Recalculate amounts based on the updated date range
-                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate);
+                    $amounts = calculate_amounts($conn, $billingStartDate, $billingEndDate, $billedTo);
 
                     // Update invoice amounts
                     $updateAmountsQuery = "
@@ -1211,8 +1236,8 @@ if ($invoiceResult->num_rows == 0) {
 
 $invoice = $invoiceResult->fetch_assoc();
 
-// Calculate initial amounts based on the current date range
-$amounts = calculate_amounts($conn, $invoice['BillingStartDate'], $invoice['BillingEndDate']);
+// Calculate initial amounts based on the current date range and BilledTo
+$amounts = calculate_amounts($conn, $invoice['BillingStartDate'], $invoice['BillingEndDate'], $invoice['BilledTo']);
 
 // Close the statement
 $stmt->close();
@@ -1288,11 +1313,23 @@ include '../officer/header.php';
                             <label for="BilledTo" class="form-label">Billed To</label>
                             <select class="form-select" id="BilledTo" name="BilledTo" required>
                                 <option value="">Select Client</option>
-                                <option value="Bounty Plus" <?php echo ($invoice['BilledTo'] == 'Bounty Plus') ? 'selected' : ''; ?>>Bounty Plus</option>
-                                <option value="Chooks to Go" <?php echo ($invoice['BilledTo'] == 'Chooks to Go') ? 'selected' : ''; ?>>Chooks to Go</option>
-                                <!-- Add more clients as needed -->
+                                <?php
+                                // Fetch clients from the database
+                                $clientQuery = "SELECT clientName FROM client";
+                                $clientResult = $conn->query($clientQuery);
+
+                                if ($clientResult) {
+                                    while ($client = $clientResult->fetch_assoc()) {
+                                        $selected = ($invoice['BilledTo'] == $client['clientName']) ? 'selected' : '';
+                                        echo '<option value="' . htmlspecialchars($client['clientName']) . '" ' . $selected . '>' . htmlspecialchars($client['clientName']) . '</option>';
+                                    }
+                                } else {
+                                    echo '<option value="">No clients available</option>';
+                                }
+                                ?>
                             </select>
                         </div>
+
 
                         <!-- Billing Start Date -->
                         <div class="col-md-4 mb-3">
@@ -1440,11 +1477,10 @@ include '../officer/header.php';
                             <div class="row">
                                 <!-- Fuel Price (New Field) -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="TG_FuelPrice" class="form-label">Fuel Price</label>
-                                    <input type="number" step="0.01" class="form-control" id="TG_FuelPrice"
-                                        name="FuelPrice" required min="50" max="100"
-                                        title="Enter a value between 50 and 100">
-
+                                    <label for="TG_FuelPrice" class="form-label">TEST Price</label>
+                                    <input type="number" class="form-control" id="TG_FuelPrice" name="FuelPrice"
+                                        required min="50" max="100" title="Enter a value between 50 and 100" step="1"
+                                        oninput="this.value = Math.floor(this.value)">
                                 </div>
 
                                 <!-- Rate Amount (Read Only) -->
@@ -1695,10 +1731,11 @@ $conn->close();
         function fetchTransactionGroups() {
             let billingStartDate = $('#BillingStartDate').val();
             let billingEndDate = $('#BillingEndDate').val();
+            let billedTo = $('#BilledTo').val();
 
-            // Validate Date Inputs
-            if (billingStartDate === '' || billingEndDate === '') {
-                $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Please select Billing Start Date and Billing End Date.</td></tr>');
+            // Validate Inputs
+            if (billingStartDate === '' || billingEndDate === '' || billedTo === '') {
+                $('#transactionGroupsTable tbody').html('<tr><td colspan="8" class="text-center">Please select Billing Start Date, Billing End Date, and Billed To.</td></tr>');
                 return;
             }
 
@@ -1711,7 +1748,8 @@ $conn->close();
                 data: {
                     action: 'fetch_transaction_groups',
                     BillingStartDate: billingStartDate,
-                    BillingEndDate: billingEndDate
+                    BillingEndDate: billingEndDate,
+                    BilledTo: billedTo
                 },
                 dataType: 'json',
                 success: function (response) {
@@ -1732,20 +1770,20 @@ $conn->close();
                         if (response.transactionGroups.length > 0) {
                             response.transactionGroups.forEach(function (tg) {
                                 let row = `
-                                    <tr id="tg-${tg.TransactionGroupID}">
-                                        <td>${tg.TransactionGroupID}</td>
-                                        <td>${tg.TruckID}</td>
-                                        <td>${tg.Date}</td>
-                                        <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                        <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                            <button class="btn btn-sm btn-danger delete-tg-btn" data-tg-id="${tg.TransactionGroupID}">Delete</button>
-                                        </td>
-                                    </tr>
-                                `;
+                            <tr id="tg-${tg.TransactionGroupID}">
+                                <td>${tg.TransactionGroupID}</td>
+                                <td>${tg.TruckID}</td>
+                                <td>${tg.Date}</td>
+                                <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+                                <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+                                <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+                                <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
+                                    <button class="btn btn-sm btn-danger delete-tg-btn" data-tg-id="${tg.TransactionGroupID}">Delete</button>
+                                </td>
+                            </tr>
+                        `;
 
                                 tbody.append(row);
                             });
@@ -1766,8 +1804,8 @@ $conn->close();
         // Initial Fetch on Page Load
         fetchTransactionGroups();
 
-        // Event listeners for real-time updates when Billing Start Date or End Date changes
-        $('#BillingStartDate, #BillingEndDate').on('change', function () {
+        /// Event listeners for Billing Start Date, End Date, and Billed To changes
+        $('#BillingStartDate, #BillingEndDate, #BilledTo').on('change', function () {
             fetchTransactionGroups();
         });
 
