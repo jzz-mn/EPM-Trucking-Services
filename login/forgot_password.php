@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <div class="col-lg-6 col-xl-5 col-xxl-4">
             <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
               <div class="col-12 auth-card">
-                <a href="../main/index.html" class="text-nowrap logo-img d-block w-100 mb-4">
+                <a href="../index.php" class="text-nowrap logo-img d-block w-100 mb-4">
                   <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-25" alt="Logo-Dark" />
                 </a>
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Forgot Password</h2>

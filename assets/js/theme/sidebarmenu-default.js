@@ -12,10 +12,10 @@ if ((at = "vertical")) {
 
   var link = document.getElementById("get-url");
 
-  if (currentURL.includes("/main/index.html")) {
-    link.setAttribute("href", "../main/index.html");
-  } else if (currentURL.includes("/index.html")) {
-    link.setAttribute("href", "./index.html");
+  if (currentURL.includes("/index.php")) {
+    link.setAttribute("href", "../index.php");
+  } else if (currentURL.includes("/index.php")) {
+    link.setAttribute("href", "./index.php");
   } else {
     link.setAttribute("href", "./");
   }
