@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/db_connection.php';
-require_once '../vendor/autoload.php'; // Ensure the path is correct
+require_once __DIR__ . '/../vendor/autoload.php';
+ // Ensure the path is correct
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -19,7 +20,7 @@ $billingInvoiceNo = intval($_POST['BillingInvoiceNo']);
 $format = isset($_POST['format']) ? $_POST['format'] : 'pdf'; // default to 'pdf'
 
 // --- Step 2: Handle Logo Image ---
-$logoPath = '../assetsEPM/logos/epm-logo-no-bg.png'; // Adjusted the path as per your requirement
+$logoPath = __DIR__ . '/../assetsEPM/logos/epm-logo-no-bg.png'; // Adjusted the path as per your requirement
 if (file_exists($logoPath)) {
     $logoData = file_get_contents($logoPath);
     $base64Logo = base64_encode($logoData);
@@ -28,7 +29,7 @@ if (file_exists($logoPath)) {
 }
 
 // --- Step 3: Handle Signature Image ---
-$signaturePath = '../assetsEPM/images/sample.png'; // Signature image path
+$signaturePath = __DIR__ . '/../assetsEPM/images/sample.png'; // Signature image path
 if (file_exists($signaturePath)) {
     $signatureData = file_get_contents($signaturePath);
     $signatureBase64 = base64_encode($signatureData);
