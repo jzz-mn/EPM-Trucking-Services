@@ -46,7 +46,7 @@ if (isset($_GET['token'])) {
                         $error_message = "Password must be at least 8 characters long and include at least one letter and one number.";
                     } else {
                         // Hash the new password
-                        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                        $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
 
                         // Update the user's password and clear the token
                         $updateSql = "UPDATE useraccounts SET Password = ?, PasswordResetToken = NULL, TokenExpiration = NULL WHERE UserID = ?";

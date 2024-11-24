@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   // Successful login
 
                   // Hash the plaintext password and update the database
-                  $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                  $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
                   $update_sql = "UPDATE useraccounts SET Password = ? WHERE UserID = ?";
                   if ($update_stmt = $conn->prepare($update_sql)) {
                     $update_stmt->bind_param("si", $hashedPassword, $row['UserID']);
