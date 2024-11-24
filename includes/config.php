@@ -3,9 +3,11 @@ function loadEnv() {
     $envFile = dirname(__DIR__) . '/.env';
     error_log('Looking for .env file at: ' . $envFile);
     
-    // If .env file exists, load it
     if (file_exists($envFile)) {
         error_log('.env file found');
+        $content = file_get_contents($envFile);
+        error_log('File contents: ' . substr($content, 0, 20) . '...'); // Log first 20 chars
+        
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
             if (strpos($line, '=') !== false && strpos(trim($line), '#') !== 0) {
@@ -13,14 +15,13 @@ function loadEnv() {
                 $key = trim($key);
                 $value = trim($value);
                 
-                // Remove quotes if present
-                $value = trim($value, '"\'');
-                
                 putenv("$key=$value");
                 $_ENV[$key] = $value;
                 $_SERVER[$key] = $value;
                 
-                error_log("Loaded env var: $key");
+                if ($key === 'OPENAI_API_KEY') {
+                    error_log("OpenAI key loaded, length: " . strlen($value));
+                }
             }
         }
     } else {
