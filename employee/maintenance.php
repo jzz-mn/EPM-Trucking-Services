@@ -23,11 +23,7 @@ $truck_result = $conn->query($truck_query);
             <h4 class="mb-4 mb-sm-0 card-title">Add Maintenance Record</h4>
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                  <a class="text-muted text-decoration-none" href="../employee/home.php">
-                    <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
-                  </a>
-                </li>
+                
                 <li class="breadcrumb-item" aria-current="page">
                   <span class="badge bg-primary-subtle text-primary">Maintenance</span>
                 </li>
