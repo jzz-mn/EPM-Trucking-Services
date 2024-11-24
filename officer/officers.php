@@ -99,12 +99,9 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             </div>
                             <div class="mb-3">
                               <label class="form-label">Set Password</label><br>
-                              <input type="radio" id="autoPassword" name="passwordOption" value="auto" checked
+                              <input type="hidden" id="autoPassword" name="passwordOption" value="auto" checked
                                 onclick="togglePasswordFields()">
                               <label for="autoPassword">Automatically Generate Password</label><br>
-                              <input type="radio" id="manualPassword" name="passwordOption" value="manual"
-                                onclick="togglePasswordFields()">
-                              <label for="manualPassword">Set Password Manually</label>
                             </div>
                             <div id="passwordFields" style="display: none;">
                               <div class="mb-3">
@@ -133,21 +130,21 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <div class="mb-3">
                               <label for="firstName" class="form-label">First Name</label>
                               <input type="text" class="form-control" id="firstName" name="firstName"
-                                placeholder="First Name" required>
+                                placeholder="First Name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="middleInitial" class="form-label">Middle Initial</label>
                               <input type="text" class="form-control" id="middleInitial" name="middleInitial"
-                                placeholder="Middle Initial">
+                                placeholder="Middle Initial" pattern="[A-Za-z\s]?" title="Please enter a single letter or leave blank" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="lastName" class="form-label">Last Name</label>
                               <input type="text" class="form-control" id="lastName" name="lastName"
-                                placeholder="Last Name" required>
+                                placeholder="Last Name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -175,14 +172,14 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <div class="mb-3">
                               <label for="yearGraduated" class="form-label">Year Graduated</label>
                               <input type="text" class="form-control" id="yearGraduated" name="yearGraduated"
-                                placeholder="Year Graduated">
+                                placeholder="Year Graduated" pattern="\d*" title="Please enter numbers only" onkeypress="return /[0-9]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-6">
                             <div class="mb-3">
                               <label for="mobile" class="form-label">Mobile Number</label>
                               <input type="tel" class="form-control" id="mobile" name="mobileNo"
-                                placeholder="Mobile Number" required>
+                                placeholder="Mobile Number" required pattern="[0-9]*" title="Please enter numbers only" onkeypress="return /[0-9]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -327,21 +324,21 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <div class="mb-3">
                               <label for="firstName" class="form-label">First Name</label>
                               <input type="text" class="form-control" id="firstName" name="firstName"
-                                placeholder="First Name" required>
+                                placeholder="First Name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="middleInitial" class="form-label">Middle Initial</label>
                               <input type="text" class="form-control" id="middleInitial" name="middleInitial"
-                                placeholder="Middle Initial">
+                                placeholder="Middle Initial" pattern="[A-Za-z\s]?" title="Please enter a single letter or leave blank" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-4">
                             <div class="mb-3">
                               <label for="lastName" class="form-label">Last Name</label>
                               <input type="text" class="form-control" id="lastName" name="lastName"
-                                placeholder="Last Name" required>
+                                placeholder="Last Name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-6">
@@ -369,7 +366,7 @@ if ($_SESSION['Role'] !== 'SuperAdmin') {
                             <div class="mb-3">
                               <label for="yearGraduated" class="form-label">Year Graduated</label>
                               <input type="text" class="form-control" id="yearGraduated" name="yearGraduated"
-                                placeholder="Year Graduated">
+                                placeholder="Year Graduated" required pattern="\d*" title="Please enter numbers only" onkeypress="return /[0-9]/.test(event.key)">
                             </div>
                           </div>
                           <div class="col-lg-6">

@@ -125,12 +125,9 @@ if (isset($_SESSION['success_message'])) {
                             <!-- Add options for password setting -->
                             <div class="mb-3">
                               <label class="form-label">Set Password</label><br>
-                              <input type="radio" id="autoPassword" name="passwordOption" value="auto" checked
+                              <input type="hidden" id="autoPassword" name="passwordOption" value="auto" checked
                                 onclick="togglePasswordFields()">
                               <label for="autoPassword">Automatically Generate Password</label><br>
-                              <input type="radio" id="manualPassword" name="passwordOption" value="manual"
-                                onclick="togglePasswordFields()">
-                              <label for="manualPassword">Set Password Manually</label>
                             </div>
 
                             <!-- Password Fields (Initially Hidden if Automatic is selected) -->
@@ -160,24 +157,24 @@ if (isset($_SESSION['success_message'])) {
                             <div class="col-lg-4 mb-3">
                               <label for="firstNameInput" class="form-label">First Name</label>
                               <input type="text" class="form-control" id="firstNameInput" name="firstName"
-                                placeholder="Enter first name" required>
+                                placeholder="Enter first name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="middleInitialInput" class="form-label">Middle Initial</label>
                               <input type="text" class="form-control" id="middleInitialInput" name="middleInitial"
-                                placeholder="Enter middle initial">
+                                placeholder="Enter middle initial" pattern="[A-Za-z\s]?" title="Please enter a single letter or leave blank" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="lastNameInput" class="form-label">Last Name</label>
                               <input type="text" class="form-control" id="lastNameInput" name="lastName"
-                                placeholder="Enter last name" required>
+                                placeholder="Enter last name" required pattern="[A-Za-z\s]+" title="Please enter letters and spaces only" onkeypress="return /[A-Za-z\s]/.test(event.key)">
                             </div>
                             <div class="col-lg-6 mb-3">
                               <label for="genderInput" class="form-label">Gender</label>
                               <select class="form-control" id="genderInput" name="gender" required>
-                                <option value="MALE">Male</option>
-                                <option value="FEMALE">Female</option>
-                                <option value="FEMALE">Others</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Others">Others</option>
                               </select>
                             </div>
                             <div class="col-lg-6 mb-3">
@@ -188,7 +185,7 @@ if (isset($_SESSION['success_message'])) {
                             <div class="col-lg-4 mb-3">
                               <label for="mobileInput" class="form-label">Mobile Number</label>
                               <input type="text" class="form-control" id="mobileInput" name="mobileNo"
-                                placeholder="Enter mobile number" required>
+                                placeholder="Enter mobile number" required pattern="\d*" title="Please enter numbers only" onkeypress="return /[0-9]/.test(event.key)">
                             </div>
                             <div class="col-lg-4 mb-3">
                               <label for="employmentDateInput" class="form-label">Employment Date</label>
@@ -327,8 +324,9 @@ if (isset($_SESSION['success_message'])) {
                               <label for="editGenderInput" class="form-label">Gender</label>
                               <select type="text" class="form-control" id="editGenderInput" name="gender"
                                 placeholder="Enter gender" required>
-                                <option value="MALE">MALE</option>
-                                <option value="FEMALE">FEMALE</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Others">Others</option>
                               </select>
                             </div>
                             <div class="col-lg-6 mb-3">
