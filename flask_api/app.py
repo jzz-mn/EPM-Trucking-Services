@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from finance import FinanceAnalyzer
+from maintenance import MaintenancePredictor
 import mysql.connector
 import pandas as pd
 import logging
@@ -202,6 +203,57 @@ def predict_finance():
             "message": str(e)
         }), 500
 
+@app.route('/predict_maintenance', methods=['GET'])
+def predict_maintenance():
+    try:
+        predictor = MaintenancePredictor()
+        
+        if not predictor.train_model():
+            raise Exception("Failed to train maintenance model")
+            
+        predictions = predictor.predict_maintenance()
+        
+        if predictions is None:
+            raise Exception("Failed to generate maintenance predictions")
+
+        return jsonify({
+            "status": "success",
+            "metrics": predictor.metrics,
+            "forecast": predictions
+        })
+
+    except Exception as e:
+        logger.error(f"Error during maintenance prediction: {str(e)}")
+        logger.exception("Full traceback:")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/get_truck_brand/<int:truck_id>', methods=['GET'])
+def get_truck_brand(truck_id):
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        
+        query = "SELECT Brand FROM trucks WHERE TruckID = %s"
+        cursor.execute(query, (truck_id,))
+        result = cursor.fetchone()
+        
+        conn.close()
+        
+        if result:
+            return jsonify({"brand": result['Brand']})
+        else:
+            return jsonify({"brand": "Unknown"}), 404
+
+    except Exception as e:
+        logger.error(f"Error fetching truck brand: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 # Add a test endpoint for database connection
 @app.route('/test_db', methods=['GET'])
 def test_db():
@@ -211,6 +263,36 @@ def test_db():
         return jsonify({"status": "success", "message": "Database connection successful"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/evaluate_maintenance', methods=['GET'])
+def evaluate_maintenance():
+    try:
+        predictor = MaintenancePredictor()
+        logger.info("MaintenancePredictor initialized")
+        
+        if not predictor.train_model():
+            logger.error("Model training failed")
+            raise Exception("Failed to train maintenance model")
+            
+        evaluation = predictor.evaluate_model()
+        
+        if evaluation is None:
+            logger.error("Model evaluation failed")
+            raise Exception("Failed to evaluate maintenance model")
+
+        logger.info("Evaluation successful")
+        return jsonify({
+            "status": "success",
+            "evaluation": evaluation
+        })
+
+    except Exception as e:
+        logger.error(f"Error during maintenance evaluation: {str(e)}")
+        logger.exception("Full traceback:")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

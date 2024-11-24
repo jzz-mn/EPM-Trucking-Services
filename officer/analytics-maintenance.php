@@ -1,32 +1,23 @@
 <?php
 session_start();
-include '../officer/header.php';
 include '../includes/db_connection.php';
+include 'header.php';
 ?>
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
-    rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js for charts -->
+<link href="../assets/libs/apexcharts/dist/apexcharts.css" rel="stylesheet">
 
 <div class="body-wrapper">
     <div class="container-fluid">
-        <?php
-        $sidebar_path = '../officer/sidebar.php';
-        if (file_exists($sidebar_path)) {
-            include $sidebar_path;
-        } else {
-            echo "<!-- Sidebar not found at $sidebar_path -->";
-        }
-        ?>
-        <div class="card card-body py-3">
+        <!-- Page Title -->
+        <div class="card card-body py-3 mb-4">
             <div class="row align-items-center">
                 <div class="col-12">
                     <div class="d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
+                        <h4 class="mb-0">Maintenance Forecasting</h4>
                         <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item d-flex align-items-center">
-                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="../officer/home.php" class="text-muted text-decoration-none">
                                         <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                                     </a>
                                 </li>
@@ -37,90 +28,73 @@ include '../includes/db_connection.php';
             </div>
         </div>
 
-        <h5 class="border-bottom py-2 px-4 mb-4">Maintenance</h5>
-
-        <div class="row">
-            <!-- Prediction Accuracy Metrics (Moved to top) -->
-            <div class="col-12 mb-4">
-                <div class="card bg-info-subtle overflow-hidden shadow-none">
+        <!-- Summary Cards Row -->
+        <div class="row mb-4">
+            <!-- Model Performance Card -->
+            <div class="col-md-6">
+                <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-semibold mb-4">Prediction Accuracy</h5>
-                        <div id="accuracyMetrics" class="row">
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <h6>Model Accuracy</h6>
-                                    <div class="accuracy-value fs-4 fw-semibold">Loading...</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <h6>Precision</h6>
-                                    <div class="precision-value fs-4 fw-semibold">Loading...</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <h6>Recall</h6>
-                                    <div class="recall-value fs-4 fw-semibold">Loading...</div>
-                                </div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="card-title mb-0">Model Accuracy</h6>
+                            <div class="accuracy-badge">
+                                <span class="badge bg-primary total-trucks">Loading...</span>
                             </div>
                         </div>
+                        <h4 class="mb-0 total-predictions">0%</h4>
+                        <small class="text-muted accuracy-kpi">Loading...</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Maintenance Predictions Chart -->
-            <div class="col-12 mb-4">
-                <div class="card bg-secondary-subtle overflow-hidden shadow-none">
+            <!-- Preventive Maintenance Savings -->
+            <div class="col-md-6">
+                <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title fw-semibold mb-4">Maintenance Predictions</h5>
-                        <div id="maintenancePredictionChart"></div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="card-title mb-0">Potential Cost Savings</h6>
+                            <div class="accuracy-badge">
+                                <span class="badge bg-success maintenance-count">Loading...</span>
+                            </div>
+                        </div>
+                        <h4 class="mb-0 maintenance-needed">₱0</h4>
+                        <small class="text-muted savings-kpi">Loading...</small>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Detailed Predictions Table with Pagination -->
-            <div class="col-12 mb-4">
-                <div class="card bg-warning-subtle overflow-hidden shadow-none">
+        <!-- Add container for charts -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Maintenance Forecast</h5>
+                        <div id="maintenanceCharts" style="min-height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add container for maintenance table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card maintenance-table-container">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="card-title fw-semibold mb-0">Detailed Maintenance Schedule</h5>
-                            <div class="d-flex align-items-center">
-                                <label class="me-2">Rows per page:</label>
-                                <select id="rowsPerPage" class="form-select form-select-sm" style="width: auto;">
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                </select>
-                            </div>
+                            <h5 class="card-title mb-0">Maintenance Schedule</h5>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
+                            <table class="table table-hover" id="maintenanceTable">
+                                <thead>
                                     <tr>
                                         <th>Month</th>
-                                        <th>Truck ID</th>
-                                        <th>Truck Brand</th>
-                                        <th>Maintenance Needed</th>
-                                        <th>Probability</th>
+                                        <th>Plate Number</th>
+                                        <th>Model</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="maintenancePredictionsTable">
-                                    <tr>
-                                        <td colspan="5" class="text-center">Loading predictions...</td>
-                                    </tr>
-                                </tbody>
+                                <tbody></tbody>
                             </table>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="text-muted">
-                                    Showing <span id="startRow">0</span> to <span id="endRow">0</span> of <span id="totalRows">0</span> entries
-                                </div>
-                                <div class="pagination-container">
-                                    <button id="prevPage" class="btn btn-sm btn-outline-secondary me-2">&laquo; Previous</button>
-                                    <button id="nextPage" class="btn btn-sm btn-outline-secondary">Next &raquo;</button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -129,208 +103,254 @@ include '../includes/db_connection.php';
     </div>
 </div>
 
-<script src="../assets/js/vendor.min.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-<script src="../assets/js/theme/app.init.js"></script>
-<script src="../assets/js/theme/theme.js"></script>
-<script src="../assets/js/theme/app.min.js"></script>
-<script src="../assets/js/theme/sidebarmenu-default.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../assets/libs/jquery/dist/jquery.min.js"></script>
 <script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
+<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
 <script>
-// Initialize variables for pagination
-let currentPage = 1;
-let rowsPerPage = 5;
-let allTableData = [];
-
-// Wrap the main code in an async function
-async function initializeDashboard() {
+document.addEventListener('DOMContentLoaded', async function() {
     try {
-        console.log('Testing database connection...');
-        const response = await fetch('http://127.0.0.1:5000/predict_maintenance', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        console.log('API Response Status:', response.status);
+        // Fetch evaluation data first
+        const evalResponse = await fetch('http://127.0.0.1:5000/evaluate_maintenance');
+        if (!evalResponse.ok) throw new Error('Failed to fetch evaluation data');
+        const evalData = await evalResponse.json();
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (evalData.status === 'success') {
+            updateCards(evalData);
         }
-        
+
+        // Then fetch predictions
+        const response = await fetch('http://127.0.0.1:5000/predict_maintenance');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch predictions: ${response.status}`);
+        }
         const data = await response.json();
-        console.log('Received Data:', data);
-
-        // Update accuracy metrics
-        console.log('Updating accuracy metrics...');
-        document.querySelector('.accuracy-value').textContent = `${(data.metrics.accuracy * 100).toFixed(1)}%`;
-        document.querySelector('.precision-value').textContent = `${(data.metrics.precision * 100).toFixed(1)}%`;
-        document.querySelector('.recall-value').textContent = `${(data.metrics.recall * 100).toFixed(1)}%`;
-
-        // Prepare chart data
-        console.log('Preparing chart data...');
-        const maintenanceData = data.forecast.map(d => d.needs_maintenance ? 1 : 0);
-        const months = data.forecast.map(d => d.date);
-
-        // Create chart
-        console.log('Creating chart...');
-        const chartOptions = {
-            series: [{
-                name: 'Trucks Needing Maintenance',
-                data: maintenanceData
-            }],
-            chart: {
-                type: 'bar',
-                height: 350,
-                toolbar: {
-                    show: false
-                }
-            },
-            colors: ['#ff6b6b'],
-            xaxis: {
-                categories: months,
-                labels: {
-                    rotate: -45,
-                    style: {
-                        fontSize: '12px'
-                    }
-                }
-            },
-            yaxis: {
-                title: {
-                    text: 'Number of Trucks'
-                },
-                min: 0,
-                forceNiceScale: true,
-                labels: {
-                    formatter: function(val) {
-                        return Math.floor(val);
-                    }
-                }
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    dataLabels: {
-                        position: 'top'
-                    },
-                    columnWidth: '60%'
-                }
-            },
-            dataLabels: {
-                enabled: true,
-                formatter: function(val) {
-                    return val;
-                },
-                offsetY: -20,
-                style: {
-                    fontSize: '12px',
-                    colors: ["#304758"]
+        
+        if (data.status === 'success') {
+            const monthlyData = prepareMonthlyData(data.forecast);
+            
+            // Initialize chart only if element exists
+            const chartElement = document.querySelector("#maintenanceCharts");
+            if (chartElement) {
+                try {
+                    const maintenanceCharts = new ApexCharts(
+                        chartElement,
+                        getChartOptions(monthlyData)
+                    );
+                    await maintenanceCharts.render();
+                } catch (chartError) {
+                    console.error('Chart initialization error:', chartError);
                 }
             }
-        };
 
-        // Render chart
-        console.log('Rendering chart...');
-        const chart = new ApexCharts(document.querySelector("#maintenancePredictionChart"), chartOptions);
-        await chart.render();
-        console.log('Chart rendered successfully');
-
-        // Update table
-        console.log('Updating table...');
-        const rows = await Promise.all(data.forecast.map(async d => {
-            const brand = await getTruckBrand(d.truck_id);
-            return `
-                <tr>
-                    <td>${d.date}</td>
-                    <td>${d.truck_id}</td>
-                    <td>${brand}</td>
-                    <td>
-                        <span class="badge ${d.needs_maintenance ? 'bg-danger' : 'bg-success'}">
-                            ${d.needs_maintenance ? 'Yes' : 'No'}
-                        </span>
-                    </td>
-                    <td>${(d.probability * 100).toFixed(1)}%</td>
-                </tr>
-            `;
-        }));
-
-        allTableData = rows;
-        updateTable();
-
+            // Update table
+            const tableBody = document.querySelector('#maintenanceTable tbody');
+            if (tableBody) {
+                tableBody.innerHTML = generateMaintenanceRows(monthlyData);
+            }
+        }
     } catch (error) {
         console.error('Error:', error);
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'alert alert-danger';
-        errorMessage.textContent = 'Unable to load maintenance predictions: ' + error.message;
-        document.querySelector('.container-fluid').prepend(errorMessage);
+        showError(error.message);
     }
-}
+});
 
-// Helper function to get truck brand
-async function getTruckBrand(truckId) {
-    try {
-        const response = await fetch(`http://127.0.0.1:5000/get_truck_brand/${truckId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch truck brand');
+// Update the chart options
+function getChartOptions(monthlyData) {
+    const sixMonthsForecast = Object.entries(monthlyData)
+        .slice(0, 6)
+        .reduce((acc, [month, data]) => {
+            acc[month] = data;
+            return acc;
+        }, {});
+
+    return {
+        series: [{
+            name: 'Trucks Needing Maintenance',
+            data: Object.entries(sixMonthsForecast).map(([month, data]) => ({
+                x: month,
+                y: data.maintenance,
+                trucks: data.trucks.filter(t => t.needs_maintenance)
+            }))
+        }],
+        chart: {
+            type: 'bar',
+            height: 350,
+            toolbar: {
+                show: true
+            },
+            animations: {
+                enabled: true
+            }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: '60%',
+                distributed: true
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val) {
+                return val > 0 ? `${val} truck${val > 1 ? 's' : ''}` : 'No Maintenance Needed';
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                const trucks = w.config.series[seriesIndex].data[dataPointIndex].trucks;
+                return `
+                    <div class="p-2">
+                        <strong>${w.globals.labels[dataPointIndex]}</strong><br/>
+                        ${trucks.length > 0 ? 
+                            trucks.map(t => `${t.plate_no} (${t.brand})`).join('<br/>') : 
+                            'No Maintenance Needed'}
+                    </div>
+                `;
+            }
+        },
+        colors: ['#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0', '#795548'],
+        xaxis: {
+            categories: Object.keys(sixMonthsForecast)
+        },
+        yaxis: {
+            title: {
+                text: 'Number of Trucks'
+            },
+            max: 4,
+            min: 0,
+            tickAmount: 4
         }
-        const data = await response.json();
-        return data.brand;
-    } catch (error) {
-        console.error(`Error fetching truck brand for ID ${truckId}:`, error);
-        return 'Unknown';
+    };
+}
+
+// Helper function to show errors
+function showError(message) {
+    const errorAlert = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
+}
+
+function updateElement(selector, value) {
+    const element = document.querySelector(selector);
+    if (element) {
+        element.textContent = value;
+    } else {
+        console.warn(`Element not found: ${selector}`);
     }
 }
 
-// Function to update table pagination
-function updateTable() {
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    const paginatedData = allTableData.slice(startIndex, endIndex);
+function generateMaintenanceRows(monthlyData) {
+    const sixMonthsForecast = Object.entries(monthlyData)
+        .slice(0, 6);
     
-    const tableBody = document.getElementById('maintenancePredictionsTable');
-    tableBody.innerHTML = paginatedData.join('');
-    
-    // Update pagination info
-    document.getElementById('startRow').textContent = startIndex + 1;
-    document.getElementById('endRow').textContent = Math.min(endIndex, allTableData.length);
-    document.getElementById('totalRows').textContent = allTableData.length;
-    
-    // Update button states
-    document.getElementById('prevPage').disabled = currentPage === 1;
-    document.getElementById('nextPage').disabled = endIndex >= allTableData.length;
+    return sixMonthsForecast.map(([month, data]) => {
+        const maintenanceTrucks = data.trucks.filter(t => t.needs_maintenance);
+        
+        if (maintenanceTrucks.length === 0) {
+            return `
+                <tr>
+                    <td>${month}</td>
+                    <td colspan="3" class="text-center">
+                        <span class="badge bg-success">No Maintenance Needed</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        return `
+            <tr>
+                <td>${month}</td>
+                <td>
+                    ${maintenanceTrucks.map(t => t.plate_no).join(', ')}
+                </td>
+                <td>
+                    ${maintenanceTrucks.map(t => t.brand).join(', ')}
+                </td>
+                <td>
+                    <span class="badge bg-primary">
+                        ${maintenanceTrucks.length} Truck${maintenanceTrucks.length > 1 ? 's' : ''} Need Maintenance
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// Event listeners for pagination
-document.getElementById('prevPage').addEventListener('click', () => {
-    if (currentPage > 1) {
-        currentPage--;
-        updateTable();
+// Add filter functionality
+document.getElementById('monthFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const month = document.getElementById('monthFilter').value;
+    const rows = document.querySelectorAll('#maintenanceTable tbody tr');
+    
+    rows.forEach(row => {
+        const showMonth = month === 'all' || row.dataset.month === month;
+        row.style.display = showMonth ? '' : 'none';
+    });
+}
+
+// Add this function after the DOMContentLoaded event listener
+function prepareMonthlyData(forecast) {
+    const monthlyData = {};
+    const seen = new Set(); // Track unique truck-month combinations
+    
+    forecast.forEach(prediction => {
+        const month = prediction.month;
+        const key = `${prediction.plate_no}-${month}`;
+        
+        if (seen.has(key)) {
+            return; // Skip duplicate entries
+        }
+        seen.add(key);
+        
+        if (!monthlyData[month]) {
+            monthlyData[month] = {
+                total: 0,
+                maintenance: 0,
+                trucks: []
+            };
+        }
+        
+        monthlyData[month].total++;
+        if (prediction.needs_maintenance) {
+            monthlyData[month].maintenance++;
+        }
+        monthlyData[month].trucks.push(prediction);
+    });
+    
+    return monthlyData;
+}
+
+// Update the cards section
+function updateCards(evalData) {
+    if (evalData && evalData.evaluation) {
+        // Model Performance Card
+        const accuracy = evalData.evaluation.accuracy || 0;
+        document.querySelector('.total-predictions').textContent = `${accuracy}%`;
+        document.querySelector('.accuracy-kpi').textContent = 'Model Accuracy';
+        document.querySelector('.total-trucks').textContent = 'Performance Metrics';
+
+        // Cost Savings Card
+        const historicalCost = evalData.evaluation.data_stats.historical_cost || 0;
+        const potentialSavings = evalData.evaluation.data_stats.potential_savings || 0;
+        const savingsPercent = ((potentialSavings / historicalCost) * 100).toFixed(1);
+        
+        document.querySelector('.maintenance-needed').textContent = `₱${historicalCost.toLocaleString()}`;
+        document.querySelector('.maintenance-count').textContent = 'Last Month\'s Cost';
+        document.querySelector('.savings-kpi').textContent = 
+            `Potential Savings: ₱${potentialSavings.toLocaleString()} (${savingsPercent}%)`;
     }
-});
-
-document.getElementById('nextPage').addEventListener('click', () => {
-    const maxPage = Math.ceil(allTableData.length / rowsPerPage);
-    if (currentPage < maxPage) {
-        currentPage++;
-        updateTable();
-    }
-});
-
-document.getElementById('rowsPerPage').addEventListener('change', (e) => {
-    rowsPerPage = parseInt(e.target.value);
-    currentPage = 1;
-    updateTable();
-});
-
-// Call the initialization function when the document is ready
-document.addEventListener('DOMContentLoaded', initializeDashboard);
+}
 </script>
-</body>
 
-</html>
+<?php 
+include 'footer.php';
+?>
