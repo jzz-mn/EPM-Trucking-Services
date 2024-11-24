@@ -9,17 +9,22 @@ include 'header.php';
 <div class="body-wrapper">
     <div class="container-fluid">
         <!-- Page Title -->
-        <div class="card card-body py-3 mb-4">
+        <div class="card card-body py-3">
             <div class="row align-items-center">
                 <div class="col-12">
-                    <div class="d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">Maintenance Forecasting</h4>
+                    <div class="d-sm-flex align-items-center justify-space-between">
+                        <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
                         <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item">
-                                    <a href="../officer/home.php" class="text-muted text-decoration-none">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item d-flex align-items-center">
+                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                                         <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                                     </a>
+                                </li>
+                                <li class="breadcrumb-item" aria-current="page">
+                                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
+                                        Maintenance
+                                    </span>
                                 </li>
                             </ol>
                         </nav>
@@ -27,6 +32,8 @@ include 'header.php';
                 </div>
             </div>
         </div>
+
+        <h5 class="border-bottom py-2 px-4 mb-4">Maintenance</h5>
 
         <!-- Summary Cards Row -->
         <div class="row mb-4">
@@ -109,100 +116,105 @@ include 'header.php';
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Fetch evaluation data first
-        const evalResponse = await fetch('http://127.0.0.1:5000/evaluate_maintenance');
-        if (!evalResponse.ok) throw new Error('Failed to fetch evaluation data');
-        const evalData = await evalResponse.json();
-        
-        if (evalData.status === 'success') {
-            updateCards(evalData);
-        }
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Fetch evaluation data first
+            const evalResponse = await fetch('http://127.0.0.1:5000/evaluate_maintenance');
+            if (!evalResponse.ok) throw new Error('Failed to fetch evaluation data');
+            const evalData = await evalResponse.json();
 
-        // Then fetch predictions
-        const response = await fetch('http://127.0.0.1:5000/predict_maintenance');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch predictions: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            const monthlyData = prepareMonthlyData(data.forecast);
-            
-            // Initialize chart only if element exists
-            const chartElement = document.querySelector("#maintenanceCharts");
-            if (chartElement) {
-                try {
-                    const maintenanceCharts = new ApexCharts(
-                        chartElement,
-                        getChartOptions(monthlyData)
-                    );
-                    await maintenanceCharts.render();
-                } catch (chartError) {
-                    console.error('Chart initialization error:', chartError);
+            if (evalData.status === 'success') {
+                updateCards(evalData);
+            }
+
+            // Then fetch predictions
+            const response = await fetch('http://127.0.0.1:5000/predict_maintenance');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch predictions: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const monthlyData = prepareMonthlyData(data.forecast);
+
+                // Initialize chart only if element exists
+                const chartElement = document.querySelector("#maintenanceCharts");
+                if (chartElement) {
+                    try {
+                        const maintenanceCharts = new ApexCharts(
+                            chartElement,
+                            getChartOptions(monthlyData)
+                        );
+                        await maintenanceCharts.render();
+                    } catch (chartError) {
+                        console.error('Chart initialization error:', chartError);
+                    }
+                }
+
+                // Update table
+                const tableBody = document.querySelector('#maintenanceTable tbody');
+                if (tableBody) {
+                    tableBody.innerHTML = generateMaintenanceRows(monthlyData);
                 }
             }
-
-            // Update table
-            const tableBody = document.querySelector('#maintenanceTable tbody');
-            if (tableBody) {
-                tableBody.innerHTML = generateMaintenanceRows(monthlyData);
-            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError(error.message);
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showError(error.message);
-    }
-});
+    });
 
-// Update the chart options
-function getChartOptions(monthlyData) {
-    const sixMonthsForecast = Object.entries(monthlyData)
-        .slice(0, 6)
-        .reduce((acc, [month, data]) => {
-            acc[month] = data;
-            return acc;
-        }, {});
+    // Update the chart options
+    function getChartOptions(monthlyData) {
+        const sixMonthsForecast = Object.entries(monthlyData)
+            .slice(0, 6)
+            .reduce((acc, [month, data]) => {
+                acc[month] = data;
+                return acc;
+            }, {});
 
-    return {
-        series: [{
-            name: 'Trucks Needing Maintenance',
-            data: Object.entries(sixMonthsForecast).map(([month, data]) => ({
-                x: month,
-                y: data.maintenance,
-                trucks: data.trucks.filter(t => t.needs_maintenance)
-            }))
-        }],
-        chart: {
-            type: 'bar',
-            height: 350,
-            toolbar: {
-                show: true
+        return {
+            series: [{
+                name: 'Trucks Needing Maintenance',
+                data: Object.entries(sixMonthsForecast).map(([month, data]) => ({
+                    x: month,
+                    y: data.maintenance,
+                    trucks: data.trucks.filter(t => t.needs_maintenance)
+                }))
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                },
+                animations: {
+                    enabled: true
+                }
             },
-            animations: {
-                enabled: true
-            }
-        },
-        plotOptions: {
-            bar: {
-                borderRadius: 4,
-                columnWidth: '60%',
-                distributed: true
-            }
-        },
-        dataLabels: {
-            enabled: true,
-            formatter: function(val) {
-                return val > 0 ? `${val} truck${val > 1 ? 's' : ''}` : 'No Maintenance Needed';
-            }
-        },
-        tooltip: {
-            shared: true,
-            intersect: false,
-            custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                const trucks = w.config.series[seriesIndex].data[dataPointIndex].trucks;
-                return `
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '60%',
+                    distributed: true
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val > 0 ? `${val} truck${val > 1 ? 's' : ''}` : 'No Maintenance Needed';
+                }
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                custom: function({
+                    series,
+                    seriesIndex,
+                    dataPointIndex,
+                    w
+                }) {
+                    const trucks = w.config.series[seriesIndex].data[dataPointIndex].trucks;
+                    return `
                     <div class="p-2">
                         <strong>${w.globals.labels[dataPointIndex]}</strong><br/>
                         ${trucks.length > 0 ? 
@@ -210,52 +222,52 @@ function getChartOptions(monthlyData) {
                             'No Maintenance Needed'}
                     </div>
                 `;
-            }
-        },
-        colors: ['#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0', '#795548'],
-        xaxis: {
-            categories: Object.keys(sixMonthsForecast)
-        },
-        yaxis: {
-            title: {
-                text: 'Number of Trucks'
+                }
             },
-            max: 4,
-            min: 0,
-            tickAmount: 4
-        }
-    };
-}
+            colors: ['#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0', '#795548'],
+            xaxis: {
+                categories: Object.keys(sixMonthsForecast)
+            },
+            yaxis: {
+                title: {
+                    text: 'Number of Trucks'
+                },
+                max: 4,
+                min: 0,
+                tickAmount: 4
+            }
+        };
+    }
 
-// Helper function to show errors
-function showError(message) {
-    const errorAlert = `
+    // Helper function to show errors
+    function showError(message) {
+        const errorAlert = `
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
-}
-
-function updateElement(selector, value) {
-    const element = document.querySelector(selector);
-    if (element) {
-        element.textContent = value;
-    } else {
-        console.warn(`Element not found: ${selector}`);
+        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
     }
-}
 
-function generateMaintenanceRows(monthlyData) {
-    const sixMonthsForecast = Object.entries(monthlyData)
-        .slice(0, 6);
-    
-    return sixMonthsForecast.map(([month, data]) => {
-        const maintenanceTrucks = data.trucks.filter(t => t.needs_maintenance);
-        
-        if (maintenanceTrucks.length === 0) {
-            return `
+    function updateElement(selector, value) {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.textContent = value;
+        } else {
+            console.warn(`Element not found: ${selector}`);
+        }
+    }
+
+    function generateMaintenanceRows(monthlyData) {
+        const sixMonthsForecast = Object.entries(monthlyData)
+            .slice(0, 6);
+
+        return sixMonthsForecast.map(([month, data]) => {
+            const maintenanceTrucks = data.trucks.filter(t => t.needs_maintenance);
+
+            if (maintenanceTrucks.length === 0) {
+                return `
                 <tr>
                     <td>${month}</td>
                     <td colspan="3" class="text-center">
@@ -263,9 +275,9 @@ function generateMaintenanceRows(monthlyData) {
                     </td>
                 </tr>
             `;
-        }
+            }
 
-        return `
+            return `
             <tr>
                 <td>${month}</td>
                 <td>
@@ -281,76 +293,76 @@ function generateMaintenanceRows(monthlyData) {
                 </td>
             </tr>
         `;
-    }).join('');
-}
-
-// Add filter functionality
-document.getElementById('monthFilter').addEventListener('change', filterTable);
-
-function filterTable() {
-    const month = document.getElementById('monthFilter').value;
-    const rows = document.querySelectorAll('#maintenanceTable tbody tr');
-    
-    rows.forEach(row => {
-        const showMonth = month === 'all' || row.dataset.month === month;
-        row.style.display = showMonth ? '' : 'none';
-    });
-}
-
-// Add this function after the DOMContentLoaded event listener
-function prepareMonthlyData(forecast) {
-    const monthlyData = {};
-    const seen = new Set(); // Track unique truck-month combinations
-    
-    forecast.forEach(prediction => {
-        const month = prediction.month;
-        const key = `${prediction.plate_no}-${month}`;
-        
-        if (seen.has(key)) {
-            return; // Skip duplicate entries
-        }
-        seen.add(key);
-        
-        if (!monthlyData[month]) {
-            monthlyData[month] = {
-                total: 0,
-                maintenance: 0,
-                trucks: []
-            };
-        }
-        
-        monthlyData[month].total++;
-        if (prediction.needs_maintenance) {
-            monthlyData[month].maintenance++;
-        }
-        monthlyData[month].trucks.push(prediction);
-    });
-    
-    return monthlyData;
-}
-
-// Update the cards section
-function updateCards(evalData) {
-    if (evalData && evalData.evaluation) {
-        // Model Performance Card
-        const accuracy = evalData.evaluation.accuracy || 0;
-        document.querySelector('.total-predictions').textContent = `${accuracy}%`;
-        document.querySelector('.accuracy-kpi').textContent = 'Model Accuracy';
-        document.querySelector('.total-trucks').textContent = 'Performance Metrics';
-
-        // Cost Savings Card
-        const historicalCost = evalData.evaluation.data_stats.historical_cost || 0;
-        const potentialSavings = evalData.evaluation.data_stats.potential_savings || 0;
-        const savingsPercent = ((potentialSavings / historicalCost) * 100).toFixed(1);
-        
-        document.querySelector('.maintenance-needed').textContent = `₱${historicalCost.toLocaleString()}`;
-        document.querySelector('.maintenance-count').textContent = 'Last Month\'s Cost';
-        document.querySelector('.savings-kpi').textContent = 
-            `Potential Savings: ₱${potentialSavings.toLocaleString()} (${savingsPercent}%)`;
+        }).join('');
     }
-}
+
+    // Add filter functionality
+    document.getElementById('monthFilter').addEventListener('change', filterTable);
+
+    function filterTable() {
+        const month = document.getElementById('monthFilter').value;
+        const rows = document.querySelectorAll('#maintenanceTable tbody tr');
+
+        rows.forEach(row => {
+            const showMonth = month === 'all' || row.dataset.month === month;
+            row.style.display = showMonth ? '' : 'none';
+        });
+    }
+
+    // Add this function after the DOMContentLoaded event listener
+    function prepareMonthlyData(forecast) {
+        const monthlyData = {};
+        const seen = new Set(); // Track unique truck-month combinations
+
+        forecast.forEach(prediction => {
+            const month = prediction.month;
+            const key = `${prediction.plate_no}-${month}`;
+
+            if (seen.has(key)) {
+                return; // Skip duplicate entries
+            }
+            seen.add(key);
+
+            if (!monthlyData[month]) {
+                monthlyData[month] = {
+                    total: 0,
+                    maintenance: 0,
+                    trucks: []
+                };
+            }
+
+            monthlyData[month].total++;
+            if (prediction.needs_maintenance) {
+                monthlyData[month].maintenance++;
+            }
+            monthlyData[month].trucks.push(prediction);
+        });
+
+        return monthlyData;
+    }
+
+    // Update the cards section
+    function updateCards(evalData) {
+        if (evalData && evalData.evaluation) {
+            // Model Performance Card
+            const accuracy = evalData.evaluation.accuracy || 0;
+            document.querySelector('.total-predictions').textContent = `${accuracy}%`;
+            document.querySelector('.accuracy-kpi').textContent = 'Model Accuracy';
+            document.querySelector('.total-trucks').textContent = 'Performance Metrics';
+
+            // Cost Savings Card
+            const historicalCost = evalData.evaluation.data_stats.historical_cost || 0;
+            const potentialSavings = evalData.evaluation.data_stats.potential_savings || 0;
+            const savingsPercent = ((potentialSavings / historicalCost) * 100).toFixed(1);
+
+            document.querySelector('.maintenance-needed').textContent = `₱${historicalCost.toLocaleString()}`;
+            document.querySelector('.maintenance-count').textContent = 'Last Month\'s Cost';
+            document.querySelector('.savings-kpi').textContent =
+                `Potential Savings: ₱${potentialSavings.toLocaleString()} (${savingsPercent}%)`;
+        }
+    }
 </script>
 
-<?php 
+<?php
 include 'footer.php';
 ?>
