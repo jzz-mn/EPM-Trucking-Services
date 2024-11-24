@@ -1,196 +1,216 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-import joblib
+from finance import FinanceAnalyzer
+import mysql.connector
 import pandas as pd
-from sqlalchemy import create_engine, text
 import logging
-from datetime import datetime
-import numpy as np
-from capstone_maintenance import predict_maintenance  # Add this import
 
 app = Flask(__name__)
 CORS(app)
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load the finance model
-try:
-    finance_model = joblib.load('finance_model.joblib')
-    logger.info("Finance model loaded successfully.")
-except Exception as e:
-    logger.error(f"Error loading finance model: {e}")
-    finance_model = None
+# Database configuration
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'epm_database'
+}
 
-# Load the maintenance model
-try:
-    maintenance_model = joblib.load('maintenance_model.joblib')
-    logger.info("Maintenance model loaded successfully.")
-except Exception as e:
-    logger.error(f"Error loading maintenance model: {e}")
-    maintenance_model = None
-
-# Database setup
-DATABASE_URI = 'mysql+pymysql://root:@localhost/epm_database'
-engine = create_engine(DATABASE_URI)
-
-
-def get_historical_data():
-    """Fetch historical revenue, expenses, and calculate profit dynamically from the database."""
+def get_transaction_data():
+    """Fetch transaction data from MySQL database"""
     try:
-        with engine.connect() as connection:
-            query_revenue = text("""
-                SELECT DATE_FORMAT(Date, '%Y-%m') AS month, 
-                       SUM(Amount) AS revenue
-                FROM transactiongroup
-                GROUP BY DATE_FORMAT(Date, '%Y-%m')
-                ORDER BY month ASC
-            """)
-            
-            query_expenses = text("""
-                SELECT DATE_FORMAT(Date, '%Y-%m') AS month, 
-                       SUM(TotalExpense) AS expenses
-                FROM expenses
-                GROUP BY DATE_FORMAT(Date, '%Y-%m')
-                ORDER BY month ASC
-            """)
-            
-            revenue_result = connection.execute(query_revenue)
-            expense_result = connection.execute(query_expenses)
-
-            revenue_data = {row.month: float(row.revenue) for row in revenue_result}
-            expense_data = {row.month: float(row.expenses) for row in expense_result}
-            
-            historical_data = []
-            for month, revenue in revenue_data.items():
-                expenses = expense_data.get(month, 0)
-                profit = revenue - expenses
-                historical_data.append({
-                    'month': month,
-                    'revenue': round(revenue, 2),
-                    'expenses': round(expenses, 2),
-                    'profit': round(profit, 2)
-                })
-            
-            return sorted(historical_data, key=lambda x: x['month'])
-
+        conn = mysql.connector.connect(**DB_CONFIG)
+        query = """
+            SELECT 
+                Date,
+                TollFeeAmount,
+                RateAmount,
+                Amount,
+                TotalKGs,
+                FuelPrice
+            FROM transactiongroup
+            ORDER BY Date
+        """
+        
+        # Read data into pandas DataFrame
+        df = pd.read_sql(query, conn)
+        conn.close()
+        
+        return df
+        
     except Exception as e:
-        logger.error(f"Database error: {e}")
+        logger.error(f"Database error: {str(e)}")
         raise
 
+def get_expense_data():
+    """Fetch expense and fuel data from MySQL database"""
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        
+        # Fetch expenses data
+        expenses_query = """
+            SELECT 
+                Date,
+                SalaryAmount,
+                MobileAmount,
+                OtherAmount,
+                (SalaryAmount + MobileAmount + OtherAmount) as TotalExpense
+            FROM expenses
+            ORDER BY Date
+        """
+        
+        # Fetch fuel data
+        fuel_query = """
+            SELECT 
+                Date,
+                Liters,
+                UnitPrice,
+                Amount
+            FROM fuel
+            ORDER BY Date
+        """
+        
+        # Read data into pandas DataFrames
+        df_expenses = pd.read_sql(expenses_query, conn)
+        df_fuel = pd.read_sql(fuel_query, conn)
+        conn.close()
+        
+        # Merge expenses and fuel data
+        df_combined = pd.merge(df_expenses, df_fuel, on='Date', how='outer')
+        df_combined.fillna(0, inplace=True)
+        
+        # Calculate total expenses
+        df_combined['Expenses'] = df_combined['TotalExpense'] + df_combined['Amount']
+        
+        return df_combined
+        
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        raise
 
-@app.route("/predict_finance", methods=["POST"])
+@app.route('/analyze/revenue', methods=['POST'])
+def analyze_revenue():
+    try:
+        # Get data from database
+        historical_data = get_transaction_data()
+        
+        if historical_data.empty:
+            return jsonify({
+                "status": "error",
+                "message": "No transaction data available"
+            }), 400
+
+        # Initialize analyzer and make predictions
+        analyzer = FinanceAnalyzer()
+        analysis = analyzer.analyze_finances(historical_data)
+
+        return jsonify({
+            "status": "success",
+            "analysis": analysis
+        })
+
+    except Exception as e:
+        logger.error(f"Error during analysis: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/predict_finance', methods=['POST'])
 def predict_finance():
     try:
-        if finance_model is None:
-            return jsonify({"error": "Finance model not loaded"}), 500
-
-        data = request.get_json()
-        months = int(data.get('months', 6))
-
-        # Get historical data
-        historical_data = get_historical_data()
-        logger.debug(f"Historical data: {historical_data}")
+        # Get data from database
+        historical_revenue = get_transaction_data()
+        historical_expenses = get_expense_data()
         
-        if not historical_data:
-            return jsonify({"error": "No historical data available"}), 404
+        if historical_revenue.empty or historical_expenses.empty:
+            return jsonify({
+                "status": "error",
+                "message": "No data available"
+            }), 400
 
-        # Extract revenue data for model features
-        historical_revenues = np.array([float(entry['revenue']) for entry in historical_data])
-
-        # Handle anomalies
-        rolling_avg = historical_revenues[-3:].mean() if len(historical_revenues) >= 3 else np.mean(historical_revenues)
-        if len(historical_revenues) < 3 or historical_revenues[-1] == 0:
-            logger.warning("Insufficient or invalid data detected. Imputing recent revenue values.")
-            historical_revenues[-1] = rolling_avg if not np.isnan(rolling_avg) else np.mean(historical_revenues)
-            if len(historical_revenues) > 1 and historical_revenues[-2] == 0:
-                historical_revenues[-2] = historical_revenues[-1]
-            if len(historical_revenues) > 2 and historical_revenues[-3] == 0:
-                historical_revenues[-3] = historical_revenues[-1]
-
-        # Calculate future dates
-        last_date = datetime.strptime(historical_data[-1]['month'], '%Y-%m')
-        future_dates = pd.date_range(start=last_date, periods=months+1, freq='MS')[1:]
-        
-        predictions = []
-        current_features = pd.DataFrame({
-            'Month': [future_dates[0].month],
-            'Year': [future_dates[0].year],
-            'Quarter': [future_dates[0].quarter],
-            'Lag1': [historical_revenues[-1]],
-            'Lag2': [historical_revenues[-2] if len(historical_revenues) > 1 else 0],
-            'Lag3': [historical_revenues[-3] if len(historical_revenues) > 2 else 0]
+        # Rename columns before merging to avoid confusion
+        historical_revenue = historical_revenue.rename(columns={
+            'Amount': 'Revenue',
+            'FuelPrice': 'FuelPrice_Revenue'
         })
-        current_features['RollingMean3'] = current_features[['Lag1', 'Lag2', 'Lag3']].mean(axis=1)
+        
+        # Merge revenue and expenses data for profit calculation
+        historical_data = historical_revenue.merge(
+            historical_expenses, on='Date', how='outer'
+        ).fillna(0)
+        
+        # Initialize analyzer
+        analyzer = FinanceAnalyzer()
+        
+        # Train models
+        if not analyzer.train_revenue_model(historical_revenue):
+            raise Exception("Failed to train revenue model")
+            
+        if not analyzer.train_expenses_model(historical_expenses):
+            raise Exception("Failed to train expenses model")
+            
+        if not analyzer.train_profit_model(historical_data):
+            raise Exception("Failed to train profit model")
 
-        # Make predictions one month at a time
-        for i in range(months):
-            pred = float(finance_model.predict(current_features)[0])
-            pred = max(0, pred) + 399230.47
-            predictions.append(pred)
-            if i < months - 1:
-                next_date = future_dates[i + 1]
-                current_features = pd.DataFrame({
-                    'Month': [next_date.month],
-                    'Year': [next_date.year],
-                    'Quarter': [next_date.quarter],
-                    'Lag1': [pred],
-                    'Lag2': [current_features['Lag1'].iloc[0]],
-                    'Lag3': [current_features['Lag2'].iloc[0]]
-                })
-                current_features['RollingMean3'] = current_features[['Lag1', 'Lag2', 'Lag3']].mean(axis=1)
+        # Make predictions
+        last_date = historical_revenue['Date'].max()
+        revenue_forecast = analyzer.predict_revenue(last_date)
+        expense_forecast = analyzer.predict_expenses(last_date)
+        profit_forecast = analyzer.predict_profit(last_date)
 
-        forecast_data = [{"month": date.strftime("%Y-%m"), "predicted_revenue": round(pred, 2)}
-                         for date, pred in zip(future_dates, predictions)]
+        if revenue_forecast is None or expense_forecast is None or profit_forecast is None:
+            raise Exception("Failed to generate forecasts")
 
-        return jsonify({"historical": historical_data, "forecast": forecast_data})
+        # Format response
+        forecast_data = []
+        for rev, exp, prof in zip(
+            revenue_forecast.to_dict('records'),
+            expense_forecast.to_dict('records'),
+            profit_forecast.to_dict('records')
+        ):
+            forecast_data.append({
+                'month': rev['Date'],
+                'revenue': float(rev['Revenue']),
+                'expenses': float(exp['Expenses']),
+                'profit': float(prof['Profit'])
+            })
+
+        return jsonify({
+            "status": "success",
+            "forecast": forecast_data,
+            "metrics": {
+                'revenue_mae': float(analyzer.metrics['revenue']['mae']),
+                'expense_mae': float(analyzer.metrics['expenses']['mae']),
+                'profit_mae': float(analyzer.metrics['profit']['mae'])
+            },
+            "forecast_period": {
+                "start": revenue_forecast['Date'].min().strftime('%Y-%m-%d'),
+                "end": revenue_forecast['Date'].max().strftime('%Y-%m-%d')
+            }
+        })
 
     except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error during finance prediction: {str(e)}")
+        logger.exception("Full traceback:")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
-@app.route('/predict_maintenance', methods=['POST'])
-def predict_maintenance_api():
+# Add a test endpoint for database connection
+@app.route('/test_db', methods=['GET'])
+def test_db():
     try:
-        data = request.get_json()
-        truck_id = int(data.get('TruckID', 0))  # 0 for all trucks
-        year = int(data.get('Year', datetime.now().year))  # Default to current year
-
-        predictions = []
-        with engine.connect() as connection:
-            # If no specific TruckID, fetch all trucks
-            if truck_id == 0:
-                truck_query = text("""
-                    SELECT DISTINCT TruckID 
-                    FROM trucksinfo 
-                    WHERE TruckStatus = 'Activated'
-                """)  # Optional: Only fetch activated trucks
-                truck_ids = [row[0] for row in connection.execute(truck_query)]
-            else:
-                truck_ids = [truck_id]
-
-            # Loop through all trucks and months
-            for tid in truck_ids:
-                for month in range(1, 13):
-                    try:
-                        # Pass the connection to predict_maintenance
-                        prediction = predict_maintenance(tid, year, month, connection)
-                        predictions.append(prediction)
-                    except Exception as e:
-                        logger.error(f"Error predicting maintenance for TruckID {tid}, Month {month}: {e}")
-                        predictions.append({
-                            "TruckID": tid,
-                            "Month": month,
-                            "MaintenanceRequired": "Error",
-                            "Reason": str(e)
-                        })
-
-        return jsonify({"predictions": predictions})
-
+        conn = mysql.connector.connect(**DB_CONFIG)
+        conn.close()
+        return jsonify({"status": "success", "message": "Database connection successful"})
     except Exception as e:
-        logger.error(f"Error in /predict_maintenance endpoint: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-
-
+if __name__ == "__main__":
+    app.run(debug=True)

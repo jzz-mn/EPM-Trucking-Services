@@ -40,294 +40,297 @@ include '../includes/db_connection.php';
         <h5 class="border-bottom py-2 px-4 mb-4">Maintenance</h5>
 
         <div class="row">
-            <!-- Most Common Maintenance Issues by Description where Amount > 0 -->
-            <div class="col-lg-6">
-                <div class="card bg-secondary-subtle overflow-hidden shadow-none">
+            <!-- Prediction Accuracy Metrics (Moved to top) -->
+            <div class="col-12 mb-4">
+                <div class="card bg-info-subtle overflow-hidden shadow-none">
                     <div class="card-body">
-                        <h5 class="card-title">Most Common Maintenance Issues</h5>
-                        <?php
-                        $query = "SELECT Description, COUNT(*) AS Frequency 
-                                  FROM truckmaintenance 
-                                  WHERE Amount > 0.00 
-                                  GROUP BY Description 
-                                  ORDER BY Frequency DESC 
-                                  LIMIT 10;";
-                        $result = mysqli_query($conn, $query);
-
-                        if (!$result) {
-                            echo "Error: " . mysqli_error($conn);
-                        }
-
-                        $descriptions = [];
-                        $frequencies = [];
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            $descriptions[] = $row['Description'];
-                            $frequencies[] = $row['Frequency'];
-                        }
-                        ?>
-                        <canvas id="commonIssuesChart"></canvas>
-                        <script>
-                            var ctx = document.getElementById('commonIssuesChart').getContext('2d');
-                            new Chart(ctx, {
-                                type: 'bar',
-                                data: {
-                                    labels: <?php echo json_encode($descriptions); ?>,
-                                    datasets: [{
-                                        label: 'Frequency',
-                                        data: <?php echo json_encode($frequencies); ?>,
-                                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    plugins: {
-                                        legend: {
-                                            position: 'top'
-                                        },
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true
-                                        },
-                                        x: {
-                                            title: {
-                                                display: true,
-                                                text: 'Description'
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Predicted Maintenance Needs Chart -->
-            <div class="col-lg-6">
-                <div class="card bg-warning-subtle overflow-hidden shadow-none">
-                    <div class="card-body">
-                        <h5 class="card-title">Predicted Maintenance Needs</h5>
-                        <canvas id="maintenancePredictionChart"></canvas>
-                        <script>
-                            async function fetchMaintenancePredictionsFromCSV() {
-                                try {
-                                    // Path to the CSV file
-                                    const filePath = 'maintenance_forecast.csv'; // This path will be accessible server-side.
-
-                                    const response = await fetch(filePath);
-                                    if (!response.ok) {
-                                        throw new Error(`Failed to load CSV: ${response.status}`);
-                                    }
-
-                                    const csvText = await response.text();
-                                    const predictions = parseCSV(csvText);
-
-                                    return predictions;
-                                } catch (error) {
-                                    console.error("Error loading CSV:", error);
-                                    return [];
-                                }
-                            }
-
-                            function parseCSV(csvText) {
-                                const rows = csvText.split('\n');
-                                const headers = rows[0].split(','); // Get CSV headers
-                                const data = [];
-
-                                for (let i = 1; i < rows.length; i++) {
-                                    const columns = rows[i].split(',');
-                                    if (columns.length < headers.length) continue;
-
-                                    // Create an object for each row
-                                    const prediction = {
-                                        Month: columns[1].trim(), // YYYY-MM format
-                                        TruckID: parseInt(columns[0].trim()), // TruckID
-                                        MaintenanceForecast: columns[3].trim() // 'Yes' or 'No'
-                                    };
-                                    data.push(prediction);
-                                }
-
-                                return data;
-                            }
-
-                            async function renderMaintenancePredictionChart() {
-                                const predictions = await fetchMaintenancePredictionsFromCSV();
-
-                                if (predictions.length === 0) {
-                                    document.getElementById("maintenancePredictionChart").parentNode.innerHTML += `
-                            <p class="text-center mt-3">No prediction data available.</p>`;
-                                    return;
-                                }
-
-                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                const maintenanceData = Array(12).fill(0);
-                                const trucksPerMonth = Array(12).fill("").map(() => []);
-
-                                predictions.forEach(prediction => {
-                                    const monthIndex = new Date(prediction.Month).getMonth(); // Get the month index from the date
-                                    if (prediction.MaintenanceForecast === "Yes") {
-                                        maintenanceData[monthIndex] += 1;
-                                        trucksPerMonth[monthIndex].push(`TruckID: ${prediction.TruckID}`);
-                                    }
-                                });
-
-                                if (maintenanceData.every(value => value === 0)) {
-                                    const ctxParent = document.getElementById('maintenancePredictionChart').parentNode;
-                                    ctxParent.innerHTML += `
-                            <p class="text-center mt-3">
-                                No trucks require maintenance for the selected year. 
-                                This could indicate:
-                                <ul>
-                                    <li>Trucks are well-maintained.</li>
-                                    <li>The model predicts no upcoming maintenance issues based on current data.</li>
-                                </ul>
-                            </p>`;
-                                    return;
-                                }
-
-                                const ctx = document.getElementById('maintenancePredictionChart').getContext('2d');
-                                new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: months,
-                                        datasets: [{
-                                            label: 'Trucks Requiring Maintenance',
-                                            data: maintenanceData,
-                                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                                            borderColor: 'rgba(255, 99, 132, 1)',
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        plugins: {
-                                            tooltip: {
-                                                callbacks: {
-                                                    afterBody: (tooltipItems) => {
-                                                        const monthIndex = tooltipItems[0].dataIndex;
-                                                        return trucksPerMonth[monthIndex].join(", ");
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                title: {
-                                                    display: true,
-                                                    text: 'Number of Trucks Requiring Maintenance'
-                                                }
-                                            },
-                                            x: {
-                                                title: {
-                                                    display: true,
-                                                    text: 'Month'
-                                                }
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-
-                            // Initialize the chart rendering
-                            renderMaintenancePredictionChart();
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="row mt-4">
-                <!-- Top Trucks with Highest Maintenance Costs -->
-                <div class="col-lg-6">
-                    <div class="card bg-primary-subtle overflow-hidden shadow-none">
-                        <div class="card-body">
-                            <h5 class="card-title">Top Trucks with Highest Maintenance Costs</h5>
-                            <?php
-                            $query = "SELECT t.TruckBrand, t.TruckID, SUM(m.Amount) AS TotalMaintenanceCost 
-                                  FROM truckmaintenance m 
-                                  JOIN trucksinfo t ON m.TruckID = t.TruckID 
-                                  GROUP BY t.TruckBrand, t.TruckID
-                                  ORDER BY TotalMaintenanceCost DESC 
-                                  LIMIT 5;";
-                            $result = mysqli_query($conn, $query);
-
-                            if (!$result) {
-                                echo "Error: " . mysqli_error($conn);
-                            }
-
-                            $topTrucks = [];
-                            while ($row = mysqli_fetch_assoc($result)) {
-                                $topTrucks[] = $row;
-                            }
-                            ?>
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>Truck Brand</th>
-                                        <th>Truck ID</th>
-                                        <th>Total Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($topTrucks as $truck): ?>
-                                        <tr>
-                                            <td><?php echo $truck['TruckBrand']; ?></td>
-                                            <td><?php echo $truck['TruckID']; ?></td>
-                                            <td><?php echo number_format($truck['TotalMaintenanceCost'], 2); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        <h5 class="card-title fw-semibold mb-4">Prediction Accuracy</h5>
+                        <div id="accuracyMetrics" class="row">
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <h6>Model Accuracy</h6>
+                                    <div class="accuracy-value fs-4 fw-semibold">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <h6>Precision</h6>
+                                    <div class="precision-value fs-4 fw-semibold">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <h6>Recall</h6>
+                                    <div class="recall-value fs-4 fw-semibold">Loading...</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Truck Maintenance Cost Summary -->
-                <div class="col-lg-6">
-                    <div class="card bg-info-subtle overflow-hidden shadow-none">
-                        <div class="card-body">
-                            <h5 class="card-title">Truck Maintenance Cost Summary</h5>
-                            <?php
-                            $summaryQuery = "SELECT 
-                                         COUNT(DISTINCT TruckID) AS TotalTrucks,
-                                         SUM(Amount) AS TotalCost,
-                                         AVG(Amount) AS AvgCost
-                                         FROM truckmaintenance 
-                                         WHERE Amount > 0.00";
-                            $summaryResult = mysqli_query($conn, $summaryQuery);
+            <!-- Maintenance Predictions Chart -->
+            <div class="col-12 mb-4">
+                <div class="card bg-secondary-subtle overflow-hidden shadow-none">
+                    <div class="card-body">
+                        <h5 class="card-title fw-semibold mb-4">Maintenance Predictions</h5>
+                        <div id="maintenancePredictionChart"></div>
+                    </div>
+                </div>
+            </div>
 
-                            if (!$summaryResult) {
-                                echo "Error: " . mysqli_error($conn);
-                            }
-
-                            $summaryData = mysqli_fetch_assoc($summaryResult);
-                            ?>
-                            <p><strong>Total Trucks with Maintenance:</strong>
-                                <?php echo $summaryData['TotalTrucks']; ?></p>
-                            <p><strong>Total Maintenance Cost:</strong>
-                                <?php echo number_format($summaryData['TotalCost'], 2); ?></p>
-                            <p><strong>Average Maintenance Cost per Truck:</strong>
-                                <?php echo number_format($summaryData['AvgCost'], 2); ?></p>
+            <!-- Detailed Predictions Table with Pagination -->
+            <div class="col-12 mb-4">
+                <div class="card bg-warning-subtle overflow-hidden shadow-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title fw-semibold mb-0">Detailed Maintenance Schedule</h5>
+                            <div class="d-flex align-items-center">
+                                <label class="me-2">Rows per page:</label>
+                                <select id="rowsPerPage" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Truck ID</th>
+                                        <th>Truck Brand</th>
+                                        <th>Maintenance Needed</th>
+                                        <th>Probability</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="maintenancePredictionsTable">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading predictions...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted">
+                                    Showing <span id="startRow">0</span> to <span id="endRow">0</span> of <span id="totalRows">0</span> entries
+                                </div>
+                                <div class="pagination-container">
+                                    <button id="prevPage" class="btn btn-sm btn-outline-secondary me-2">&laquo; Previous</button>
+                                    <button id="nextPage" class="btn btn-sm btn-outline-secondary">Next &raquo;</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="../assets/js/vendor.min.js"></script>
-    <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
-    <script src="../assets/js/theme/app.init.js"></script>
-    <script src="../assets/js/theme/theme.js"></script>
-    <script src="../assets/js/theme/app.min.js"></script>
-    <script src="../assets/js/theme/sidebarmenu-default.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-    <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-    <script src="../assets/js/apps/productDetail.js"></script>
-    </body>
+<script src="../assets/js/vendor.min.js"></script>
+<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/libs/simplebar/dist/simplebar.min.js"></script>
+<script src="../assets/js/theme/app.init.js"></script>
+<script src="../assets/js/theme/theme.js"></script>
+<script src="../assets/js/theme/app.min.js"></script>
+<script src="../assets/js/theme/sidebarmenu-default.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
 
-    </html>
+<script>
+// Initialize variables for pagination
+let currentPage = 1;
+let rowsPerPage = 5;
+let allTableData = [];
+
+// Wrap the main code in an async function
+async function initializeDashboard() {
+    try {
+        console.log('Testing database connection...');
+        const response = await fetch('http://127.0.0.1:5000/predict_maintenance', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('API Response Status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Received Data:', data);
+
+        // Update accuracy metrics
+        console.log('Updating accuracy metrics...');
+        document.querySelector('.accuracy-value').textContent = `${(data.metrics.accuracy * 100).toFixed(1)}%`;
+        document.querySelector('.precision-value').textContent = `${(data.metrics.precision * 100).toFixed(1)}%`;
+        document.querySelector('.recall-value').textContent = `${(data.metrics.recall * 100).toFixed(1)}%`;
+
+        // Prepare chart data
+        console.log('Preparing chart data...');
+        const maintenanceData = data.forecast.map(d => d.needs_maintenance ? 1 : 0);
+        const months = data.forecast.map(d => d.date);
+
+        // Create chart
+        console.log('Creating chart...');
+        const chartOptions = {
+            series: [{
+                name: 'Trucks Needing Maintenance',
+                data: maintenanceData
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: false
+                }
+            },
+            colors: ['#ff6b6b'],
+            xaxis: {
+                categories: months,
+                labels: {
+                    rotate: -45,
+                    style: {
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Number of Trucks'
+                },
+                min: 0,
+                forceNiceScale: true,
+                labels: {
+                    formatter: function(val) {
+                        return Math.floor(val);
+                    }
+                }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    dataLabels: {
+                        position: 'top'
+                    },
+                    columnWidth: '60%'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val;
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    colors: ["#304758"]
+                }
+            }
+        };
+
+        // Render chart
+        console.log('Rendering chart...');
+        const chart = new ApexCharts(document.querySelector("#maintenancePredictionChart"), chartOptions);
+        await chart.render();
+        console.log('Chart rendered successfully');
+
+        // Update table
+        console.log('Updating table...');
+        const rows = await Promise.all(data.forecast.map(async d => {
+            const brand = await getTruckBrand(d.truck_id);
+            return `
+                <tr>
+                    <td>${d.date}</td>
+                    <td>${d.truck_id}</td>
+                    <td>${brand}</td>
+                    <td>
+                        <span class="badge ${d.needs_maintenance ? 'bg-danger' : 'bg-success'}">
+                            ${d.needs_maintenance ? 'Yes' : 'No'}
+                        </span>
+                    </td>
+                    <td>${(d.probability * 100).toFixed(1)}%</td>
+                </tr>
+            `;
+        }));
+
+        allTableData = rows;
+        updateTable();
+
+    } catch (error) {
+        console.error('Error:', error);
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'alert alert-danger';
+        errorMessage.textContent = 'Unable to load maintenance predictions: ' + error.message;
+        document.querySelector('.container-fluid').prepend(errorMessage);
+    }
+}
+
+// Helper function to get truck brand
+async function getTruckBrand(truckId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:5000/get_truck_brand/${truckId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch truck brand');
+        }
+        const data = await response.json();
+        return data.brand;
+    } catch (error) {
+        console.error(`Error fetching truck brand for ID ${truckId}:`, error);
+        return 'Unknown';
+    }
+}
+
+// Function to update table pagination
+function updateTable() {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedData = allTableData.slice(startIndex, endIndex);
+    
+    const tableBody = document.getElementById('maintenancePredictionsTable');
+    tableBody.innerHTML = paginatedData.join('');
+    
+    // Update pagination info
+    document.getElementById('startRow').textContent = startIndex + 1;
+    document.getElementById('endRow').textContent = Math.min(endIndex, allTableData.length);
+    document.getElementById('totalRows').textContent = allTableData.length;
+    
+    // Update button states
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = endIndex >= allTableData.length;
+}
+
+// Event listeners for pagination
+document.getElementById('prevPage').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        updateTable();
+    }
+});
+
+document.getElementById('nextPage').addEventListener('click', () => {
+    const maxPage = Math.ceil(allTableData.length / rowsPerPage);
+    if (currentPage < maxPage) {
+        currentPage++;
+        updateTable();
+    }
+});
+
+document.getElementById('rowsPerPage').addEventListener('change', (e) => {
+    rowsPerPage = parseInt(e.target.value);
+    currentPage = 1;
+    updateTable();
+});
+
+// Call the initialization function when the document is ready
+document.addEventListener('DOMContentLoaded', initializeDashboard);
+</script>
+</body>
+
+</html>
