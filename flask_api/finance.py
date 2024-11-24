@@ -131,15 +131,22 @@ class FinanceAnalyzer:
             logger.info("Starting profit model training...")
             logger.info(f"Available columns: {historical_data.columns.tolist()}")
             
-            # Calculate profit directly
-            historical_data['Profit'] = historical_data['Revenue'] - historical_data['Expenses']
+            # Revenue is directly from transactiongroup.Amount
+            historical_data['Revenue'] = historical_data['Amount']  # Changed from RateAmount * TotalKGs
             
-            # Prepare features for profit model (similar to revenue model)
+            # Total Expenses is from expenses.TotalExpense + fuel.Amount
+            historical_data['TotalExpenses'] = (
+                historical_data['TotalExpense'] +  # From expenses table
+                historical_data['Amount']  # From fuel table
+            )
+            
+            # Calculate Profit
+            historical_data['Profit'] = historical_data['Revenue'] - historical_data['TotalExpenses']
+            
+            # Prepare features for profit model
             features = pd.DataFrame({
-                'TollFeeAmount': historical_data['TollFeeAmount'],
-                'RateAmount': historical_data['RateAmount'],
-                'TotalKGs': historical_data['TotalKGs'],
-                'FuelPrice': historical_data['FuelPrice_Revenue'],
+                'Revenue': historical_data['Revenue'],
+                'TotalExpenses': historical_data['TotalExpenses'],
                 'Year': pd.to_datetime(historical_data['Date']).dt.year,
                 'Month': pd.to_datetime(historical_data['Date']).dt.month,
                 'Day': pd.to_datetime(historical_data['Date']).dt.day
@@ -163,11 +170,7 @@ class FinanceAnalyzer:
                 'r2': float(r2_score(y_test, y_pred))
             }
             
-            # Store last features for predictions
-            self.last_features = features.iloc[-1]
-            
             logger.info("Profit model trained successfully")
-            logger.info(f"Profit model metrics: {self.metrics['profit']}")
             return True
             
         except Exception as e:
@@ -178,31 +181,19 @@ class FinanceAnalyzer:
     def predict_profit(self, last_date, periods=90):
         """Predict profit for future dates"""
         try:
-            # Generate future dates
-            future_dates = pd.date_range(
-                start=last_date + pd.Timedelta(days=1),
-                periods=periods,
-                freq='D'
-            )
+            # Get revenue and expense predictions
+            revenue_forecast = self.predict_revenue(last_date, periods)
+            expense_forecast = self.predict_expenses(last_date, periods)
             
-            # Create future features (similar to revenue prediction)
-            future_features = pd.DataFrame({
-                'TollFeeAmount': [self.last_features['TollFeeAmount']] * periods,
-                'RateAmount': [self.last_features['RateAmount']] * periods,
-                'TotalKGs': [self.last_features['TotalKGs']] * periods,
-                'FuelPrice': [self.last_features['FuelPrice']] * periods,
-                'Year': future_dates.year,
-                'Month': future_dates.month,
-                'Day': future_dates.day
-            })
+            if revenue_forecast is None or expense_forecast is None:
+                raise Exception("Failed to get revenue or expense forecasts")
             
-            # Make predictions
-            predictions = self.profit_model.predict(future_features)
-            
-            # Create forecast DataFrame
+            # Calculate profit directly from revenue and expenses
             forecast = pd.DataFrame({
-                'Date': future_dates,
-                'Profit': predictions.round(2)
+                'Date': revenue_forecast['Date'],
+                'Revenue': revenue_forecast['Revenue'],
+                'Expenses': expense_forecast['Expenses'],
+                'Profit': (revenue_forecast['Revenue'] - expense_forecast['Expenses']).round(2)
             })
             
             return forecast
