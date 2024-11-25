@@ -1,10 +1,9 @@
 <?php
 // Database configuration
-$host = "localhost";  // or "127.0.0.1"
-$usernameDB = "root";   // your MySQL username
-$password = "";       // your MySQL password (leave empty if not set)
-
-$database = "epm_backup";
+$host = "DB_HOST";  // or "127.0.0.1"
+$usernameDB = "DB_USERNAME";   // your MySQL username
+$password = "DB_PASSWORD";       // your MySQL password (leave empty if not set)
+$database = "DB_DATABASE";
 
 // Create connection
 $conn = new mysqli($host, $usernameDB, $password, $database);
