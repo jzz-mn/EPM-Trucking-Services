@@ -3,6 +3,7 @@
 $host = "localhost";  // or "127.0.0.1"
 $usernameDB = "root";   // your MySQL username
 $password = "";       // your MySQL password (leave empty if not set)
+
 $database = "epm_backup";
 
 // Create connection
