@@ -6,25 +6,6 @@ import mysql.connector
 import pandas as pd
 import logging
 
-from sqlalchemy import create_engine
-
-# Database configuration
-DB_CONFIG = {
-    'host': 'jazzmin12.mysql.pythonanywhere-services.com',
-    'user': 'jazzmin12',
-    'password': 'mysqladmin',  # Replace with your actual password
-    'database': 'jazzmin12$epm'
-}
-
-# Create the database connection string
-connection_string = (
-    f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
-    f"{DB_CONFIG['host']}/{DB_CONFIG['database']}"
-)
-
-# Create the SQLAlchemy engine
-engine = create_engine(connection_string)
-
 app = Flask(__name__)
 CORS(app)
 
@@ -32,7 +13,13 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+# Database configuration
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'epm_database'
+}
 
 def get_transaction_data():
     """Fetch transaction data from MySQL database"""
