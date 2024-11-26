@@ -119,7 +119,7 @@ include 'header.php';
     document.addEventListener('DOMContentLoaded', async function() {
         try {
             // Fetch evaluation data first
-            const evalResponse = await fetch('http://127.0.0.1:5000/evaluate_maintenance');
+            const evalResponse = await fetch('https://epm-analytics-13715bf8762f.herokuapp.com/evaluate_maintenance');
             if (!evalResponse.ok) throw new Error('Failed to fetch evaluation data');
             const evalData = await evalResponse.json();
 
@@ -128,7 +128,7 @@ include 'header.php';
             }
 
             // Then fetch predictions
-            const response = await fetch('http://127.0.0.1:5000/predict_maintenance');
+            const response = await fetch('https://epm-analytics-13715bf8762f.herokuapp.com/predict_maintenance');
             if (!response.ok) {
                 throw new Error(`Failed to fetch predictions: ${response.status}`);
             }
