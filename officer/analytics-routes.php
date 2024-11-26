@@ -106,13 +106,15 @@ include 'header.php';
             </div>
         </div>
 
-        <!-- Map and Route Details Row -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card">
+        <!-- Map and Delivery Sequence Section -->
+        <div class="row g-3">
+            <!-- Map Section -->
+            <div class="col-12 col-lg-8">
+                <div class="card h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <select id="routeSelect" class="form-select" style="width: 300px;">
+                        <!-- Controls for Map -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <select id="routeSelect" class="form-select w-50">
                                 <option value="">Select Delivery Cluster</option>
                                 <?php foreach ($clusters as $cluster): ?>
                                     <option value="<?php echo htmlspecialchars($cluster['ClusterCategory']); ?>">
@@ -120,15 +122,18 @@ include 'header.php';
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <button id="getAISuggestions" class="btn btn-primary" disabled>
-                                <i class="ti ti-brain me-1"></i>Get AI Suggestions
+                            <button id="getAISuggestions" class="btn btn-primary btn-sm" disabled>
+                                <i class="bi bi-lightbulb"></i> Get AI Suggestions
                             </button>
                         </div>
-                        <div id="map" style="height: 600px; border-radius: 8px;"></div>
+
+                        <!-- Map Container -->
+                        <div id="map" class="w-100" style="height: 500px; border-radius: 10px; position:sticky">
+                            <!-- Leaflet map will be rendered here -->
+                        </div>
                     </div>
                 </div>
             </div>
-
             <!-- Route Details -->
             <div class="col-md-4">
                 <div class="card">
@@ -188,76 +193,76 @@ include 'header.php';
 </div>
 
 <script>
-let map;
-let routingControl;
+    let map;
+    let routingControl;
 
-const LOCATION_COORDINATES = {
-    'BOUNTY PLUS': [13.8781, 121.2117],
-    // Add your other location coordinates here
-};
+    const LOCATION_COORDINATES = {
+        'BOUNTY PLUS': [13.8781, 121.2117],
+        // Add your other location coordinates here
+    };
 
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMap();
-    
-    const routeSelect = document.getElementById('routeSelect');
-    const aiSuggestBtn = document.getElementById('getAISuggestions');
-    
-    if (routeSelect && aiSuggestBtn) {
-        // Handle route selection change
-        routeSelect.addEventListener('change', function() {
-            aiSuggestBtn.disabled = !this.value;
-            if (this.value) {
-                // Clear previous route if any
-                if (routingControl) {
-                    map.removeControl(routingControl);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap();
+
+        const routeSelect = document.getElementById('routeSelect');
+        const aiSuggestBtn = document.getElementById('getAISuggestions');
+
+        if (routeSelect && aiSuggestBtn) {
+            // Handle route selection change
+            routeSelect.addEventListener('change', function() {
+                aiSuggestBtn.disabled = !this.value;
+                if (this.value) {
+                    // Clear previous route if any
+                    if (routingControl) {
+                        map.removeControl(routingControl);
+                    }
                 }
-            }
-        });
+            });
 
-        // Handle AI Suggestions button click
-        aiSuggestBtn.addEventListener('click', async function() {
-            const selectedCluster = routeSelect.value;
-            if (!selectedCluster) return;
+            // Handle AI Suggestions button click
+            aiSuggestBtn.addEventListener('click', async function() {
+                const selectedCluster = routeSelect.value;
+                if (!selectedCluster) return;
 
-            try {
-                // Show loading state
-                aiSuggestBtn.disabled = true;
-                aiSuggestBtn.innerHTML = '<i class="ti ti-loader animate-spin me-1"></i>Processing...';
+                try {
+                    // Show loading state
+                    aiSuggestBtn.disabled = true;
+                    aiSuggestBtn.innerHTML = '<i class="ti ti-loader animate-spin me-1"></i>Processing...';
 
-                // Get route optimization
-                const optimizationData = await getRouteOptimization(selectedCluster);
-                
-                if (optimizationData && optimizationData.choices && optimizationData.choices[0]) {
-                    const suggestions = optimizationData.choices[0].message.content;
-                    updateUIWithSuggestions(suggestions);
+                    // Get route optimization
+                    const optimizationData = await getRouteOptimization(selectedCluster);
+
+                    if (optimizationData && optimizationData.choices && optimizationData.choices[0]) {
+                        const suggestions = optimizationData.choices[0].message.content;
+                        updateUIWithSuggestions(suggestions);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('Failed to get AI suggestions: ' + error.message);
+                } finally {
+                    // Reset button state
+                    aiSuggestBtn.disabled = false;
+                    aiSuggestBtn.innerHTML = '<i class="ti ti-brain me-1"></i>Get AI Suggestions';
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to get AI suggestions: ' + error.message);
-            } finally {
-                // Reset button state
-                aiSuggestBtn.disabled = false;
-                aiSuggestBtn.innerHTML = '<i class="ti ti-brain me-1"></i>Get AI Suggestions';
-            }
-        });
-    }
-});
+            });
+        }
+    });
 
-function updateUIWithSuggestions(data) {
-    try {
-        // Update metrics cards
-        document.getElementById('total-distance').textContent = data.route.metrics.total_distance;
-        document.getElementById('total-time').textContent = data.route.metrics.total_time;
-        document.getElementById('total-fuel').textContent = data.route.metrics.fuel_cost;
+    function updateUIWithSuggestions(data) {
+        try {
+            // Update metrics cards
+            document.getElementById('total-distance').textContent = data.route.metrics.total_distance;
+            document.getElementById('total-time').textContent = data.route.metrics.total_time;
+            document.getElementById('total-fuel').textContent = data.route.metrics.fuel_cost;
 
-        // Update badges
-        document.getElementById('distance-badge').textContent = 'Optimized';
-        document.getElementById('time-badge').textContent = 'Estimated';
-        document.getElementById('fuel-badge').textContent = 'Calculated';
+            // Update badges
+            document.getElementById('distance-badge').textContent = 'Optimized';
+            document.getElementById('time-badge').textContent = 'Estimated';
+            document.getElementById('fuel-badge').textContent = 'Calculated';
 
-        // Update route details
-        const routeStops = document.getElementById('routeStops');
-        routeStops.innerHTML = `
+            // Update route details
+            const routeStops = document.getElementById('routeStops');
+            routeStops.innerHTML = `
             <div class="route-details p-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
@@ -301,132 +306,139 @@ function updateUIWithSuggestions(data) {
             </div>
         `;
 
-        // Update map with waypoints
-        updateMapRoute(data.route);
-    } catch (error) {
-        console.error('Error updating UI:', error);
-        showError('Failed to update display with route details');
+            // Update map with waypoints
+            updateMapRoute(data.route);
+        } catch (error) {
+            console.error('Error updating UI:', error);
+            showError('Failed to update display with route details');
+        }
     }
-}
 
-function showError(message) {
-    // Create and show error alert
-    const errorAlert = `
+    function showError(message) {
+        // Create and show error alert
+        const errorAlert = `
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
-}
-
-function initializeMap() {
-    map = L.map('map').setView([13.8781, 121.2117], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Add Bounty Plus marker
-    addStartingPointMarker();
-}
-
-function addStartingPointMarker() {
-    const bountyMarker = L.marker(LOCATION_COORDINATES['BOUNTY PLUS'], {
-        icon: L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div style="background-color: #4CAF50; color: white; padding: 5px; border-radius: 50%; width: 30px; height: 30px; text-align: center;">BP</div>`,
-            iconSize: [30, 30]
-        })
-    }).addTo(map);
-    bountyMarker.bindPopup('Bounty Plus (Start/End Point)');
-}
-
-async function getRouteOptimization(clusterCategory) {
-    try {
-        const response = await fetch(`get_cluster_details.php?category=${encodeURIComponent(clusterCategory)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
-        // Update metrics cards
-        if (data.route && data.route.metrics) {
-            document.getElementById('total-distance').textContent = data.route.metrics.total_distance;
-            document.getElementById('total-time').textContent = data.route.metrics.total_time;
-            document.getElementById('total-fuel').textContent = data.route.metrics.fuel_cost;
-
-            // Update badges
-            document.getElementById('distance-badge').textContent = 'Optimized';
-            document.getElementById('time-badge').textContent = 'Estimated';
-            document.getElementById('fuel-badge').textContent = 'Calculated';
-        }
-
-        // Update UI with route data
-        updateUIWithRouteData(data);
-        
-        // Update map with waypoints
-        updateMapWithWaypoints(data.route);
-        
-        return data;
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Failed to get route details: ' + error.message);
-        throw error;
-    }
-}
-
-// Add this new function to update the map with the route
-function updateMapRoute(routeData) {
-    // Clear existing route
-    if (routingControl) {
-        map.removeControl(routingControl);
+        document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', errorAlert);
     }
 
-    const waypoints = [
-        L.latLng(LOCATION_COORDINATES['BOUNTY PLUS']),
-        ...routeData.waypoints.map(wp => L.latLng(wp.coordinates.split(','))),
-        L.latLng(LOCATION_COORDINATES['BOUNTY PLUS'])
-    ];
+    function initializeMap() {
+        map = L.map('map').setView([13.8781, 121.2117], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-    routingControl = L.Routing.control({
-        waypoints: waypoints,
-        routeWhileDragging: false,
-        lineOptions: {
-            styles: [{ color: '#4CAF50', weight: 6 }]
-        },
-        createMarker: function(i, wp, n) {
-            return L.marker(wp.latLng, {
-                icon: L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div style="background-color: #4CAF50; color: white; padding: 5px; border-radius: 50%; width: 30px; height: 30px; text-align: center;">${i + 1}</div>`,
-                    iconSize: [30, 30]
-                })
-            });
-        },
-        // Hide detailed instructions
-        show: false,
-        showAlternatives: false,
-        formatter: function() { return ''; }
-    }).addTo(map);
+        // Add Bounty Plus marker
+        addStartingPointMarker();
+    }
 
-    // Fit map to show all waypoints
-    const bounds = L.latLngBounds(waypoints);
-    map.fitBounds(bounds, { padding: [50, 50] });
-}
+    function addStartingPointMarker() {
+        const bountyMarker = L.marker(LOCATION_COORDINATES['BOUNTY PLUS'], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: #4CAF50; color: white; padding: 5px; border-radius: 50%; width: 30px; height: 30px; text-align: center;">BP</div>`,
+                iconSize: [30, 30]
+            })
+        }).addTo(map);
+        bountyMarker.bindPopup('Bounty Plus (Start/End Point)');
+    }
 
-function updateUIWithRouteData(data) {
-    try {
-        const sequencePoints = document.getElementById('sequencePoints');
-        let html = '';
+    async function getRouteOptimization(clusterCategory) {
+        try {
+            const response = await fetch(`get_cluster_details.php?category=${encodeURIComponent(clusterCategory)}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
 
-        // Add waypoints
-        if (data.route && data.route.waypoints) {
-            data.route.waypoints.forEach((waypoint, index) => {
-                html += `
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update metrics cards
+            if (data.route && data.route.metrics) {
+                document.getElementById('total-distance').textContent = data.route.metrics.total_distance;
+                document.getElementById('total-time').textContent = data.route.metrics.total_time;
+                document.getElementById('total-fuel').textContent = data.route.metrics.fuel_cost;
+
+                // Update badges
+                document.getElementById('distance-badge').textContent = 'Optimized';
+                document.getElementById('time-badge').textContent = 'Estimated';
+                document.getElementById('fuel-badge').textContent = 'Calculated';
+            }
+
+            // Update UI with route data
+            updateUIWithRouteData(data);
+
+            // Update map with waypoints
+            updateMapWithWaypoints(data.route);
+
+            return data;
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Failed to get route details: ' + error.message);
+            throw error;
+        }
+    }
+
+    // Add this new function to update the map with the route
+    function updateMapRoute(routeData) {
+        // Clear existing route
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
+
+        const waypoints = [
+            L.latLng(LOCATION_COORDINATES['BOUNTY PLUS']),
+            ...routeData.waypoints.map(wp => L.latLng(wp.coordinates.split(','))),
+            L.latLng(LOCATION_COORDINATES['BOUNTY PLUS'])
+        ];
+
+        routingControl = L.Routing.control({
+            waypoints: waypoints,
+            routeWhileDragging: false,
+            lineOptions: {
+                styles: [{
+                    color: '#4CAF50',
+                    weight: 6
+                }]
+            },
+            createMarker: function(i, wp, n) {
+                return L.marker(wp.latLng, {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: #4CAF50; color: white; padding: 5px; border-radius: 50%; width: 30px; height: 30px; text-align: center;">${i + 1}</div>`,
+                        iconSize: [30, 30]
+                    })
+                });
+            },
+            // Hide detailed instructions
+            show: false,
+            showAlternatives: false,
+            formatter: function() {
+                return '';
+            }
+        }).addTo(map);
+
+        // Fit map to show all waypoints
+        const bounds = L.latLngBounds(waypoints);
+        map.fitBounds(bounds, {
+            padding: [50, 50]
+        });
+    }
+
+    function updateUIWithRouteData(data) {
+        try {
+            const sequencePoints = document.getElementById('sequencePoints');
+            let html = '';
+
+            // Add waypoints
+            if (data.route && data.route.waypoints) {
+                data.route.waypoints.forEach((waypoint, index) => {
+                    html += `
                     <div class="sequence-item">
                         <div class="sequence-number">
                             ${index + 1}
@@ -437,12 +449,12 @@ function updateUIWithRouteData(data) {
                         </div>
                     </div>
                 `;
-            });
-        }
+                });
+            }
 
-        // Add end point only if we have waypoints
-        if (data.route && data.route.waypoints && data.route.waypoints.length > 0) {
-            html += `
+            // Add end point only if we have waypoints
+            if (data.route && data.route.waypoints && data.route.waypoints.length > 0) {
+                html += `
                 <div class="sequence-item">
                     <div class="sequence-marker end">
                         <i class="ti ti-flag-filled"></i>
@@ -453,102 +465,113 @@ function updateUIWithRouteData(data) {
                     </div>
                 </div>
             `;
+            }
+
+            sequencePoints.innerHTML = html;
+        } catch (error) {
+            console.error('Error updating sequence:', error);
+            showError('Failed to update delivery sequence');
         }
-
-        sequencePoints.innerHTML = html;
-    } catch (error) {
-        console.error('Error updating sequence:', error);
-        showError('Failed to update delivery sequence');
-    }
-}
-
-function updateMapWithWaypoints(routeData) {
-    try {
-        if (window.routingControl) {
-            map.removeControl(window.routingControl);
-        }
-
-        const waypoints = [
-            L.latLng(routeData.start_point.coordinates.split(',')),
-            ...routeData.waypoints.map(wp => L.latLng(wp.coordinates.split(','))),
-            L.latLng(routeData.start_point.coordinates.split(','))
-        ];
-
-        window.routingControl = L.Routing.control({
-            waypoints: waypoints,
-            routeWhileDragging: false,
-            lineOptions: {
-                styles: [{ color: '#4CAF50', weight: 6 }]
-            },
-            createMarker: function(i, wp, n) {
-                const isStart = i === 0;
-                const isEnd = i === n - 1;
-                const label = isStart ? 'S' : isEnd ? 'E' : i;
-                return L.marker(wp.latLng, {
-                    icon: L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div class="marker-icon ${isStart || isEnd ? 'marker-endpoint' : ''}">${label}</div>`,
-                        iconSize: [30, 30]
-                    })
-                });
-            },
-            show: false,
-            showAlternatives: false,
-            fitSelectedRoutes: true,
-            formatter: function() { return ''; }
-        }).addTo(map);
-
-        const bounds = L.latLngBounds(waypoints);
-        map.fitBounds(bounds, { padding: [50, 50] });
-    } catch (error) {
-        console.error('Error updating map:', error);
-        showError('Failed to update map with route');
-    }
-}
-
-// Add this new function for showing general route tips
-async function showRouteTips() {
-    const modalElement = document.getElementById('routeTipsModal');
-    if (!modalElement) {
-        console.error('Tips modal not found');
-        return;
     }
 
-    const modal = new bootstrap.Modal(modalElement);
-    const tipsContent = document.getElementById('routeTipsContent');
-    
-    try {
-        const selectedCluster = document.getElementById('routeSelect').value;
-        if (!selectedCluster) {
-            throw new Error('Please select a cluster first');
+    function updateMapWithWaypoints(routeData) {
+        try {
+            if (window.routingControl) {
+                map.removeControl(window.routingControl);
+            }
+
+            const waypoints = [
+                L.latLng(routeData.start_point.coordinates.split(',')),
+                ...routeData.waypoints.map(wp => L.latLng(wp.coordinates.split(','))),
+                L.latLng(routeData.start_point.coordinates.split(','))
+            ];
+
+            window.routingControl = L.Routing.control({
+                waypoints: waypoints,
+                routeWhileDragging: false,
+                lineOptions: {
+                    styles: [{
+                        color: '#4CAF50',
+                        weight: 6
+                    }]
+                },
+                createMarker: function(i, wp, n) {
+                    const isStart = i === 0;
+                    const isEnd = i === n - 1;
+                    const label = isStart ? 'S' : isEnd ? 'E' : i;
+                    return L.marker(wp.latLng, {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div class="marker-icon ${isStart || isEnd ? 'marker-endpoint' : ''}">${label}</div>`,
+                            iconSize: [30, 30]
+                        })
+                    });
+                },
+                show: false,
+                showAlternatives: false,
+                fitSelectedRoutes: true,
+                formatter: function() {
+                    return '';
+                }
+            }).addTo(map);
+
+            const bounds = L.latLngBounds(waypoints);
+            map.fitBounds(bounds, {
+                padding: [50, 50]
+            });
+        } catch (error) {
+            console.error('Error updating map:', error);
+            showError('Failed to update map with route');
+        }
+    }
+
+    // Add this new function for showing general route tips
+    async function showRouteTips() {
+        const modalElement = document.getElementById('routeTipsModal');
+        if (!modalElement) {
+            console.error('Tips modal not found');
+            return;
         }
 
-        modal.show();
-        
-        tipsContent.innerHTML = `
+        const modal = new bootstrap.Modal(modalElement);
+        const tipsContent = document.getElementById('routeTipsContent');
+
+        try {
+            const selectedCluster = document.getElementById('routeSelect').value;
+            if (!selectedCluster) {
+                throw new Error('Please select a cluster first');
+            }
+
+            modal.show();
+
+            tipsContent.innerHTML = `
             <div class="text-center p-4">
                 <div class="spinner-border text-primary"></div>
                 <p class="mt-2">Generating optimization tips...</p>
             </div>
         `;
 
-        const response = await fetch('get_route_tips.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cluster: selectedCluster })
-        });
+            const response = await fetch('get_route_tips.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cluster: selectedCluster
+                })
+            });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
 
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to get tips');
-        }
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to get tips');
+            }
 
-        tipsContent.innerHTML = `
+            tipsContent.innerHTML = `
             <div class="tips-container p-3">
                 ${data.tips.map((tip, index) => `
                     <div class="tip-card mb-3">
@@ -562,631 +585,647 @@ async function showRouteTips() {
                 `).join('')}
             </div>
         `;
-    } catch (error) {
-        console.error('Error showing tips:', error);
-        tipsContent.innerHTML = `
+        } catch (error) {
+            console.error('Error showing tips:', error);
+            tipsContent.innerHTML = `
             <div class="alert alert-danger m-3">
                 <i class="ti ti-alert-circle me-2"></i>${error.message}
             </div>
         `;
+        }
     }
-}
-
 </script>
 
 <style>
-.route-details {
-    padding: 1rem;
-}
-
-.route-item {
-    padding: 0.8rem;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 0.5rem;
-}
-
-.route-number .badge {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.route-content {
-    font-size: 0.95rem;
-    line-height: 1.4;
-}
-
-.optimization-notes {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-}
-
-.note-item {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.route-section {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.route-timeline {
-    position: relative;
-    padding-left: 40px;
-}
-
-.timeline-item {
-    position: relative;
-    padding: 1rem 0;
-    border-left: 2px solid #e9ecef;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: -20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    z-index: 1;
-}
-
-.timeline-marker.start,
-.timeline-marker.end {
-    background: #2196F3;
-}
-
-.timeline-content {
-    background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-left: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.ai-suggestions {
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #4CAF50;
-}
-
-.marker-icon {
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-}
-
-.marker-endpoint {
-    background-color: #2196F3;
-}
-
-.tip-item {
-    padding: 8px;
-    border-radius: 6px;
-    background: white;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-}
-
-.tip-item:hover {
-    background: #f8f9fa;
-}
-
-.tips-content {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.btn-light {
-    border: 1px solid #dee2e6;
-    background: white;
-}
-
-.btn-light:hover {
-    background: #f8f9fa;
-}
-
-.route-sequence {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 1rem;
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.route-point {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border-bottom: 1px solid #eee;
-}
-
-.point-marker {
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 0.5rem;
-}
-
-.point-details {
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-.point-marker.start,
-.point-marker.end {
-    background-color: #2196F3;
-}
-
-.point-marker.start {
-    background-color: #4CAF50;
-}
-
-.point-marker.end {
-    background-color: #2196F3;
-}
-
-.tip-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    border-left: 4px solid #4CAF50;
-    transition: transform 0.2s;
-}
-
-.tip-card:hover {
-    transform: translateX(5px);
-}
-
-.tip-number {
-    background: #4CAF50;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.tip-content {
-    flex: 1;
-}
-
-.tip-content h6 {
-    color: #2196F3;
-    font-weight: 600;
-}
-
-.modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.modal-body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 3px;
-}
-
-.route-sequence-container {
-    max-height: 500px;
-    overflow-y: auto;
-    padding: 0.5rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.sequence-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    border: 1px solid #e9ecef;
-    transition: transform 0.2s;
-}
-
-.sequence-item:hover {
-    transform: translateX(5px);
-}
-
-.sequence-marker {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.sequence-marker.start {
-    background: #2196F3;
-}
-
-.sequence-marker.end {
-    background: #FFA000;
-}
-
-.sequence-content {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* Custom scrollbar */
-.route-sequence-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.route-sequence-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.route-sequence-container::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 3px;
-}
-
-/* Updated styles for cleaner UI */
-.delivery-sequence {
-    position: relative;
-}
-
-.sequence-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border-left: 2px solid #e9ecef;
-    margin-left: 20px;
-    position: relative;
-}
-
-.sequence-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: -2px;
-    bottom: 0;
-    width: 2px;
-    height: 100%;
-    background: #e9ecef;
-}
-
-.sequence-marker {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid #4CAF50;
-    color: #4CAF50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 1rem;
-    position: relative;
-    z-index: 1;
-}
-
-.sequence-item.start .sequence-marker,
-.sequence-item.end .sequence-marker {
-    background: #fff;
-    border-color: #2196F3;
-    color: #2196F3;
-}
-
-.sequence-content {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.location-name {
-    font-weight: 500;
-    color: #2c3e50;
-}
-
-.sequence-list {
-    max-height: 400px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #4CAF50 #f1f1f1;
-}
-
-.sequence-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sequence-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.sequence-list::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 4px;
-}
-
-/* Hover effects */
-.sequence-item:hover {
-    background: #f8fafb;
-}
-
-.badge {
-    font-weight: 500;
-    padding: 0.5em 0.8em;
-}
-
-.sequence-container {
-    position: relative;
-    padding: 1rem;
-}
-
-.sequence-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
-    border: 1px solid #e9ecef;
-    transition: all 0.2s ease;
-}
-
-.sequence-item:hover {
-    background: #f8f9fa;
-    transform: translateX(5px);
-    border-color: #dee2e6;
-}
-
-.sequence-marker {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid #4CAF50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    flex-shrink: 0;
-}
-
-.sequence-marker.start { border-color: #28a745; }
-.sequence-marker.end { border-color: #007bff; }
-
-.sequence-content {
-    flex: 1;
-}
-
-.location-name {
-    font-weight: 500;
-    color: #2c3e50;
-    display: block;
-    margin-bottom: 0.25rem;
-}
-
-.sequence-list {
-    max-height: 400px;
-    overflow-y: auto;
-    margin: 1rem 0;
-    padding-right: 0.5rem;
-}
-
-.route-info-banner {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-}
-
-/* Custom scrollbar */
-.sequence-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sequence-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-.sequence-list::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 4px;
-}
-
-.badge {
-    font-weight: 500;
-    padding: 0.5em 0.8em;
-}
-
-/* Simplified and cleaned up styles */
-.sequence-list {
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-.sequence-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s;
-}
-
-.sequence-item:hover {
-    background-color: #f8f9fa;
-}
-
-.sequence-marker, .sequence-number {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    flex-shrink: 0;
-}
-
-.sequence-marker {
-    background: #fff;
-    border: 2px solid #4CAF50;
-    color: #4CAF50;
-}
-
-.sequence-marker.start {
-    border-color: #28a745;
-    color: #28a745;
-}
-
-.sequence-marker.end {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.sequence-number {
-    background: #4CAF50;
-    color: white;
-    font-weight: 500;
-}
-
-.sequence-content {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.location-name {
-    font-weight: 500;
-    color: #2c3e50;
-}
-
-/* Custom scrollbar */
-.sequence-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sequence-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.sequence-list::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 4px;
-}
-
-/* Updated muted color palette */
-:root {
-    --primary-color: #6B7B8C;      /* Muted blue-gray */
-    --success-color: #7C9082;      /* Muted sage green */
-    --info-color: #8E8BA3;         /* Muted purple */
-    --warning-color: #B69B85;      /* Muted tan */
-    --danger-color: #B68D8D;       /* Muted rose */
-    --background-hover: #F5F6F8;   /* Light gray hover */
-}
-
-.sequence-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #eef0f2;
-    transition: background-color 0.2s;
-}
-
-.sequence-item:hover {
-    background-color: var(--background-hover);
-}
-
-.sequence-marker {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid var(--primary-color);
-    color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    flex-shrink: 0;
-}
-
-.sequence-marker.start {
-    border-color: var(--success-color);
-    color: var(--success-color);
-}
-
-.sequence-marker.end {
-    border-color: var(--info-color);
-    color: var(--info-color);
-}
-
-.badge {
-    font-weight: 500;
-    padding: 0.5em 0.8em;
-}
-
-.badge.text-success {
-    color: var(--success-color) !important;
-}
-
-.badge.text-info {
-    color: var(--info-color) !important;
-}
-
-/* Update scrollbar colors */
-.sequence-list::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-}
+    .route-details {
+        padding: 1rem;
+    }
+
+    .route-item {
+        padding: 0.8rem;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 0.5rem;
+    }
+
+    .route-number .badge {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .route-content {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .optimization-notes {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .note-item {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .route-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .route-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding: 1rem 0;
+        border-left: 2px solid #e9ecef;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #4CAF50;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        z-index: 1;
+    }
+
+    .timeline-marker.start,
+    .timeline-marker.end {
+        background: #2196F3;
+    }
+
+    .timeline-content {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-left: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .ai-suggestions {
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #4CAF50;
+    }
+
+    .marker-icon {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .marker-endpoint {
+        background-color: #2196F3;
+    }
+
+    .tip-item {
+        padding: 8px;
+        border-radius: 6px;
+        background: white;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .tip-item:hover {
+        background: #f8f9fa;
+    }
+
+    .tips-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .btn-light {
+        border: 1px solid #dee2e6;
+        background: white;
+    }
+
+    .btn-light:hover {
+        background: #f8f9fa;
+    }
+
+    .route-sequence {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1rem;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .route-point {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .point-marker {
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .point-details {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .point-marker.start,
+    .point-marker.end {
+        background-color: #2196F3;
+    }
+
+    .point-marker.start {
+        background-color: #4CAF50;
+    }
+
+    .point-marker.end {
+        background-color: #2196F3;
+    }
+
+    .tip-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        border-left: 4px solid #4CAF50;
+        transition: transform 0.2s;
+    }
+
+    .tip-card:hover {
+        transform: translateX(5px);
+    }
+
+    .tip-number {
+        background: #4CAF50;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .tip-content {
+        flex: 1;
+    }
+
+    .tip-content h6 {
+        color: #2196F3;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 3px;
+    }
+
+    .route-sequence-container {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .sequence-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s;
+    }
+
+    .sequence-item:hover {
+        transform: translateX(5px);
+    }
+
+    .sequence-marker {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #4CAF50;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .sequence-marker.start {
+        background: #2196F3;
+    }
+
+    .sequence-marker.end {
+        background: #FFA000;
+    }
+
+    .sequence-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Custom scrollbar */
+    .route-sequence-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .route-sequence-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .route-sequence-container::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 3px;
+    }
+
+    /* Updated styles for cleaner UI */
+    .delivery-sequence {
+        position: relative;
+    }
+
+    .sequence-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-left: 2px solid #e9ecef;
+        margin-left: 20px;
+        position: relative;
+    }
+
+    .sequence-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: -2px;
+        bottom: 0;
+        width: 2px;
+        height: 100%;
+        background: #e9ecef;
+    }
+
+    .sequence-marker {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #4CAF50;
+        color: #4CAF50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sequence-item.start .sequence-marker,
+    .sequence-item.end .sequence-marker {
+        background: #fff;
+        border-color: #2196F3;
+        color: #2196F3;
+    }
+
+    .sequence-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .location-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .sequence-list {
+        max-height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #4CAF50 #f1f1f1;
+    }
+
+    .sequence-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sequence-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .sequence-list::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 4px;
+    }
+
+    /* Hover effects */
+    .sequence-item:hover {
+        background: #f8fafb;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    .sequence-container {
+        position: relative;
+        padding: 1rem;
+    }
+
+    .sequence-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+
+    .sequence-item:hover {
+        background: #f8f9fa;
+        transform: translateX(5px);
+        border-color: #dee2e6;
+    }
+
+    .sequence-marker {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #4CAF50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .sequence-marker.start {
+        border-color: #28a745;
+    }
+
+    .sequence-marker.end {
+        border-color: #007bff;
+    }
+
+    .sequence-content {
+        flex: 1;
+    }
+
+    .location-name {
+        font-weight: 500;
+        color: #2c3e50;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .sequence-list {
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 1rem 0;
+        padding-right: 0.5rem;
+    }
+
+    .route-info-banner {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    /* Custom scrollbar */
+    .sequence-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sequence-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .sequence-list::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 4px;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    /* Simplified and cleaned up styles */
+    .sequence-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .sequence-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+    }
+
+    .sequence-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .sequence-marker,
+    .sequence-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .sequence-marker {
+        background: #fff;
+        border: 2px solid #4CAF50;
+        color: #4CAF50;
+    }
+
+    .sequence-marker.start {
+        border-color: #28a745;
+        color: #28a745;
+    }
+
+    .sequence-marker.end {
+        border-color: #007bff;
+        color: #007bff;
+    }
+
+    .sequence-number {
+        background: #4CAF50;
+        color: white;
+        font-weight: 500;
+    }
+
+    .sequence-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .location-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    /* Custom scrollbar */
+    .sequence-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sequence-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .sequence-list::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 4px;
+    }
+
+    /* Updated muted color palette */
+    :root {
+        --primary-color: #6B7B8C;
+        /* Muted blue-gray */
+        --success-color: #7C9082;
+        /* Muted sage green */
+        --info-color: #8E8BA3;
+        /* Muted purple */
+        --warning-color: #B69B85;
+        /* Muted tan */
+        --danger-color: #B68D8D;
+        /* Muted rose */
+        --background-hover: #F5F6F8;
+        /* Light gray hover */
+    }
+
+    .sequence-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #eef0f2;
+        transition: background-color 0.2s;
+    }
+
+    .sequence-item:hover {
+        background-color: var(--background-hover);
+    }
+
+    .sequence-marker {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .sequence-marker.start {
+        border-color: var(--success-color);
+        color: var(--success-color);
+    }
+
+    .sequence-marker.end {
+        border-color: var(--info-color);
+        color: var(--info-color);
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+    }
+
+    .badge.text-success {
+        color: var(--success-color) !important;
+    }
+
+    .badge.text-info {
+        color: var(--info-color) !important;
+    }
+
+    /* Update scrollbar colors */
+    .sequence-list::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+    }
 </style>
 
 <?php include 'footer.php'; ?>

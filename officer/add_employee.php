@@ -131,7 +131,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Execute the statement
         if ($stmtUser->execute()) {
             // Send activation email
-            $activationLink = "http://localhost/EPM-Trucking-Services/activate_account.php?token=$activationToken";
+            $activationLink = "https://www.epm-trucking-services.com/activate_account.php?token=$activationToken";
 
             // Configure PHPMailer
             $mail = new PHPMailer(true);
