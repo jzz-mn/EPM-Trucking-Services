@@ -195,7 +195,7 @@ include 'header.php';
     document.addEventListener('DOMContentLoaded', async function() {
         try {
             // Fetch predictions from API
-            const response = await fetch('http://127.0.0.1:5000/predict_finance', {
+            const response = await fetch('https://epm-analytics-13715bf8762f.herokuapp.com//predict_finance', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
