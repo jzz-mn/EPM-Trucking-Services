@@ -415,6 +415,43 @@ if (!empty($sql_all_notifications)) {
             .dark-mode .badge.bg-primary {
                 background-color: #0d6efd;
             }
+            /* Sidebar Styling */
+.left-sidebar {
+    position: fixed;            /* Fix the sidebar position */
+    top: 0;                     /* Align to the top */
+    left: 0;                    /* Align to the left */
+    height: 100vh;              /* Full viewport height */
+    width: 250px;               /* Set a fixed width */
+    z-index: 1000;              /* Ensure it stays above other elements */
+}
+
+/* Adjust the main content to account for the fixed sidebar */
+.page-wrapper {
+    margin-left: 250px;         /* Same as the sidebar width */
+    transition: margin-left 0.3s ease; /* Smooth transition if sidebar width changes */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .left-sidebar {
+        width: 200px;           /* Reduce width on smaller screens */
+    }
+    .page-wrapper {
+        margin-left: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .left-sidebar {
+        width: 100%;             /* Make sidebar full width on very small screens */
+        height: auto;
+        position: relative;      /* Allow it to scroll with content */
+    }
+    .page-wrapper {
+        margin-left: 0;
+    }
+}
+
         </style>
 
         <div class="page-wrapper">

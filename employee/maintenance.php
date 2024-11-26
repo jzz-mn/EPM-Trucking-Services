@@ -23,7 +23,7 @@ $truck_result = $conn->query($truck_query);
             <h4 class="mb-4 mb-sm-0 card-title">Add Maintenance Record</h4>
             <nav aria-label="breadcrumb" class="ms-auto">
               <ol class="breadcrumb">
-                
+
                 <li class="breadcrumb-item" aria-current="page">
                   <span class="badge bg-primary-subtle text-primary">Maintenance</span>
                 </li>
@@ -76,7 +76,25 @@ $truck_result = $conn->query($truck_query);
             <div class="col-lg-12">
               <div class="mb-3">
                 <label for="maintenanceDescription" class="form-label">Description</label>
-                <input type="text" class="form-control" id="maintenanceDescription" name="maintenanceDescription" required>
+                <select class="form-control" id="maintenanceDescription" name="maintenanceDescription" required>
+                  <option value="" disabled selected>Select a description</option>
+                  <option value="PURCHASE MATERIALS (COOL AIR SPARE PARTS)">PURCHASE MATERIALS (COOL AIR SPARE PARTS)</option>
+                  <option value="REEFER BAN REPAIR LABOR">REEFER BAN REPAIR LABOR</option>
+                  <option value="FREON">FREON</option>
+                  <option value="COMPRESSOR">COMPRESSOR</option>
+                  <option value="FUEL & OIL EXP">FUEL & OIL EXP</option>
+                  <option value="GEAR OIL EXP">GEAR OIL EXP</option>
+                  <option value="TIRE 2T 750X15">TIRE 2T 750X15</option>
+                  <option value="TUBE 2T 750X15">TUBE 2T 750X15</option>
+                  <option value="TIRE 2T 700X16">TIRE 2T 700X16</option>
+                  <option value="TUBE 2T 700X16">TUBE 2T 700X16</option>
+                  <option value="TUBE 4T 700X16">TUBE 4T 700X16</option>
+                  <option value="TOLL GATE">TOLL GATE</option>
+                  <option value="PARKING FEE">PARKING FEE</option>
+                  <option value="PARKING FEE/TOLL GATE">PARKING FEE/TOLL GATE</option>
+                  <option value="TRUCK INSURANCE">TRUCK INSURANCE</option>
+                  <option value="LEGALIZATION">LEGALIZATION</option>
+                </select>
               </div>
             </div>
             <div class="col-12">

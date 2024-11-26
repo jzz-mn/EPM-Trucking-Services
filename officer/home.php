@@ -752,11 +752,28 @@ include 'dashboard.php';
               };
               break;
 
-            case 'revenue':
+              case 'revenue':
               chartOptions = {
                 chart: {
                   type: 'line',
                   height: 350,
+                  toolbar: {
+                    show: false
+                  },
+                  zoom: {
+                    enabled: true
+                  }
+                },
+                colors: ['#0d6efd'], // Blue
+                stroke: {
+                  curve: 'smooth',
+                  width: 2
+                },
+                markers: {
+                  size: 4,
+                  hover: {
+                    size: 6
+                  }
                 },
                 series: [
                   {
@@ -771,24 +788,52 @@ include 'dashboard.php';
                   },
                   labels: {
                     rotate: -45,
+                    style: {
+                      fontSize: '12px'
+                    }
                   },
                 },
                 yaxis: {
                   title: {
                     text: 'Amount (₱)',
                   },
+                  labels: {
+                    formatter: function (val) {
+                      return '₱' + val;
+                    }
+                  }
                 },
                 title: {
                   text: 'Revenue Trends',
                   align: 'center',
+                  style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }
                 },
                 tooltip: {
                   y: {
                     formatter: function (val) {
                       return '₱' + val.toFixed(2);
                     },
-                  },
+                    title: {
+                      formatter: function (seriesName) {
+                        return seriesName;
+                      }
+                    }
+                  }
                 },
+                legend: {
+                  position: 'top',
+                  horizontalAlign: 'center',
+                  floating: false,
+                  fontSize: '14px',
+                  markers: {
+                    width: 12,
+                    height: 12,
+                    radius: 0
+                  }
+                }
               };
               break;
 
@@ -797,6 +842,32 @@ include 'dashboard.php';
                 chart: {
                   type: 'area',
                   height: 350,
+                  toolbar: {
+                    show: false
+                  },
+                  zoom: {
+                    enabled: true
+                  }
+                },
+                colors: ['#28a745'], // Green
+                stroke: {
+                  curve: 'smooth',
+                  width: 2
+                },
+                markers: {
+                  size: 4,
+                  hover: {
+                    size: 6
+                  }
+                },
+                fill: {
+                  type: 'gradient',
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                  }
                 },
                 series: [
                   {
@@ -811,24 +882,52 @@ include 'dashboard.php';
                   },
                   labels: {
                     rotate: -45,
+                    style: {
+                      fontSize: '12px'
+                    }
                   },
                 },
                 yaxis: {
                   title: {
                     text: 'Amount (₱)',
                   },
+                  labels: {
+                    formatter: function (val) {
+                      return '₱' + val;
+                    }
+                  }
                 },
                 title: {
                   text: 'Profit Margins',
                   align: 'center',
+                  style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }
                 },
                 tooltip: {
                   y: {
                     formatter: function (val) {
                       return '₱' + val.toFixed(2);
                     },
-                  },
+                    title: {
+                      formatter: function (seriesName) {
+                        return seriesName;
+                      }
+                    }
+                  }
                 },
+                legend: {
+                  position: 'top',
+                  horizontalAlign: 'center',
+                  floating: false,
+                  fontSize: '14px',
+                  markers: {
+                    width: 12,
+                    height: 12,
+                    radius: 0
+                  }
+                }
               };
               break;
 
@@ -837,6 +936,32 @@ include 'dashboard.php';
                 chart: {
                   type: 'area',
                   height: 350,
+                  toolbar: {
+                    show: false
+                  },
+                  zoom: {
+                    enabled: true
+                  }
+                },
+                colors: ['#FF8C00'], // Orange
+                stroke: {
+                  curve: 'smooth',
+                  width: 2
+                },
+                markers: {
+                  size: 4,
+                  hover: {
+                    size: 6
+                  }
+                },
+                fill: {
+                  type: 'gradient',
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                  }
                 },
                 series: [
                   {
@@ -851,24 +976,52 @@ include 'dashboard.php';
                   },
                   labels: {
                     rotate: -45,
+                    style: {
+                      fontSize: '12px'
+                    }
                   },
                 },
                 yaxis: {
                   title: {
                     text: 'Total Transactions',
                   },
+                  labels: {
+                    formatter: function (val) {
+                      return val;
+                    }
+                  }
                 },
                 title: {
                   text: 'Transactions Over Time',
                   align: 'center',
+                  style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }
                 },
                 tooltip: {
                   y: {
                     formatter: function (val) {
                       return val;
                     },
-                  },
+                    title: {
+                      formatter: function (seriesName) {
+                        return seriesName;
+                      }
+                    }
+                  }
                 },
+                legend: {
+                  position: 'top',
+                  horizontalAlign: 'center',
+                  floating: false,
+                  fontSize: '14px',
+                  markers: {
+                    width: 12,
+                    height: 12,
+                    radius: 0
+                  }
+                }
               };
               break;
 
@@ -877,6 +1030,23 @@ include 'dashboard.php';
                 chart: {
                   type: 'bar',
                   height: 350,
+                  toolbar: {
+                    show: false
+                  },
+                  zoom: {
+                    enabled: true
+                  }
+                },
+                colors: ['#17a2b8'], // Teal for Fuel
+                plotOptions: {
+                  bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                  },
+                },
+                dataLabels: {
+                  enabled: false
                 },
                 series: [
                   {
@@ -891,24 +1061,52 @@ include 'dashboard.php';
                   },
                   labels: {
                     rotate: -45,
+                    style: {
+                      fontSize: '12px'
+                    }
                   },
                 },
                 yaxis: {
                   title: {
                     text: 'Liters',
                   },
+                  labels: {
+                    formatter: function (val) {
+                      return val + ' L';
+                    }
+                  }
                 },
                 title: {
                   text: 'Fuel Consumption Over Time',
                   align: 'center',
+                  style: {
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }
                 },
                 tooltip: {
                   y: {
                     formatter: function (val) {
                       return val + ' L';
                     },
-                  },
+                    title: {
+                      formatter: function (seriesName) {
+                        return seriesName;
+                      }
+                    }
+                  }
                 },
+                legend: {
+                  position: 'top',
+                  horizontalAlign: 'center',
+                  floating: false,
+                  fontSize: '14px',
+                  markers: {
+                    width: 12,
+                    height: 12,
+                    radius: 0
+                  }
+                }
               };
               break;
 

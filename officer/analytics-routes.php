@@ -29,17 +29,22 @@ include 'header.php';
 <div class="body-wrapper">
     <div class="container-fluid">
         <!-- Page Title -->
-        <div class="card card-body py-3 mb-4">
+        <div class="card card-body py-3">
             <div class="row align-items-center">
                 <div class="col-12">
-                    <div class="d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-0">Routes</h4>
+                    <div class="d-sm-flex align-items-center justify-space-between">
+                        <h4 class="mb-4 mb-sm-0 card-title">Analytics</h4>
                         <nav aria-label="breadcrumb" class="ms-auto">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item">
-                                    <a href="../officer/home.php" class="text-muted text-decoration-none">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item d-flex align-items-center">
+                                    <a class="text-muted text-decoration-none d-flex" href="../officer/home.php">
                                         <iconify-icon icon="solar:home-2-line-duotone" class="fs-6"></iconify-icon>
                                     </a>
+                                </li>
+                                <li class="breadcrumb-item" aria-current="page">
+                                    <span class="badge fw-medium fs-2 bg-primary-subtle text-primary">
+                                        Routes
+                                    </span>
                                 </li>
                             </ol>
                         </nav>
@@ -47,6 +52,8 @@ include 'header.php';
                 </div>
             </div>
         </div>
+
+        <h5 class="border-bottom py-2 px-4 mb-4">Routes</h5>
 
         <!-- Summary Cards Row -->
         <div class="row mb-4">
