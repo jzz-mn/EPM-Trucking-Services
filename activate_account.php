@@ -105,7 +105,7 @@ if (isset($_GET['token'])) {
                         <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
                             <div class="col-12 auth-card">
                                 <a href="index.php" class="text-nowrap logo-img d-block w-100 mb-4">
-                                    <img src="assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-25"
+                                    <img src="assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20"
                                         alt="Logo-Dark" />
                                 </a>
 

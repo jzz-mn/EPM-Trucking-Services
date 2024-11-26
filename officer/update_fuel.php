@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   try {
     // Retrieve and sanitize form data
     $fuelID = isset($_POST['updateFuelID']) ? intval($_POST['updateFuelID']) : 0;
-    $date = isset($_POST['updateDate']) ? trim($_POST['updateDate']) : '';
+    $date = isset($_POST['updateFuelDate']) ? trim($_POST['updateFuelDate']) : '';
     $liters = isset($_POST['updateLiters']) ? floatval($_POST['updateLiters']) : 0;
     $unitPrice = isset($_POST['updateUnitPrice']) ? floatval($_POST['updateUnitPrice']) : 0;
     $fuelType = isset($_POST['updateFuelType']) ? trim($_POST['updateFuelType']) : '';

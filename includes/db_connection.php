@@ -15,10 +15,11 @@ if ($conn->connect_error) {
 
 /*
 // Database configuration
-$host = getenv('DB_HOST');
-$usernameDB = getenv('DB_USERNAME');
-$password = getenv('DB_PASSWORD');
-$database = getenv('DB_DATABASE');
+$host = "localhost";  // or "127.0.0.1"
+$usernameDB = "root";   // your MySQL username
+$password = "";       // your MySQL password (leave empty if not set)
+
+$database = "epm_backup";
 
 // Create connection
 $conn = new mysqli($host, $usernameDB, $password, $database);

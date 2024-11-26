@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $activationToken = bin2hex(random_bytes(16));
 
     // Set Activation Status to 'deactivated'
-    $activationStatus = 'deactivated';
+    $activationStatus = 'Deactivated';
 
     // Handle profile picture upload
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];

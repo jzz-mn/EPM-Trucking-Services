@@ -521,8 +521,8 @@ include '../includes/db_connection.php';
                                   <!-- Date -->
                                   <div class="col-lg-4">
                                     <div class="mb-3">
-                                      <label for="updateDate" class="form-label">Date</label>
-                                      <input type="date" class="form-control" id="updateDate" name="updateDate" required>
+                                      <label for="updateFuelDate" class="form-label">Date</label>
+                                      <input type="date" class="form-control" id="updateFuelDate" name="updateFuelDate" required>
                                     </div>
                                   </div>
                                   <!-- Liters -->
@@ -784,7 +784,7 @@ include '../includes/db_connection.php';
 
     function populateEditForm(fuel) {
       document.getElementById("updateFuelID").value = fuel.FuelID;
-      document.getElementById("updateDate").value = fuel.Date;
+      document.getElementById("updateFuelDate").value = fuel.Date;
       document.getElementById("updateLiters").value = fuel.Liters;
       document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
       document.getElementById("updateFuelType").value = fuel.FuelType;
@@ -801,7 +801,7 @@ include '../includes/db_connection.php';
     function populateEditForm(fuel) {
       // Set the form fields in the modal using the fuel data passed from the table row
       document.getElementById("updateFuelID").value = fuel.FuelID;
-      document.getElementById("updateDate").value = fuel.Date;
+      document.getElementById("updateFuelDate").value = fuel.Date;
       document.getElementById("updateLiters").value = fuel.Liters;
       document.getElementById("updateUnitPrice").value = fuel.UnitPrice;
       document.getElementById("updateFuelType").value = fuel.FuelType;

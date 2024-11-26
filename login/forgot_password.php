@@ -131,14 +131,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="min-vh-100 bg-body row justify-content-center align-items-center p-5">
               <div class="col-12 auth-card">
                 <a href="../index.php" class="text-nowrap logo-img d-block w-100 mb-4">
-                  <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-25" alt="Logo-Dark" />
+                  <img src="../assetsEPM/logos/epm-logo.png" class="dark-logo img-fluid w-20" alt="Logo-Dark" />
                 </a>
                 <h2 class="mb-2 mt-4 fs-7 fw-bolder">Forgot Password</h2>
                 <!-- Displaying messages -->
                 <?php if (!empty($error_message)): ?>
-                  <p class="mb-4 text-danger"><?php echo $error_message; ?></p>
+                  <p class="mb-4 text-danger text-center text-strong fw-bold my-4"><?php echo $error_message; ?></p>
                 <?php elseif (!empty($success_message)): ?>
-                  <p class="mb-4 text-success"><?php echo $success_message; ?></p>
+                  <p class="mb-4 text-success text-center text-strong fw-bold my-4"><?php echo $success_message; ?></p>
                 <?php else: ?>
                   <p class="mb-4">Please enter the email address associated with your account, and we will email you a
                     link to reset your password.</p>
@@ -154,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <a href="../index.php" class="text-primary w-100 text-center d-block">Back to Login</a>
                   </form>
                 <?php else: ?>
-                  <a href="../index.php" class="text-primary w-100 text-center d-block">Back to Login</a>
+                  <a href="../index.php" class="btn btn-muted w-100 text-center d-block">Back to Login</a>
                 <?php endif; ?>
               </div>
             </div>
