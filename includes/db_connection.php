@@ -1,9 +1,10 @@
 <?php
 
-$host = 'localhost';
-$usernameDB = 'root';
-$password ='';
-$database = 'epm_database';
+$host = getenv('DB_HOST');
+$usernameDB = getenv('DB_USERNAME');
+$password = getenv('DB_PASSWORD');
+$database = getenv('DB_DATABASE');
+
 
 // Create connection
 $conn = new mysqli($host, $usernameDB, $password, $database);
