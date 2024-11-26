@@ -26,6 +26,8 @@ include 'header.php';
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
 <div class="body-wrapper">
     <div class="container-fluid">
         <!-- Page Title -->
@@ -122,8 +124,9 @@ include 'header.php';
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <button id="getAISuggestions" class="btn btn-primary btn-sm" disabled>
-                                <i class="bi bi-lightbulb"></i> Get AI Suggestions
+                            <button id="getAISuggestions" class="btn btn-success btn-sm d-inline-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow-sm" disabled>
+                                <i class="ti ti-map-check fs-5"></i>
+                                <span class="fw-medium">Confirm Route</span>
                             </button>
                         </div>
 
@@ -145,8 +148,9 @@ include 'header.php';
                             </div>
                         </div>
                         <div class="text-end">
-                            <button class="btn btn-outline-primary btn-sm" onclick="showRouteTips()">
-                                <i class="ti ti-bulb me-1"></i>View Route Tips
+                            <button id="aiTipsButton" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 px-3 py-2" onclick="showRouteTips()">
+                                <i class="ti ti-robot fs-5"></i>
+                                <span class="fw-medium">Get AI Route Tips</span>
                             </button>
                         </div>
                     </div>
@@ -192,6 +196,19 @@ include 'header.php';
     </div>
 </div>
 
+<!-- Add Loading Modal for AI Tips -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5 class="mb-2">Generating AI Tips...</h5>
+                <p class="text-muted mb-0">Please wait while we analyze your route</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let map;
     let routingControl;
@@ -225,11 +242,14 @@ include 'header.php';
                 if (!selectedCluster) return;
 
                 try {
-                    // Show loading state
+                    // Show loading state while maintaining button style
                     aiSuggestBtn.disabled = true;
-                    aiSuggestBtn.innerHTML = '<i class="ti ti-loader animate-spin me-1"></i>Processing...';
+                    const originalContent = aiSuggestBtn.innerHTML;
+                    aiSuggestBtn.innerHTML = `
+                        <i class="ti ti-loader animate-spin fs-5"></i>
+                        <span class="fw-medium">Confirming...</span>
+                    `;
 
-                    // Get route optimization
                     const optimizationData = await getRouteOptimization(selectedCluster);
 
                     if (optimizationData && optimizationData.choices && optimizationData.choices[0]) {
@@ -238,11 +258,14 @@ include 'header.php';
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showError('Failed to get AI suggestions: ' + error.message);
+                    showError('Failed to confirm route: ' + error.message);
                 } finally {
-                    // Reset button state
+                    // Reset button to original state while maintaining style
                     aiSuggestBtn.disabled = false;
-                    aiSuggestBtn.innerHTML = '<i class="ti ti-brain me-1"></i>Get AI Suggestions';
+                    aiSuggestBtn.innerHTML = `
+                        <i class="ti ti-map-check fs-5"></i>
+                        <span class="fw-medium">Confirm Route</span>
+                    `;
                 }
             });
         }
@@ -527,71 +550,76 @@ include 'header.php';
 
     // Add this new function for showing general route tips
     async function showRouteTips() {
-        const modalElement = document.getElementById('routeTipsModal');
-        if (!modalElement) {
-            console.error('Tips modal not found');
-            return;
-        }
-
-        const modal = new bootstrap.Modal(modalElement);
-        const tipsContent = document.getElementById('routeTipsContent');
-
+        const tipsButton = document.getElementById('aiTipsButton');
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        
         try {
-            const selectedCluster = document.getElementById('routeSelect').value;
+            const routeSelect = document.getElementById('routeSelect');
+            const selectedCluster = routeSelect.value;
+            
             if (!selectedCluster) {
                 throw new Error('Please select a cluster first');
             }
 
-            modal.show();
-
-            tipsContent.innerHTML = `
-            <div class="text-center p-4">
-                <div class="spinner-border text-primary"></div>
-                <p class="mt-2">Generating optimization tips...</p>
-            </div>
-        `;
+            // Show loading modal
+            loadingModal.show();
+            
+            // Disable button and show loading state
+            tipsButton.disabled = true;
+            tipsButton.innerHTML = `
+                <i class="ti ti-loader animate-spin"></i>
+                <span>Generating Tips...</span>
+            `;
 
             const response = await fetch('get_route_tips.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    cluster: selectedCluster
-                })
+                body: JSON.stringify({ cluster: selectedCluster })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                throw new Error(errorData.error || 'Failed to get route tips');
             }
 
             const data = await response.json();
+            
             if (!data.success) {
-                throw new Error(data.error || 'Failed to get tips');
+                throw new Error(data.error || 'Failed to process route tips');
             }
 
-            tipsContent.innerHTML = `
-            <div class="tips-container p-3">
-                ${data.tips.map((tip, index) => `
-                    <div class="tip-card mb-3">
-                        <div class="d-flex gap-3">
-                            <div class="tip-number">${index + 1}</div>
-                            <div class="tip-content">
-                                <p class="mb-0">${tip}</p>
-                            </div>
-                        </div>
+            // Hide loading modal
+            loadingModal.hide();
+
+            // Show tips in modal
+            const tipsHtml = data.tips.map((tip, index) => `
+                <div class="tip-card d-flex align-items-start gap-3 mb-3">
+                    <div class="tip-number">${index + 1}</div>
+                    <div class="tip-content">
+                        <h6 class="mb-1">Tip ${index + 1}</h6>
+                        <p class="mb-0">${tip}</p>
                     </div>
-                `).join('')}
-            </div>
-        `;
+                </div>
+            `).join('');
+
+            document.getElementById('routeTipsContent').innerHTML = tipsHtml;
+            new bootstrap.Modal(document.getElementById('routeTipsModal')).show();
+
         } catch (error) {
             console.error('Error showing tips:', error);
-            tipsContent.innerHTML = `
-            <div class="alert alert-danger m-3">
-                <i class="ti ti-alert-circle me-2"></i>${error.message}
-            </div>
-        `;
+            alert(`Could not load route tips: ${error.message}`);
+        } finally {
+            // Hide loading modal if still shown
+            loadingModal.hide();
+            
+            // Reset button state
+            tipsButton.disabled = false;
+            tipsButton.innerHTML = `
+                <i class="ti ti-robot"></i>
+                <span>Get AI Route Tips</span>
+            `;
         }
     }
 </script>
@@ -1225,6 +1253,95 @@ include 'header.php';
     /* Update scrollbar colors */
     .sequence-list::-webkit-scrollbar-thumb {
         background: var(--primary-color);
+    }
+
+    /* Custom button styles */
+    #getAISuggestions {
+        transition: all 0.3s ease;
+        border: none;
+        background: linear-gradient(45deg, #28a745, #20c997);
+    }
+
+    #getAISuggestions:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+
+    #getAISuggestions:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    #aiTipsButton {
+        transition: all 0.3s ease;
+    }
+
+    #aiTipsButton:hover {
+        background-color: #0d6efd;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Ensure map container maintains size */
+    #map {
+        height: 500px !important;
+        min-height: 500px;
+        border-radius: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Button styles */
+    #getAISuggestions {
+        transition: all 0.3s ease;
+        border: none;
+        background: linear-gradient(45deg, #28a745, #20c997);
+        min-width: 150px; /* Prevent size changes */
+    }
+
+    #getAISuggestions:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    }
+
+    #getAISuggestions:disabled {
+        opacity: 0.85;
+        cursor: not-allowed;
+        /* Maintain gradient even when disabled */
+        background: linear-gradient(45deg, #28a745, #20c997);
+    }
+
+    /* Ensure consistent button content layout */
+    #getAISuggestions i,
+    #getAISuggestions span {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    /* Maintain icon size */
+    #getAISuggestions i {
+        font-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        line-height: 1;
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>
 

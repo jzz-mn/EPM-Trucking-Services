@@ -1,4 +1,19 @@
 <?php
+
+$host = 'localhost';
+$usernameDB = 'root';
+$password ='';
+$database = 'epm_database';
+
+// Create connection
+$conn = new mysqli($host, $usernameDB, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+   die("Connection failed: " . $conn->connect_error);
+}
+
+/*
 // Database configuration
 $host = getenv('DB_HOST');
 $usernameDB = getenv('DB_USERNAME');
@@ -12,7 +27,7 @@ $conn = new mysqli($host, $usernameDB, $password, $database);
 if ($conn->connect_error) {
    die("Connection failed: " . $conn->connect_error);
 }
-
+*/
 /*
 $host = "ixnzh1cxch6rtdrx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com";  // JawsDB host
 $usernameDB = "p7apqmgbef3tu2d6";  // JawsDB username

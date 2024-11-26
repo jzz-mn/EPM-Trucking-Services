@@ -3,7 +3,18 @@ header('Content-Type: application/json');
 include '../includes/db_connection.php';
 include '../includes/config.php';
 
+// Temporary debug
+error_log("Debug - Environment check:");
+error_log("Direct getenv(): " . (getenv('OPENAI_API_KEY') ? "Found" : "Not found"));
+error_log("Constant defined: " . (defined('OPENAI_API_KEY') ? "Yes" : "No"));
+error_log("Constant value empty: " . (defined('OPENAI_API_KEY') && empty(OPENAI_API_KEY) ? "Yes" : "No"));
+
 try {
+    // Debug logging
+    error_log("Starting route tips generation...");
+    error_log("OPENAI_API_KEY defined: " . (defined('OPENAI_API_KEY') ? 'Yes' : 'No'));
+    error_log("OPENAI_API_KEY empty: " . (empty(OPENAI_API_KEY) ? 'Yes' : 'No'));
+    
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
     $cluster = $data['cluster'] ?? '';
@@ -12,9 +23,16 @@ try {
         throw new Exception('Cluster is required');
     }
 
-    // Verify OpenAI API key exists
-    if (!defined('OPENAI_API_KEY') || empty(OPENAI_API_KEY)) {
-        throw new Exception('OpenAI API key is not configured');
+    // Verify OpenAI API key exists with more detailed error
+    if (!defined('OPENAI_API_KEY')) {
+        throw new Exception('OpenAI API key constant is not defined');
+    }
+    
+    if (empty(OPENAI_API_KEY)) {
+        // Debug: Check environment variable directly
+        $env_key = getenv('OPENAI_API_KEY');
+        error_log("Direct environment check for OPENAI_API_KEY: " . ($env_key ? 'Found' : 'Not found'));
+        throw new Exception('OpenAI API key is empty. Environment check: ' . ($env_key ? 'Key exists in env' : 'Key not in env'));
     }
 
     // Get cluster-specific data
@@ -151,10 +169,16 @@ try {
 
 } catch (Exception $e) {
     error_log('Route Tips Error: ' . $e->getMessage());
+    error_log('Route Tips Error Trace: ' . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
+        'debug' => [
+            'openai_key_defined' => defined('OPENAI_API_KEY'),
+            'openai_key_empty' => empty(OPENAI_API_KEY),
+            'env_check' => getenv('OPENAI_API_KEY') ? 'exists' : 'not found'
+        ]
     ]);
 }
 ?> 
