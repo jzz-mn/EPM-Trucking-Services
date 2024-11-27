@@ -2,7 +2,16 @@
 <IfModule mod_headers.c>
   
   # 1. Content Security Policy (CSP)
-  Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://trusted.cdn.com; style-src 'self' https://trusted.cdn.com; img-src 'self' data:; frame-ancestors 'self';"
+  Header set Content-Security-Policy "default-src 'self'; \
+    script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net; \
+    style-src 'self' 'unsafe-inline'; \
+    img-src 'self' data:; \
+    font-src 'self'; \
+    connect-src 'self'; \
+    frame-ancestors 'self'; \
+    object-src 'none'; \
+    base-uri 'self'; \
+    form-action 'self';"
 
   # 2. Strict Transport Security (HSTS)
   Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
