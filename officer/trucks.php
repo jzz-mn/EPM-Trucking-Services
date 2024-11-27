@@ -190,7 +190,7 @@ include '../officer/header.php';
         </div>
       </div>
     </div>
-    <!-- Edit Maintenance Modal -->
+    <!-- Edit Maintenance Record Modal -->
     <div class="modal fade" id="updateMaintenanceRecordModal" tabindex="-1" role="dialog"
       aria-labelledby="updateMaintenanceRecordModalTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -207,7 +207,7 @@ include '../officer/header.php';
                     <h4 class="card-title">Edit Maintenance Record</h4>
                     <p class="card-subtitle mb-4">Fill out the form to record a maintenance expense.</p>
 
-                    <!-- Place the updated form here -->
+                    <!-- Updated Form -->
                     <form id="editMaintenanceForm" method="POST" action="update_maintenance.php">
                       <div class="row">
                         <!-- Maintenance ID -->
@@ -276,6 +276,7 @@ include '../officer/header.php';
                           </div>
                         </div>
 
+                        <!-- Logged By -->
                         <div class="col-lg-4">
                           <div class="mb-3">
                             <label for="maintenanceLoggedBy" class="form-label">Logged By</label>
@@ -283,6 +284,7 @@ include '../officer/header.php';
                           </div>
                         </div>
 
+                        <!-- Form Buttons -->
                         <div class="col-12">
                           <div class="d-flex align-items-center justify-content-end mt-4 gap-6">
                             <button type="button" class="btn bg-danger-subtle text-danger"
@@ -292,6 +294,7 @@ include '../officer/header.php';
                         </div>
                       </div>
                     </form>
+                    <!-- End of Form -->
                   </div>
                 </div>
               </div>
@@ -299,6 +302,7 @@ include '../officer/header.php';
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- Edit Transaction Modal -->
@@ -678,12 +682,10 @@ include '../officer/header.php';
               <div class="table-controls mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="col-md-4">
-                    <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search..."
-                      onkeyup="filterMaintenanceTable()">
+                    <input type="text" id="maintenanceSearchBar" class="form-control" placeholder="Search...">
                   </div>
                   <div class="col-md-4 text-end">
-                    <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline"
-                      onchange="changeMaintenanceRowsPerPage()">
+                    <select id="maintenanceRowsPerPage" class="form-select w-auto d-inline">
                       <option value="5">5 rows</option>
                       <option value="10">10 rows</option>
                       <option value="20">20 rows</option>
@@ -694,15 +696,8 @@ include '../officer/header.php';
 
               <div class="py-3">
                 <!-- Maintenance Table -->
-                <?php
-                include '../includes/db_connection.php';
-                $query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy FROM truckmaintenance
-                    ORDER BY MaintenanceID DESC";
-                $result = $conn->query($query);
-                ?>
                 <div class="table-responsive">
-                  <table id="maintenanceTable"
-                    class="table text-center table-striped table-bordered display text-nowrap">
+                  <table id="maintenanceTable" class="table text-center table-striped table-bordered display text-nowrap">
                     <thead>
                       <tr>
                         <th onclick="sortMaintenanceTable(0)">Maintenance ID</th>
@@ -716,48 +711,25 @@ include '../officer/header.php';
                       </tr>
                     </thead>
                     <tbody id="maintenanceTableBody">
-                      <?php
-                      if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                          $maintenanceData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
-                          echo "<tr>";
-                          echo "<td>" . $row['MaintenanceID'] . "</td>";
-                          echo "<td>" . $row['Year'] . "</td>";
-                          echo "<td>" . $row['Month'] . "</td>";
-                          echo "<td>" . $row['Category'] . "</td>";
-                          echo "<td>" . $row['Description'] . "</td>";
-                          echo "<td>" . $row['Amount'] . "</td>";
-                          echo "<td>" . $row['LoggedBy'] . "</td>";
-                          echo "<td>";
-                          echo "<a href='#' class='me-3 text-primary edit-maintenance-btn' data-bs-toggle='modal' data-maintenance='" . $maintenanceData . "'>";
-                          echo "<i class='fs-4 ti ti-edit'></i></a>";
-                          echo "</td>";
-                          echo "</tr>";
-                        }
-                      } else {
-                        echo "<tr id='noMaintenanceDataRow'><td colspan='7' class='text-center'>No maintenance records found</td></tr>";
-                      }
-                      ?>
+                      <tr>
+                        <td colspan="8" class="text-center">Loading...</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
-                <div
-                  class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                   <div class="order-2 order-md-1 mt-3 mt-md-0">
                     <span>Number of pages: <span id="totalPagesMaintenance"></span></span>
                   </div>
                   <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
-                    <ul class="pagination justify-content-center justify-content-md-end mb-0"
-                      id="maintenancePaginationNumbers">
+                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="maintenancePaginationNumbers">
                       <!-- Pagination buttons will be dynamically generated here -->
                     </ul>
                   </nav>
                 </div>
-
-
-                <?php $conn->close(); ?>
               </div>
             </div>
+
 
 
             <!-- Transactions Tab -->
@@ -997,63 +969,6 @@ include '../officer/header.php';
     <!----------- button/fetching etc. ---------->
 
     <script>
-      // Function to populate the Edit Maintenance modal with the selected record data
-      // Function to populate the Edit Maintenance modal with the selected record data
-      function populateEditMaintenanceForm(maintenance) {
-        // Map month names to numbers (if necessary)
-        const monthMap = {
-          'January': '1',
-          'February': '2',
-          'March': '3',
-          'April': '4',
-          'May': '5',
-          'June': '6',
-          'July': '7',
-          'August': '8',
-          'September': '9',
-          'October': '10',
-          'November': '11',
-          'December': '12',
-        };
-
-        let monthValue = maintenance.Month;
-
-        // If the month is a name, map it to its numeric value
-        if (isNaN(monthValue)) {
-          monthValue = monthMap[monthValue];
-        }
-
-        // Populate modal fields with maintenance data
-        document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
-        document.getElementById("maintenanceYear").value = maintenance.Year;
-        document.getElementById("maintenanceMonth").value = monthValue;
-        document.getElementById("maintenanceCategory").value = maintenance.Category;
-        document.getElementById("maintenanceDescription").value = maintenance.Description;
-        document.getElementById("maintenanceAmount").value = maintenance.Amount;
-        document.getElementById("maintenanceLoggedBy").value = maintenance.LoggedBy;
-
-        // Show the modal
-        const updateModal = new bootstrap.Modal(document.getElementById('updateMaintenanceRecordModal'));
-        updateModal.show();
-      }
-
-      // Attach the edit button functionality
-      function attachMaintenanceEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-        editButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const maintenanceData = JSON.parse(this.dataset.maintenance);
-            populateEditMaintenanceForm(maintenanceData);
-          });
-        });
-      }
-
-      // Ensure the edit buttons are re-attached after the table is updated
-      document.addEventListener('DOMContentLoaded', () => {
-        attachMaintenanceEditButtons();
-      });
-    </script>
-    <script>
       // Function to populate the Edit Transaction modal with the selected record data1
       function populateEditTransactionForm(transaction) {
         // Set values in the modal based on the selected transaction
@@ -1084,17 +999,6 @@ include '../officer/header.php';
 </div>
 
 <script>
-  function attachMaintenanceEditButtons() {
-    const editButtons = document.querySelectorAll('.edit-maintenance-btn');
-    editButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const maintenanceData = JSON.parse(this.dataset.maintenance);
-        populateEditMaintenanceForm(maintenanceData);
-        $('#updateMaintenanceRecordModal').modal('show');
-      });
-    });
-  }
-
   function attachTransactionEditButtons() {
     const editButtons = document.querySelectorAll('.edit-transaction-btn');
     editButtons.forEach(button => {
@@ -1326,33 +1230,34 @@ include '../officer/header.php';
     function loadMaintenanceData(page = 1, rowsPerPage = 5, search = "") {
       const offset = (page - 1) * rowsPerPage;
 
+      // Show loading indicator
+      maintenanceTableBody.innerHTML = "<tr><td colspan='8' class='text-center'>Loading...</td></tr>";
+
       fetch(`fetch_maintenance.php?limit=${rowsPerPage}&offset=${offset}&search=${encodeURIComponent(search)}`)
-        .then((response) => response.json())
-        .then(({
-          data,
-          total
-        }) => {
+        .then(response => response.json())
+        .then(({ data, total }) => {
           maintenanceTotalRecords = total;
           maintenanceTableBody.innerHTML = ""; // Clear the table
 
           if (data.length > 0) {
-            data.forEach((row) => {
+            data.forEach(row => {
               const tableRow = document.createElement("tr");
-              tableRow.innerHTML = `
-  <td>${row.MaintenanceID}</td>
-  <td>${row.Year}</td>
-  <td>${row.Month}</td>
-  <td>${row.Category}</td>
-  <td>${row.Description}</td>
-  <td>${row.Amount}</td>
-  <td>${row.LoggedBy}</td>
-  <td>
-    <a href="#" class="me-3 text-primary edit-maintenance-btn" data-bs-toggle="modal" data-maintenance='${JSON.stringify(row)}'>
-      <i class="fs-4 ti ti-edit"></i>
-    </a>
-  </td>
-`;
+              const maintenanceData = JSON.stringify(row).replace(/'/g, "\\'"); // Escape single quotes
 
+              tableRow.innerHTML = `
+                <td>${row.MaintenanceID}</td>
+                <td>${row.Year}</td>
+                <td>${row.Month}</td>
+                <td>${row.Category}</td>
+                <td>${row.Description}</td>
+                <td>${row.Amount}</td>
+                <td>${row.LoggedBy}</td>
+                <td>
+                  <a href="#" class="me-3 text-primary edit-maintenance-btn" data-bs-toggle="modal" data-maintenance='${maintenanceData}'>
+                    <i class="fs-4 ti ti-edit"></i>
+                  </a>
+                </td>
+              `;
               maintenanceTableBody.appendChild(tableRow);
             });
           } else {
@@ -1361,7 +1266,10 @@ include '../officer/header.php';
 
           updateMaintenancePagination();
         })
-        .catch((error) => console.error("Error fetching maintenance data:", error));
+        .catch(error => {
+          console.error("Error fetching maintenance data:", error);
+          maintenanceTableBody.innerHTML = "<tr><td colspan='8' class='text-center text-danger'>Error loading data</td></tr>";
+        });
     }
 
     // Function to update Maintenance pagination
@@ -1370,6 +1278,8 @@ include '../officer/header.php';
 
       const totalPages = Math.ceil(maintenanceTotalRecords / maintenanceRowsPerPage);
       const maxVisiblePages = window.innerWidth <= 768 ? 3 : 5; // Adjust for mobile
+
+      document.getElementById("totalPagesMaintenance").textContent = totalPages;
 
       if (totalPages > 1) {
         // Create the '<<' and '<' buttons
@@ -1393,21 +1303,10 @@ include '../officer/header.php';
         }
 
         for (let i = startPage; i <= endPage; i++) {
-          const pageItem = document.createElement("li");
-          pageItem.classList.add("page-item");
-          if (i === maintenanceCurrentPage) pageItem.classList.add("active");
-
-          const pageLink = document.createElement("a");
-          pageLink.classList.add("page-link");
-          pageLink.textContent = i;
-          pageLink.style.cursor = 'pointer';
-          pageLink.addEventListener('click', () => {
+          maintenancePaginationNumbers.appendChild(createPaginationItem(i, false, () => {
             maintenanceCurrentPage = i;
             loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
-          });
-
-          pageItem.appendChild(pageLink);
-          maintenancePaginationNumbers.appendChild(pageItem);
+          }, i === maintenanceCurrentPage));
         }
 
         maintenancePaginationNumbers.appendChild(createPaginationItem('›', maintenanceCurrentPage === totalPages, () => {
@@ -1424,29 +1323,73 @@ include '../officer/header.php';
       }
     }
 
-    function createPaginationItem(label, isDisabled, onClick) {
+    function createPaginationItem(label, isDisabled, onClick, isActive = false) {
       const pageItem = document.createElement("li");
       pageItem.classList.add("page-item");
       if (isDisabled) pageItem.classList.add("disabled");
+      if (isActive) pageItem.classList.add("active");
 
       const pageLink = document.createElement("a");
       pageLink.classList.add("page-link");
       pageLink.textContent = label;
-      pageLink.style.cursor = isDisabled ? 'default' : 'pointer';
+      pageLink.style.cursor = isDisabled ? 'not-allowed' : 'pointer';
 
-      if (!isDisabled) pageLink.addEventListener('click', onClick);
+      if (!isDisabled && !isActive) {
+        pageLink.addEventListener('click', onClick);
+      }
 
       pageItem.appendChild(pageLink);
       return pageItem;
     }
 
-    // Load Maintenance data only when the Maintenance tab is active
-    maintenanceTab.addEventListener('shown.bs.tab', () => {
-      if (!maintenanceDataLoaded) {
-        loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
-        maintenanceDataLoaded = true; // Ensure data is loaded only once per session
+    // Event delegation for edit buttons
+    maintenanceTableBody.addEventListener('click', function(event) {
+      const target = event.target.closest('.edit-maintenance-btn');
+      if (target) {
+        event.preventDefault(); // Prevent default link behavior
+        const maintenanceData = JSON.parse(target.dataset.maintenance);
+        populateEditMaintenanceForm(maintenanceData);
       }
     });
+
+    // Function to populate the Edit Maintenance modal with the selected record data
+    function populateEditMaintenanceForm(maintenance) {
+      // Map month names to numbers (if necessary)
+      const monthMap = {
+        'January': '1',
+        'February': '2',
+        'March': '3',
+        'April': '4',
+        'May': '5',
+        'June': '6',
+        'July': '7',
+        'August': '8',
+        'September': '9',
+        'October': '10',
+        'November': '11',
+        'December': '12',
+      };
+
+      let monthValue = maintenance.Month;
+
+      // If the month is a name, map it to its numeric value
+      if (isNaN(monthValue)) {
+        monthValue = monthMap[monthValue];
+      }
+
+      // Populate modal fields with maintenance data
+      document.getElementById("maintenanceId").value = maintenance.MaintenanceID;
+      document.getElementById("maintenanceYear").value = maintenance.Year;
+      document.getElementById("maintenanceMonth").value = monthValue;
+      document.getElementById("maintenanceCategory").value = maintenance.Category;
+      document.getElementById("maintenanceDescription").value = maintenance.Description;
+      document.getElementById("maintenanceAmount").value = maintenance.Amount;
+      document.getElementById("maintenanceLoggedBy").value = maintenance.LoggedBy;
+
+      // Show the modal using Bootstrap's Vanilla JS API
+      const updateModal = new bootstrap.Modal(document.getElementById('updateMaintenanceRecordModal'));
+      updateModal.show();
+    }
 
     // Attach event listeners to filtering and rows per page controls
     maintenanceSearchBar.addEventListener("input", () => {
@@ -1459,10 +1402,23 @@ include '../officer/header.php';
       maintenanceCurrentPage = 1;
       loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
     });
-  });
-  
-</script>
 
+    // Load Maintenance data only when the Maintenance tab is active
+    maintenanceTab.addEventListener('shown.bs.tab', () => {
+      if (!maintenanceDataLoaded) {
+        loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+        maintenanceDataLoaded = true; // Ensure data is loaded only once per session
+      }
+    });
+
+    // Optionally, load data immediately if the Maintenance tab is active on page load
+    const maintenanceTabPane = document.getElementById('maintenance');
+    if (maintenanceTabPane.classList.contains('active')) {
+      loadMaintenanceData(maintenanceCurrentPage, maintenanceRowsPerPage, maintenanceSearchBar.value);
+      maintenanceDataLoaded = true;
+    }
+  });
+</script>
 
 
 
@@ -2133,102 +2089,67 @@ include '../officer/header.php';
 <!--------- CSS/STYLE --------->
 
 <style>
-  .dark-mode .pagination .page-item .page-link {
-    /* Dark background for pagination items */
-    color: #fff;
-    /* Light text for readability */
-  }
+    .dark-mode .pagination .page-item .page-link {
+      /* Dark background for pagination items */
+      color: #fff;
+      /* Light text for readability */
+    }
 
-  .dark-mode .pagination .page-item.active .page-link {
-    background-color: #0d6efd;
-    /* Highlight color for active page */
-    color: #fff;
-  }
+    .dark-mode .pagination .page-item.active .page-link {
+      background-color: #0d6efd;
+      /* Highlight color for active page */
+      color: #fff;
+    }
 
-  .dark-mode .pagination .page-link:hover {
-    background-color: #555;
-    /* Slightly lighter on hover */
-  }
+    .dark-mode .pagination .page-link:hover {
+      background-color: #555;
+      /* Slightly lighter on hover */
+    }
 
-  th {
-    cursor: pointer;
-  }
+    .sortable {
+      cursor: pointer;
+    }
 
-  /* Add ascending and descending arrow icons */
-  .ascending::after {
-    content: ' ↑';
-    /* Unicode up arrow */
-  }
+    .ascending::after {
+      content: ' ↑';
+    }
 
-  .descending::after {
-    content: ' ↓';
-    /* Unicode down arrow */
-  }
+    .descending::after {
+      content: ' ↓';
+    }
 
-  .pagination .page-item .page-link {
-    border: none;
-    /* Remove border from non-highlighted items */
-    margin: 0 2px;
-    /* Add spacing between items */
-  }
+    table td,
+    table th {
+      min-width: 100px;
+      /* Adjust as needed */
+      max-width: 200px;
+      /* Adjust based on your design */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-  .pagination .page-item.active .page-link {
-    background-color: #0d6efd;
-    /* Blue background for the active page */
-    color: #fff;
-    /* White text for the active page */
-    border-radius: 50%;
-    /* Make the active page a circle */
-    min-width: 35px;
-    /* Set width for the circle */
-    height: 35px;
-    /* Set height for the circle */
-    display: flex;
-    /* Center text */
-    align-items: center;
-    /* Center text vertically */
-    justify-content: center;
-    /* Center text horizontally */
-  }
-
-  @media (max-width: 768px) {
     .pagination .page-item .page-link {
-      font-size: 12px;
-      /* Reduce font size for mobile */
-      padding: 0.5rem;
-      /* Adjust padding */
-
+      min-width: 35px;
+      height: 35px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      color: #000;
+      margin: 0 2px;
     }
 
     .pagination .page-item.active .page-link {
-      min-width: 35px;
-      /* Adjust width for smaller screen */
-      height: 35px;
-      /* Adjust height for smaller screen */
-      font-size: 12px;
-      /* Reduce font size for active page */
+      background-color: #0d6efd;
+      color: #fff;
+      border-radius: 50%;
     }
 
-    .pagination-controls {
-      flex-direction: column;
-      /* Stack elements vertically on mobile */
-      align-items: center;
-      /* Center align items */
+    .pagination .page-link:hover {
+      background-color: #e9ecef;
     }
-
-    .pagination-controls .order-2 {
-      margin-top: 10px;
-      /* Add space between elements */
-    }
-  }
-
-  .pagination .page-link:hover {
-    background-color: #e9ecef;
-    /* Hover background color */
-    color: #000;
-    /* Text color on hover */
-  }
-</style>
+  </style>
 
 
 
