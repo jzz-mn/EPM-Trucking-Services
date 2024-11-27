@@ -3,7 +3,7 @@ $allowedRoles = ['Employee'];
 
 // Include the authentication script
 require_once 'auth.php'; // Update the path as necessary
-
+include '../includes/db_connection.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve and sanitize POST data
