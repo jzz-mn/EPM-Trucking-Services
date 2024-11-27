@@ -47,10 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
       // Query to fetch transactiongroup records
       $query = "
-                SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, tg.TollFeeAmount, tg.Amount
-                FROM transactiongroup tg
-                WHERE tg.Date BETWEEN ? AND ?
-            ";
+          SELECT tg.TransactionGroupID, tg.Date, tg.RateAmount, tg.TotalKGs, tg.TollFeeAmount, tg.Amount
+          FROM transactiongroup tg
+          WHERE tg.Date BETWEEN ? AND ?
+          ORDER BY tg.Date ASC
+      ";
 
       $stmt = $conn->prepare($query);
       if ($stmt) {
@@ -60,17 +61,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Check if records are found
         if ($result->num_rows > 0) {
+          // Fetch all records into an array
+          $records = $result->fetch_all(MYSQLI_ASSOC);
+          $totalRecords = count($records);
+
           $html = '';
-          while ($row = $result->fetch_assoc()) {
+
+          if ($totalRecords <= 6) {
+            // If 6 or fewer records, display all
+            foreach ($records as $row) {
+              $html .= '<tr>';
+              $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
+              $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
+              $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['Amount'], 2) . '</td>'; // Added Amount column
+              $html .= '</tr>';
+            }
+          } else {
+            // Display first 3 records
+            for ($i = 0; $i < 3; $i++) {
+              $row = $records[$i];
+              $html .= '<tr>';
+              $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
+              $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
+              $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['Amount'], 2) . '</td>'; // Added Amount column
+              $html .= '</tr>';
+            }
+
+            // Insert a separator row indicating skipped records
             $html .= '<tr>';
-            $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
-            $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
-            $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
-            $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
-            $html .= '<td>' . number_format($row['Amount'], 2) . '</td>'; // Added Amount column
+            $html .= '<td colspan="6" class="text-center">...</td>';
             $html .= '</tr>';
+
+            // Display last 3 records
+            for ($i = $totalRecords - 3; $i < $totalRecords; $i++) {
+              $row = $records[$i];
+              $html .= '<tr>';
+              $html .= '<td>' . htmlspecialchars($row['TransactionGroupID']) . '</td>';
+              $html .= '<td>' . htmlspecialchars($row['Date']) . '</td>';
+              $html .= '<td>' . number_format($row['RateAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TotalKGs'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['TollFeeAmount'], 2) . '</td>';
+              $html .= '<td>' . number_format($row['Amount'], 2) . '</td>'; // Added Amount column
+              $html .= '</tr>';
+            }
           }
+
           echo json_encode(['success' => true, 'html' => $html]);
 
           // Insert activity log for fetching records
@@ -453,11 +494,13 @@ include '../officer/header.php';
                   <!-- Form Fields -->
                   <div class="mb-3">
                     <label for="billingStartDate" class="form-label">Billing Start Date</label>
-                    <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required>
+                    <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required
+                      max="<?php echo date('Y-m-d'); ?>">
                   </div>
                   <div class="mb-3">
                     <label for="billingEndDate" class="form-label">Billing End Date</label>
-                    <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required>
+                    <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required
+                      max="<?php echo date('Y-m-d'); ?>">
                   </div>
                   <div class="mb-3">
                     <label for="billedTo" class="form-label">Billed To</label>
@@ -492,7 +535,8 @@ include '../officer/header.php';
         <!-- Selected Records Modal -->
         <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
           aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 70%;">
+          <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 70%;">
+            <!-- Changed modal-sm to modal-lg for better visibility -->
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="selectedRecordsModalLabel">Selected Transaction Groups</h5>
@@ -527,6 +571,7 @@ include '../officer/header.php';
           </div>
         </div>
 
+
       </div>
     </div>
   </div>
@@ -536,7 +581,8 @@ include '../officer/footer.php';
 $conn->close();
 ?>
 <!-- Bootstrap Bundle JS (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+ADa0j5j2zYzMEaXkvoE3kR18j4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+ADa0j5j2zYzMEaXkvoE3kR18j4" crossorigin="anonymous"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>

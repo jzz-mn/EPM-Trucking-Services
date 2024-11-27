@@ -239,7 +239,8 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                             <div class="col-md-6">
                                 <label for="transaction-date" class="form-label">Date</label>
                                 <input type="date" class="form-control" id="transaction-date" name="transaction_date"
-                                    value="<?php echo $_SESSION['transaction_date'] ?? date('Y-m-d'); ?>" required>
+                                    value="<?php echo $_SESSION['transaction_date'] ?? date('Y-m-d'); ?>" required
+                                    max="<?php echo date('Y-m-d'); ?>">
                             </div>
                             <!-- Truck Selection -->
                             <div class="col-md-6">
@@ -289,13 +290,13 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                                             </span>
                                         </div>
                                         <input type="number" class="form-control" id="input-dr-no" placeholder="DR No"
-                                            step="1" min="1">
+                                            min="1" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     </div>
                                     <!-- Quantity -->
                                     <div class="col-md-2">
                                         <label for="input-quantity" class="form-label">Quantity</label>
                                         <input type="number" class="form-control" id="input-quantity"
-                                            placeholder="Quantity" step="0.01" min="0">
+                                            placeholder="Quantity" min="0" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     </div>
                                     <!-- KGs -->
                                     <div class="col-md-2">

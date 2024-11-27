@@ -288,8 +288,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit;
             }
 
-            // Fetch Transaction Groups within the date range
-            $tgQuery = "SELECT * FROM transactiongroup WHERE Date BETWEEN ? AND ?";
+            // Fetch Transaction Groups within the date range, including PlateNo from trucksinfo
+            $tgQuery = "
+                SELECT tg.*, ti.PlateNo 
+                FROM transactiongroup tg 
+                LEFT JOIN trucksinfo ti ON tg.TruckID = ti.TruckID 
+                WHERE tg.Date BETWEEN ? AND ?
+            ";
             $stmt = $conn->prepare($tgQuery);
             if (!$stmt) {
                 echo json_encode(['success' => false, 'message' => 'Failed to prepare transaction groups fetch query.']);
@@ -311,6 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo json_encode(['success' => true, 'transactionGroups' => $transactionGroups, 'amounts' => $amounts]);
             exit;
         }
+
 
 
         // Update Transaction Group
@@ -1418,7 +1424,7 @@ include '../officer/header.php';
                         <thead>
                             <tr>
                                 <th>Transaction Group ID</th>
-                                <th>Truck ID</th>
+                                <th>Plate No</th> <!-- Changed from Truck ID to Plate No -->
                                 <th>Date</th>
                                 <th>Toll Fee Amount</th>
                                 <th>Rate Amount</th>
@@ -1434,6 +1440,7 @@ include '../officer/header.php';
                 </div>
             </div>
         </div>
+
 
         <!-- Edit Transaction Group Modal -->
         <div class="modal fade" id="editTGModal" tabindex="-1" aria-labelledby="editTGModalLabel" aria-hidden="true">
@@ -1769,24 +1776,27 @@ $conn->close();
 
                         if (response.transactionGroups.length > 0) {
                             response.transactionGroups.forEach(function (tg) {
+                                let plateNo = tg.PlateNo ? tg.PlateNo : 'N/A'; // Handle cases where PlateNo might be null
+
                                 let row = `
-                            <tr id="tg-${tg.TransactionGroupID}">
-                                <td>${tg.TransactionGroupID}</td>
-                                <td>${tg.TruckID}</td>
-                                <td>${tg.Date}</td>
-                                <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
-                                <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
-                                <td>${parseFloat(tg.Amount).toFixed(2)}</td>
-                                <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}">Edit</button>
-                                    <button class="btn btn-sm btn-danger delete-tg-btn" data-tg-id="${tg.TransactionGroupID}">Delete</button>
-                                </td>
-                            </tr>
-                        `;
+        <tr id="tg-${tg.TransactionGroupID}">
+            <td>${tg.TransactionGroupID}</td>
+            <td>${plateNo}</td> <!-- Display Plate No instead of Truck ID -->
+            <td>${tg.Date}</td>
+            <td>${parseFloat(tg.TollFeeAmount).toFixed(2)}</td>
+            <td>${parseFloat(tg.RateAmount).toFixed(2)}</td>
+            <td>${parseFloat(tg.Amount).toFixed(2)}</td>
+            <td>${parseFloat(tg.TotalKGs).toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-primary edit-tg-btn" data-tg-id="${tg.TransactionGroupID}" data-truck-id="${tg.TruckID}">Edit</button>
+                <button class="btn btn-sm btn-danger delete-tg-btn" data-tg-id="${tg.TransactionGroupID}" data-truck-id="${tg.TruckID}">Delete</button>
+            </td>
+        </tr>
+    `;
 
                                 tbody.append(row);
                             });
+
                         } else {
                             tbody.append('<tr><td colspan="8" class="text-center">No Transaction Groups found for the selected date range.</td></tr>');
                         }
@@ -1812,6 +1822,7 @@ $conn->close();
         // Handle Edit Transaction Group Button Click
         $(document).on('click', '.edit-tg-btn', function () {
             let tgID = $(this).data('tg-id');
+            let truckID = $(this).data('truck-id');
 
             // Show a loading state in the modal
             $('#editTGModal').find('form')[0].reset();
@@ -2443,6 +2454,7 @@ $conn->close();
         // Event listener for Delete Transaction Group button
         $(document).on('click', '.delete-tg-btn', function () {
             let tgID = $(this).data('tg-id');
+            let truckID = $(this).data('truck-id');
             if (confirm('Are you sure you want to delete this Transaction Group? This action cannot be undone.')) {
                 $.ajax({
                     url: 'edit_invoice.php',

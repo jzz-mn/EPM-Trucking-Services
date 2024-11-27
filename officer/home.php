@@ -740,7 +740,7 @@ include 'dashboard.php';
                   },
                 },
                 title: {
-                  text: 'Expenses and Fuel Over Time',
+                  text: 'Expenses Over Time',
                   align: 'center',
                 },
                 tooltip: {
