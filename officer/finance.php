@@ -82,7 +82,7 @@ include '../includes/db_connection.php';
                 <div class="col-12">
                   <div class="card w-100 border position-relative overflow-hidden mb-0">
                     <div class="card-body p-4">
-                      <h4 class="card-title">Edit Fuel Expense</h4>
+                      <h4 class="card-title">Edit Expense</h4>
                       <p class="card-subtitle mb-4">Fill out the form to update an expense.</p>
                       <form id="updateExpenseForm" method="POST" action="update_expense.php">
                         <div class="row">

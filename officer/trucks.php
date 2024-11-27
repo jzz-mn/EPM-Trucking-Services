@@ -915,7 +915,7 @@ include '../officer/header.php';
                     <tbody id="clustersTableBody">
                       <?php
                       $query = "SELECT UniqueClusterID, ClusterID, ClusterCategory, LocationsInCluster, Tonner, KMRADIUS, FuelPrice, RateAmount FROM clusters
-                          ORDER BY UniqueClusterID DESC";
+                  ORDER BY UniqueClusterID DESC";
                       $result = $conn->query($query);
                       if ($result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
@@ -929,83 +929,79 @@ include '../officer/header.php';
                           echo "<td>" . $row['FuelPrice'] . "</td>";
                           echo "<td>" . $row['RateAmount'] . "</td>";
                           echo "<td>
-                              <div class='btn-group'>
-                                  <button type='button' class='btn btn-secondary btn-sm dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'>
-                                      Actions
-                                  </button>
-                                  <ul class='dropdown-menu'>
-                                      <li><a href='#' class='dropdown-item edit-cluster-btn' data-bs-toggle='modal'>Edit Cluster</a></li>
-                                      <li><a href='#' class='dropdown-item delete-cluster-btn'>Delete Cluster</a></li>
-                                  </ul>
-                              </div>
-                            </td>";
+                    <div class='btn-group'>
+                      <a href='#' class='me-3 text-primary edit-cluster-btn' data-bs-toggle='modal' title='Edit Cluster'>
+        <i class='fs-4 ti ti-edit'></i>
+    </a>
+    <a href='#' class='me-3 text-danger delete-cluster-btn' title='Delete Cluster'>
+        <i class='fs-4 fa fa-trash'></i>
+    </a>
+                    </div>
+                  </td>";
                           echo "</tr>";
                         }
                       } else {
-                        echo "<tr><td colspan='8' class='text-center'>No data available</td></tr>";
+                        echo "<tr><td colspan='9' class='text-center'>No data available</td></tr>";
                       }
                       ?>
                     </tbody>
                   </table>
                 </div>
+              </div>
 
-                <style>
-                  .dropdown-menu {
-    z-index: 1050 !important;
-}
+              <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
-                </style>
 
-                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
-                  <div class="order-2 order-md-1 mt-3 mt-md-0">
-                    <span>Number of pages: <span id="totalPagesClusters"></span></span>
-                  </div>
-                  <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
-                    <ul class="pagination justify-content-center justify-content-md-end mb-0" id="clustersPaginationNumbers">
-                      <!-- Pagination buttons generated here -->
-                    </ul>
-                  </nav>
+              <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
+                <div class="order-2 order-md-1 mt-3 mt-md-0">
+                  <span>Number of pages: <span id="totalPagesClusters"></span></span>
                 </div>
+                <nav aria-label="Page navigation" class="order-1 order-md-2 w-100">
+                  <ul class="pagination justify-content-center justify-content-md-end mb-0" id="clustersPaginationNumbers">
+                    <!-- Pagination buttons generated here -->
+                  </ul>
+                </nav>
               </div>
             </div>
-
-
           </div>
+
+
         </div>
       </div>
     </div>
-
-
-    <!----------- button/fetching etc. ---------->
-
-    <script>
-      // Function to populate the Edit Transaction modal with the selected record data1
-      function populateEditTransactionForm(transaction) {
-        // Set values in the modal based on the selected transaction
-        document.getElementById("transactionId").value = transaction.TransactionID;
-        document.getElementById("transactionDate").value = transaction.TransactionDate;
-        document.getElementById("drNo").value = transaction.DRno;
-        document.getElementById("outletName").value = transaction.OutletName;
-        document.getElementById("qty").value = transaction.Qty;
-        document.getElementById("kgs").value = transaction.KGs;
-      }
-
-      // Attach the 'populateEditTransactionForm' function to the edit button in your table
-      function attachTransactionEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-transaction-btn');
-        editButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
-            populateEditTransactionForm(transactionData); // Populate modal with transaction data
-            $('#editTransactionModal').modal('show'); // Show the modal
-          });
-        });
-      }
-
-      // Execute this function when the document is fully loaded
-      document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
-    </script>
   </div>
+
+
+  <!----------- button/fetching etc. ---------->
+
+  <script>
+    // Function to populate the Edit Transaction modal with the selected record data1
+    function populateEditTransactionForm(transaction) {
+      // Set values in the modal based on the selected transaction
+      document.getElementById("transactionId").value = transaction.TransactionID;
+      document.getElementById("transactionDate").value = transaction.TransactionDate;
+      document.getElementById("drNo").value = transaction.DRno;
+      document.getElementById("outletName").value = transaction.OutletName;
+      document.getElementById("qty").value = transaction.Qty;
+      document.getElementById("kgs").value = transaction.KGs;
+    }
+
+    // Attach the 'populateEditTransactionForm' function to the edit button in your table
+    function attachTransactionEditButtons() {
+      const editButtons = document.querySelectorAll('.edit-transaction-btn');
+      editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const transactionData = JSON.parse(this.dataset.transaction); // Get data from the data attribute
+          populateEditTransactionForm(transactionData); // Populate modal with transaction data
+          $('#editTransactionModal').modal('show'); // Show the modal
+        });
+      });
+    }
+
+    // Execute this function when the document is fully loaded
+    document.addEventListener('DOMContentLoaded', attachTransactionEditButtons);
+  </script>
+</div>
 </div>
 
 <script>
@@ -1245,7 +1241,10 @@ include '../officer/header.php';
 
       fetch(`fetch_maintenance.php?limit=${rowsPerPage}&offset=${offset}&search=${encodeURIComponent(search)}`)
         .then(response => response.json())
-        .then(({ data, total }) => {
+        .then(({
+          data,
+          total
+        }) => {
           maintenanceTotalRecords = total;
           maintenanceTableBody.innerHTML = ""; // Clear the table
 
@@ -2099,67 +2098,67 @@ include '../officer/header.php';
 <!--------- CSS/STYLE --------->
 
 <style>
-    .dark-mode .pagination .page-item .page-link {
-      /* Dark background for pagination items */
-      color: #fff;
-      /* Light text for readability */
-    }
+  .dark-mode .pagination .page-item .page-link {
+    /* Dark background for pagination items */
+    color: #fff;
+    /* Light text for readability */
+  }
 
-    .dark-mode .pagination .page-item.active .page-link {
-      background-color: #0d6efd;
-      /* Highlight color for active page */
-      color: #fff;
-    }
+  .dark-mode .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    /* Highlight color for active page */
+    color: #fff;
+  }
 
-    .dark-mode .pagination .page-link:hover {
-      background-color: #555;
-      /* Slightly lighter on hover */
-    }
+  .dark-mode .pagination .page-link:hover {
+    background-color: #555;
+    /* Slightly lighter on hover */
+  }
 
-    .sortable {
-      cursor: pointer;
-    }
+  .sortable {
+    cursor: pointer;
+  }
 
-    .ascending::after {
-      content: ' ↑';
-    }
+  .ascending::after {
+    content: ' ↑';
+  }
 
-    .descending::after {
-      content: ' ↓';
-    }
+  .descending::after {
+    content: ' ↓';
+  }
 
-    table td,
-    table th {
-      min-width: 100px;
-      /* Adjust as needed */
-      max-width: 200px;
-      /* Adjust based on your design */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  table td,
+  table th {
+    min-width: 100px;
+    /* Adjust as needed */
+    max-width: 200px;
+    /* Adjust based on your design */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-    .pagination .page-item .page-link {
-      min-width: 35px;
-      height: 35px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
-      color: #000;
-      margin: 0 2px;
-    }
+  .pagination .page-item .page-link {
+    min-width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: #000;
+    margin: 0 2px;
+  }
 
-    .pagination .page-item.active .page-link {
-      background-color: #0d6efd;
-      color: #fff;
-      border-radius: 50%;
-    }
+  .pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+  }
 
-    .pagination .page-link:hover {
-      background-color: #e9ecef;
-    }
-  </style>
+  .pagination .page-link:hover {
+    background-color: #e9ecef;
+  }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
