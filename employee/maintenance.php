@@ -78,7 +78,8 @@ $truck_result = $conn->query($truck_query);
                 <label for="maintenanceDescription" class="form-label">Description</label>
                 <select class="form-control" id="maintenanceDescription" name="maintenanceDescription" required>
                   <option value="" disabled selected>Select a description</option>
-                  <option value="PURCHASE MATERIALS (COOL AIR SPARE PARTS)">PURCHASE MATERIALS (COOL AIR SPARE PARTS)</option>
+                  <option value="PURCHASE MATERIALS (COOL AIR SPARE PARTS)">PURCHASE MATERIALS (COOL AIR SPARE PARTS)
+                  </option>
                   <option value="REEFER BAN REPAIR LABOR">REEFER BAN REPAIR LABOR</option>
                   <option value="FREON">FREON</option>
                   <option value="COMPRESSOR">COMPRESSOR</option>
@@ -110,7 +111,8 @@ $truck_result = $conn->query($truck_query);
 </div>
 
 <!-- Confirmation Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+  aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">

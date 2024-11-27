@@ -72,7 +72,14 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
       <div>
         <div class="brand-logo d-flex align-items-center">
           <a href="../employee/maintenance.php" class="text-nowrap logo-img">
-            <img src="../assets/images/logos/epm-logo-no-bg.png" alt="Logo" />
+            <!-- Modified Logo Image with Theme Support -->
+            <img 
+              src="../assetsEPM/logos/epm-logo-no-bg-light-emp.png" 
+              alt="Logo" 
+              class="img-fluid logo-image theme-logo" 
+              data-light-src="../assetsEPM/logos/epm-logo-no-bg1.png"
+              data-dark-src="../assetsEPM/logos/epm-logo-no-bg-light-emp.png"
+              style="max-width: 146px; height: auto;">
           </a>
         </div>
 
@@ -89,14 +96,16 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
               </a>
             </li>
             <li class="sidebar-item">
-              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'maintenance.php' ? 'active' : ''; ?>" href="../employee/maintenance.php" aria-expanded="false">
+              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'maintenance.php' ? 'active' : ''; ?>"
+                href="../employee/maintenance.php" aria-expanded="false">
                 <iconify-icon icon="mdi:truck-outline"></iconify-icon>
                 <span class="hide-menu">Maintenance</span>
               </a>
             </li>
 
             <li class="sidebar-item">
-              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'view_maintenance.php' ?>" href="../employee/view_maintenance.php" aria-expanded="false">
+              <a class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) === 'view_maintenance.php' ? 'active' : ''; ?>"
+                href="../employee/view_maintenance.php" aria-expanded="false">
                 <iconify-icon icon="mdi:truck-outline"></iconify-icon>
                 <span class="hide-menu">View Maintenance</span>
               </a>
@@ -136,7 +145,14 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
             </ul>
 
             <div class="d-block d-lg-none py-9 py-xl-0">
-              <img src="../assets/images/logos/epm-logo-no-bg.png" alt="matdash-img" />
+              <!-- Modified Header Logo with Theme Support -->
+              <img 
+                src="../assetsEPM/logos/epm-logo-no-bg-light-emp.png" 
+                alt="Logo" 
+                class="img-fluid logo-image theme-logo" 
+                data-light-src="../assetsEPM/logos/epm-logo-no-bg1.png"
+                data-dark-src="../assetsEPM/logos/epm-logo-no-bg-light-emp.png"
+                style="max-width: 146px; height: auto;">
             </div>
             <a class="navbar-toggler p-0 border-0 nav-icon-hover-bg rounded-circle" href="javascript:void(0)"
               data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
@@ -205,15 +221,39 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
           <!-- End Vertical Layout Header -->
 
           <script>
-            // Load theme preference from localStorage
-            document.addEventListener("DOMContentLoaded", function() {
-              const savedTheme = localStorage.getItem("theme");
-              if (savedTheme) {
-                document.documentElement.setAttribute("data-bs-theme", savedTheme);
-                toggleIcons(savedTheme);
-              }
+            // Function to update logo sources based on the current theme
+            function updateLogoSrc(theme) {
+              const logos = document.querySelectorAll('.theme-logo');
+              logos.forEach((logo) => {
+                const lightSrc = logo.getAttribute('data-light-src');
+                const darkSrc = logo.getAttribute('data-dark-src');
+                logo.src = theme === 'dark' ? darkSrc : lightSrc;
+              });
+            }
 
-              // Add click events for theme toggle buttons
+            // Function to toggle the visibility of theme icons (sun and moon)
+            function toggleIcons(theme) {
+              const isDark = theme === "dark";
+              document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
+              document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
+            }
+
+            // Function to set the theme and update localStorage
+            function setTheme(theme) {
+              document.documentElement.setAttribute("data-bs-theme", theme);
+              localStorage.setItem("theme", theme);
+              toggleIcons(theme);
+              updateLogoSrc(theme);
+            }
+
+            // Initialize theme on DOMContentLoaded
+            document.addEventListener("DOMContentLoaded", function () {
+              const savedTheme = localStorage.getItem("theme") || 'light';
+              document.documentElement.setAttribute("data-bs-theme", savedTheme);
+              toggleIcons(savedTheme);
+              updateLogoSrc(savedTheme);
+
+              // Event listeners for theme toggle buttons
               document.querySelectorAll(".dark-layout").forEach((element) => {
                 element.addEventListener("click", () => {
                   setTheme("dark");
@@ -227,36 +267,13 @@ if ($stmt = $conn->prepare("SELECT Username, EmailAddress, Role, UserImage FROM 
               });
             });
 
-            // Function to set theme and save preference in localStorage
-            function setTheme(theme) {
-              document.documentElement.setAttribute("data-bs-theme", theme);
-              localStorage.setItem("theme", theme);
-              toggleIcons(theme);
-            }
-
-            // Toggle icons based on theme
-            function toggleIcons(theme) {
-              const isDark = theme === "dark";
-              document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
-              document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
-            }
-          </script>
-
-          <?php
-          // Start the session if not already started
-          if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-          }
-          ?>
-          <script>
+            // Handle theme reset if applicable
             <?php if (isset($_SESSION['reset_theme']) && $_SESSION['reset_theme'] === true): ?>
               // Clear theme preference from localStorage
               localStorage.removeItem("theme");
-              <?php $_SESSION['reset_theme'] = false; // Reset the flag 
-              ?>
+              <?php $_SESSION['reset_theme'] = false; // Reset the flag ?>
             <?php endif; ?>
           </script>
-
 
         </div>
       </header>
