@@ -1455,6 +1455,11 @@ include '../officer/header.php';
                             <input type="hidden" id="TransactionGroupID" name="TransactionGroupID">
                             <input type="hidden" id="TG_ClusterID" name="ClusterID"> <!-- Hidden ClusterID Field -->
                             <div class="row">
+                                <!-- Date -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="TG_Date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="TG_Date" name="Date" required>
+                                </div>
                                 <!-- Truck Dropdown -->
                                 <div class="col-md-4 mb-3">
                                     <label for="TG_TruckID" class="form-label">Truck</label>
@@ -1467,21 +1472,7 @@ include '../officer/header.php';
                                     </select>
                                 </div>
 
-                                <!-- Date -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="TG_Date" class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="TG_Date" name="Date" required>
-                                </div>
 
-                                <!-- Toll Fee Amount -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="TG_TollFeeAmount" class="form-label">Toll Fee Amount</label>
-                                    <input type="number" step="0.01" class="form-control" id="TG_TollFeeAmount"
-                                        name="TollFeeAmount" required>
-                                </div>
-                            </div>
-
-                            <div class="row">
                                 <!-- Fuel Price (New Field) -->
                                 <div class="col-md-4 mb-3">
                                     <label for="TG_FuelPrice" class="form-label">Fuel Price</label>
@@ -1490,32 +1481,45 @@ include '../officer/header.php';
                                         oninput="this.value = Math.floor(this.value)">
                                 </div>
 
-                                <!-- Rate Amount (Read Only) -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="TG_RateAmount" class="form-label">Rate Amount</label>
-                                    <input type="number" step="0.01" class="form-control" id="TG_RateAmount"
-                                        name="RateAmount" readonly>
-                                </div>
-
-                                <!-- Amount (Read Only) -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="TG_Amount" class="form-label">Amount</label>
-                                    <input type="number" step="0.01" class="form-control" id="TG_Amount" name="Amount"
-                                        readonly>
-                                </div>
                             </div>
 
                             <div class="row">
                                 <!-- Total KGs (Read Only) -->
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label for="TG_TotalKGs" class="form-label">Total KGs</label>
                                     <input type="number" step="0.01" class="form-control" id="TG_TotalKGs"
                                         name="TotalKGs" readonly>
                                 </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </form>
+                                <div class="col-md-3 mb-3">
+                                    <label for="TG_RateAmount" class="form-label">Rate Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="TG_RateAmount"
+                                        name="RateAmount" readonly>
+                                </div>
+                                <!-- Toll Fee Amount -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="TG_TollFeeAmount" class="form-label">Toll Fee Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="TG_TollFeeAmount"
+                                        name="TollFeeAmount" required>
+                                </div>
+                                <!-- Rate Amount (Read Only) -->
 
+
+                                <!-- Amount (Read Only) -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="TG_Amount" class="form-label">Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="TG_Amount" name="Amount"
+                                        readonly>
+                                </div>
+
+
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-3 mb-4">
+                                <button type="button" class="btn btn-success" id="addTransactionBtn">Add
+                                    Transaction</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
                         <!-- Transactions Table within Modal -->
                         <div class="mt-4">
                             <h5>Transactions</h5>
@@ -1528,8 +1532,8 @@ include '../officer/header.php';
                                             <th>Transaction Date</th>
                                             <th>DR No</th>
                                             <th>Outlet Name</th>
-                                            <th>Qty</th>
-                                            <th>KGs</th>
+                                            <th>Quantity</th>
+                                            <th>Kilograms</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -1540,10 +1544,7 @@ include '../officer/header.php';
                             </div>
                         </div>
                         <!-- Add Transaction Button -->
-                        <div class="d-flex justify-content-start mb-3">
-                            <button type="button" class="btn btn-success" id="addTransactionBtn">Add
-                                Transaction</button>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -1585,14 +1586,14 @@ include '../officer/header.php';
                             <div class="row">
                                 <!-- Qty -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="Add_Qty" class="form-label">Qty</label>
+                                    <label for="Add_Qty" class="form-label">Quantity</label>
                                     <input type="number" step="0.01" class="form-control" id="Add_Qty" name="Qty"
                                         required>
                                 </div>
 
                                 <!-- KGs -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="Add_KGs" class="form-label">KGs</label>
+                                    <label for="Add_KGs" class="form-label">Kilograms</label>
                                     <input type="number" step="0.01" class="form-control" id="Add_KGs" name="KGs"
                                         required>
                                 </div>
@@ -1648,14 +1649,14 @@ include '../officer/header.php';
                             <div class="row">
                                 <!-- Qty -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="T_Qty" class="form-label">Qty</label>
+                                    <label for="T_Qty" class="form-label">Quantity</label>
                                     <input type="number" step="0.01" class="form-control" id="T_Qty" name="Qty"
                                         required>
                                 </div>
 
                                 <!-- KGs -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="T_KGs" class="form-label">KGs</label>
+                                    <label for="T_KGs" class="form-label">Kilograms</label>
                                     <input type="number" step="0.01" class="form-control" id="T_KGs" name="KGs"
                                         required>
                                 </div>
