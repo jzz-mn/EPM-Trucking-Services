@@ -17,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['truckId'], $_POST['pla
     // Execute the query and check if it was successful
     if ($stmt->execute()) {
         // Redirect back to the trucks page with a success message
+        $_SESSION['truck_updated'] = true; // Set success flag
+
         header("Location: trucks.php?success=1");
         exit();
     } else {

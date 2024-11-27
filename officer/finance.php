@@ -1188,7 +1188,40 @@ include '../includes/db_connection.php';
     }
   </style>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Check if a success message is passed via session or query parameters
+    <?php if (isset($_SESSION['expense_updated']) && $_SESSION['expense_updated'] === true): ?>
+      Swal.fire({
+        icon: 'success',
+        title: 'Expense Updated Successfully!',
+        text: 'The expense record has been successfully updated.',
+        showConfirmButton: false,
+        timer: 2000
+      });
+      <?php unset($_SESSION['expense_updated']); ?>
+    <?php endif; ?>
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Check if a success message is passed via session or query parameters
+    <?php if (isset($_SESSION['fuel_updated']) && $_SESSION['fuel_updated'] === true): ?>
+      Swal.fire({
+        icon: 'success',
+        title: 'Fuel Updated Successfully!',
+        text: 'The fuel record has been successfully updated.',
+        showConfirmButton: false,
+        timer: 2000
+      });
+      <?php unset($_SESSION['fuel_updated']); ?>
+    <?php endif; ?>
+  });
+</script>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </div>
 <?php

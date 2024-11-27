@@ -77,6 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_commit($conn);
 
     // Redirect back to the finance page or refresh the page
+            $_SESSION['expense_updated'] = true; // Set success flag
     header("Location: finance.php");
     exit();
   } catch (Exception $e) {

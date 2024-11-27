@@ -51,6 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (mysqli_query($conn, $sql)) {
       // Success: Redirect back or show success message
+      $_SESSION['maintenances_updated'] = true; // Set success flag
       header("Location: trucks.php");
       exit();
     } else {

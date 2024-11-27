@@ -519,6 +519,11 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Include SweetAlert2 CSS and JS via CDN -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
   $(document).ready(function() {
     $('.edit-button').on('click', function() {
@@ -778,6 +783,75 @@ JOIN useraccounts ua ON o.OfficerID = ua.officerID";
     });
   });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Function to get URL parameters
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  // Handle Add Officer Form Submission with SweetAlert confirmation
+  const addOfficerForm = document.getElementById('addOfficerForm');
+
+  if (addOfficerForm) {
+    addOfficerForm.addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      // Optionally perform additional client-side validations here
+
+      // Show confirmation dialog
+      Swal.fire({
+        title: 'Confirm Account Creation',
+        text: "Are you sure you want to add this officer?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, add officer!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Optionally show a loading indicator
+          Swal.fire({
+            title: 'Adding Officer...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          // Submit the form programmatically after confirmation
+          addOfficerForm.submit();
+        }
+      });
+    });
+  }
+
+  // Display Success Message if 'message' parameter exists in URL
+  const successMessage = getQueryParam('message');
+  if (successMessage) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: successMessage,
+      confirmButtonText: 'OK'
+    });
+  }
+
+  // Display Error Message if 'error' parameter exists in URL
+  const errorMessage = getQueryParam('error');
+  if (errorMessage) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage,
+      confirmButtonText: 'OK'
+    });
+  }
+});
+</script>
+
 <?php
 include '../officer/footer.php';
 ?>

@@ -77,6 +77,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_commit($conn);
 
     // Redirect back to the trucks page or show success message
+    $_SESSION['transaction_updated'] = true; // Set success flag
+
     header("Location: trucks.php");
     exit();
   } catch (Exception $e) {
