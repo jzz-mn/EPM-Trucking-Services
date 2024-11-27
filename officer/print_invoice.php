@@ -361,12 +361,10 @@ if ($format === 'pdf') {
                 </div>
             </div>
             <div class="invoice-details">
-                <p><strong>BILLED TO:</strong> <?php echo htmlspecialchars($invoice['BilledTo']); ?></p>
-                <p><strong>BILLING INVOICE # OR </strong> SOA#
-                    <?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>-E
-                </p>
-                <p><strong>SERVICE NO:</strong> <?php echo htmlspecialchars($invoice['ServiceNo']); ?></p>
-                <p><strong>BILLING DATE:</strong> <?php echo htmlspecialchars($dateRangeStr); ?></p>
+                <p>BILLED TO: <strong><?php echo htmlspecialchars($invoice['BilledTo']); ?></strong></p>
+                <p>BILLING INVOICE # OR SOA#: <strong><?php echo htmlspecialchars($invoice['BillingInvoiceNo']); ?>-E</strong></p>
+                <p>SERVICE NO: <strong><?php echo htmlspecialchars($invoice['ServiceNo']); ?></strong></p>
+                <p>BILLING DATE: <strong><?php echo htmlspecialchars($dateRangeStr); ?></strong></p>
             </div>
         </div>
 
