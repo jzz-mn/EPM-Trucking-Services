@@ -949,6 +949,13 @@ include '../officer/header.php';
                   </table>
                 </div>
 
+                <style>
+                  .dropdown-menu {
+    z-index: 1050 !important;
+}
+
+                </style>
+
                 <div class="pagination-controls d-flex justify-content-between align-items-center mt-3 flex-column flex-md-row">
                   <div class="order-2 order-md-1 mt-3 mt-md-0">
                     <span>Number of pages: <span id="totalPagesClusters"></span></span>
@@ -2155,55 +2162,6 @@ include '../officer/header.php';
   </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Check if a success message is passed via session or query parameters
-    <?php if (isset($_SESSION['maintenances_updated']) && $_SESSION['maintenances_updated'] === true): ?>
-      Swal.fire({
-        icon: 'success',
-        title: 'Maintenance Updated Successfully!',
-        text: 'The maintenance record has been successfully updated.',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      <?php unset($_SESSION['maintenances_updated']); ?>
-    <?php endif; ?>
-  });
-</script>
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Check if a success message is passed via session or query parameters
-    <?php if (isset($_SESSION['truck_updated']) && $_SESSION['truck_updated'] === true): ?>
-      Swal.fire({
-        icon: 'success',
-        title: 'Truck Updated Successfully!',
-        text: 'The truck record has been successfully updated.',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      <?php unset($_SESSION['truck_updated']); ?>
-    <?php endif; ?>
-  });
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Check if a success message is passed via session or query parameters
-    <?php if (isset($_SESSION['cluster_updated']) && $_SESSION['cluster_updated'] === true): ?>
-      Swal.fire({
-        icon: 'success',
-        title: 'Cluster Updated Successfully!',
-        text: 'The cluster record has been successfully updated.',
-        showConfirmButton: false,
-        timer: 2000
-      });
-      <?php unset($_SESSION['cluster_updated']); ?>
-    <?php endif; ?>
-  });
-</script>
-
 
 <?php
 $conn->close();
