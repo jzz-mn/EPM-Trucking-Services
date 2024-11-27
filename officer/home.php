@@ -1,5 +1,8 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php'; // Update the path as necessary
 include '../includes/db_connection.php'; // Adjust the path as necessary
 
 // Set 'year' as the default filter if none is selected

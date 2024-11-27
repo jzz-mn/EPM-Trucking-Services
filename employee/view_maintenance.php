@@ -1,12 +1,11 @@
 <?php
-session_start();
+$allowedRoles = ['Employee'];
+
+// Include the authentication script
+require_once 'auth.php'; // Update the path as necessary
 include '../employee/header.php';
 include '../includes/db_connection.php';
 // Check if the user is logged in (redundant if already handled in header.php)
-if (!isset($_SESSION['UserID'])) {
-  header('Location: ../index.php');
-  exit();
-}
 
 // Fetch truck details for display
 if (isset($_SESSION['truck_id']) && !isset($truck_display)) {

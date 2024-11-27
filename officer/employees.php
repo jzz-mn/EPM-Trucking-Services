@@ -1,5 +1,8 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 include '../officer/header.php';
 // Display success message if set
 if (isset($_SESSION['success_message'])) {

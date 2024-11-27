@@ -1,5 +1,8 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 include '../includes/db_connection.php';
 include 'header.php';
 ?>

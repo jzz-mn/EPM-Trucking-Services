@@ -1,13 +1,10 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 include '../includes/db_connection.php';
 
-// Ensure the user is logged in
-if (!isset($_SESSION['UserID'])) {
-  // Redirect to login page if not authenticated
-  header("Location: ../index.php");
-  exit();
-}
 
 // Function to insert activity logs
 function insert_activity_log($conn, $userID, $action)

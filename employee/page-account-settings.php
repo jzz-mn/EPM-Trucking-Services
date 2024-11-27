@@ -1,8 +1,8 @@
 <?php
-// Start the session if it's not already started in header.php
-// session_start(); // Removed as it's handled in header.php
+$allowedRoles = ['Employee'];
 
-// Include the header (which handles session and database connection)
+// Include the authentication script
+require_once 'auth.php'; // Update the path as necessary
 include '../employee/header.php';
 
 // Check if the user is logged in (redundant if already handled in header.php)

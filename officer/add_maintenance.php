@@ -1,4 +1,8 @@
 <?php
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 // Include your database connection
 include '../includes/db_connection.php';
 

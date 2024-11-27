@@ -1,5 +1,8 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 
 require '../includes/db_connection.php';
 require '../vendor/autoload.php'; // For PHPMailer

@@ -1,11 +1,8 @@
 <?php
-session_start();
-include '../includes/db_connection.php';
-// Check if the user is logged in (redundant if already handled in header.php)
-if (!isset($_SESSION['UserID'])) {
-    header('Location: ../index.php');
-    exit();
-}
+$allowedRoles = ['Employee'];
+
+// Include the authentication script
+require_once 'auth.php'; // Update the path as necessary
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

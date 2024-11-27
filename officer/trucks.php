@@ -1,5 +1,8 @@
 <?php
-session_start();
+$allowedRoles = ['SuperAdmin', 'Officer'];
+
+// Include the authentication script
+require_once '../includes/auth.php';
 
 // Set Cache-Control headers
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
