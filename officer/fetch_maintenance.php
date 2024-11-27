@@ -1,29 +1,31 @@
 <?php
+header('Content-Type: application/json');
 include '../includes/db_connection.php';
 
-$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
 $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-$search = isset($_GET['search']) ? $_GET['search'] : '';
+$search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
 
-$query = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy 
-          FROM truckmaintenance
-          WHERE CONCAT(MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy) LIKE '%$search%'
-          ORDER BY MaintenanceID DESC
-          LIMIT $limit OFFSET $offset";
-
-$result = $conn->query($query);
-
-$data = [];
-while ($row = $result->fetch_assoc()) {
-    $data[] = $row;
+$whereClause = "";
+if (!empty($search)) {
+    $whereClause = "WHERE MaintenanceID LIKE '%$search%' OR Year LIKE '%$search%' OR Month LIKE '%$search%' OR Category LIKE '%$search%' OR Description LIKE '%$search%' OR Amount LIKE '%$search%' OR LoggedBy LIKE '%$search%'";
 }
 
-// Count total records for pagination
-$countQuery = "SELECT COUNT(*) AS total FROM truckmaintenance
-               WHERE CONCAT(MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy) LIKE '%$search%'";
-$countResult = $conn->query($countQuery);
-$totalRecords = $countResult->fetch_assoc()['total'];
+$totalQuery = "SELECT COUNT(*) as total FROM truckmaintenance $whereClause";
+$totalResult = $conn->query($totalQuery);
+$total = $totalResult->fetch_assoc()['total'];
 
-echo json_encode(['data' => $data, 'total' => $totalRecords]);
+$dataQuery = "SELECT MaintenanceID, Year, Month, Category, Description, Amount, LoggedBy FROM truckmaintenance $whereClause ORDER BY MaintenanceID DESC LIMIT $limit OFFSET $offset";
+$dataResult = $conn->query($dataQuery);
+
+$data = [];
+if ($dataResult->num_rows > 0) {
+    while ($row = $dataResult->fetch_assoc()) {
+        $data[] = $row;
+    }
+}
+
+echo json_encode(['data' => $data, 'total' => $total]);
+
 $conn->close();
 ?>
