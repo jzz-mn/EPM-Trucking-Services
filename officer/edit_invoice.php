@@ -1477,7 +1477,7 @@ include '../officer/header.php';
                             <div class="row">
                                 <!-- Fuel Price (New Field) -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="TG_FuelPrice" class="form-label">TEST Price</label>
+                                    <label for="TG_FuelPrice" class="form-label">Fuel Price</label>
                                     <input type="number" class="form-control" id="TG_FuelPrice" name="FuelPrice"
                                         required min="50" max="100" title="Enter a value between 50 and 100" step="1"
                                         oninput="this.value = Math.floor(this.value)">

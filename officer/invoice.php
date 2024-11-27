@@ -168,13 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Calculate amounts based on billedTo
         $ewt = 0;
         switch ($billedTo) {
-            case 'BOUNTY AGRO VENTURES INC.':
-            case 'BOUNTY FRESH FOOD INC.':
-                $ewt = $grossAmount * 0.02; 
-                break;
-            case 'CHOOKS TO GO INC.':
-                $ewt = $amount * 0.02; // Using the correct variable 'amount'
-                break;
+          case 'BOUNTY AGRO VENTURES INC.':
+          case 'BOUNTY FRESH FOOD INC.':
+            $ewt = $grossAmount * 0.02;
+            break;
+          case 'CHOOKS TO GO INC.':
+            $ewt = $amount * 0.02; // Using the correct variable 'amount'
+            break;
         }
 
         $vat = $grossAmount * 0.12;
@@ -441,58 +441,57 @@ include '../officer/header.php';
         </div>
 
         <!-- Add Invoice Modal -->
-        <div class="modal fade" id="addInvoiceModal" tabindex="-1" role="dialog" aria-labelledby="addInvoiceModalTitle"
+        <div class="modal fade" id="addInvoiceModal" tabindex="-1" aria-labelledby="addInvoiceModalTitle"
           aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal" role="document"> <!-- Changed modal-lg to modal-sm -->
+          <div class="modal-dialog modal-dialog-centered modal-sm" role="document"> <!-- Corrected class -->
             <div class="modal-content">
               <div class="modal-header d-flex align-items-center bg-primary">
                 <h5 class="modal-title text-white fs-4">Add Invoice Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Close Button -->
               </div>
               <div class="modal-body">
-                <div class="add-contact-box">
-                  <div class="add-contact-content">
-                    <!-- Add the method and action attributes -->
-                    <form id="addInvoiceForm">
-                      <div class="mb-3">
-                        <label for="billingStartDate" class="form-label">Billing Start Date</label>
-                        <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="billingEndDate" class="form-label">Billing End Date</label>
-                        <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="billedTo" class="form-label">Billed To</label>
-                        <select class="form-select" id="billedTo" name="billedTo" required>
-                          <option value="">Select Client</option>
-                          <?php
-                          // Fetch clients from the database
-                          $clientQuery = "SELECT clientID, clientName FROM client";
-                          $clientResult = $conn->query($clientQuery);
-                          if ($clientResult && $clientResult->num_rows > 0) {
-                            while ($client = $clientResult->fetch_assoc()) {
-                              echo '<option value="' . htmlspecialchars($client['clientName']) . '">' . htmlspecialchars($client['clientName']) . '</option>';
-                            }
-                          }
-                          ?>
-                        </select>
-                      </div>
-                      <div class="col-12 mb-3">
-                        <div class="d-flex gap-6 m-0 justify-content-end">
-                          <button type="button" class="btn bg-danger-subtle text-danger"
-                            data-bs-dismiss="modal">Discard</button>
-                          <button id="btn-add-invoice" class="btn btn-primary" type="button">Generate Invoice</button>
-                        </div>
-                      </div>
-                    </form>
-
+                <!-- Modal Body Content -->
+                <form id="addInvoiceForm">
+                  <!-- Form Fields -->
+                  <div class="mb-3">
+                    <label for="billingStartDate" class="form-label">Billing Start Date</label>
+                    <input type="date" class="form-control" id="billingStartDate" name="billingStartDate" required>
                   </div>
-                </div>
+                  <div class="mb-3">
+                    <label for="billingEndDate" class="form-label">Billing End Date</label>
+                    <input type="date" class="form-control" id="billingEndDate" name="billingEndDate" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="billedTo" class="form-label">Billed To</label>
+                    <select class="form-select" id="billedTo" name="billedTo" required>
+                      <option value="">Select Client</option>
+                      <?php
+                      // Fetch clients from the database
+                      $clientQuery = "SELECT clientID, clientName FROM client";
+                      $clientResult = $conn->query($clientQuery);
+                      if ($clientResult && $clientResult->num_rows > 0) {
+                        while ($client = $clientResult->fetch_assoc()) {
+                          echo '<option value="' . htmlspecialchars($client['clientName']) . '">' . htmlspecialchars($client['clientName']) . '</option>';
+                        }
+                      }
+                      ?>
+                    </select>
+                  </div>
+                  <div class="col-12 mb-3">
+                    <div class="d-flex gap-6 m-0 justify-content-end">
+                      <button type="button" class="btn bg-danger-subtle text-danger"
+                        data-bs-dismiss="modal">Discard</button> <!-- Discard Button -->
+                      <button id="btn-add-invoice" class="btn btn-primary" type="button">Generate Invoice</button>
+                      <!-- Generate Invoice Button -->
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
         </div>
+
         <!-- Selected Records Modal -->
         <div class="modal fade" id="selectedRecordsModal" tabindex="-1" aria-labelledby="selectedRecordsModalLabel"
           aria-hidden="true">
@@ -539,6 +538,9 @@ include '../officer/header.php';
 include '../officer/footer.php';
 $conn->close();
 ?>
+<!-- Bootstrap Bundle JS (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+ADa0j5j2zYzMEaXkvoE3kR18j4" crossorigin="anonymous"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   $(document).ready(function () {
@@ -806,7 +808,7 @@ $conn->close();
 </script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function () {
     const theme = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-bs-theme", theme);
     document.body.classList.toggle("dark-mode", theme === "dark");
@@ -831,8 +833,7 @@ $conn->close();
 
 <!-- Add the following styles to support the sorting arrows -->
 <style>
-
-.dark-mode .pagination .page-item .page-link {
+  .dark-mode .pagination .page-item .page-link {
     /* Dark background for pagination items */
     color: #fff;
     /* Light text for readability */
