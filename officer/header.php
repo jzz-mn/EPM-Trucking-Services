@@ -261,7 +261,7 @@ if (!empty($sql_all_notifications)) {
                                 }
                                 ?>
                                 <?php if (isUserRole('SuperAdmin')): // Updated condition to include 'Officer' 
-                                ?>
+                                        ?>
                                     <li class="sidebar-item">
                                         <a class="sidebar-link" href="../officer/officers.php">
                                             <iconify-icon icon="mdi:badge-account-horizontal-outline"></iconify-icon>
@@ -316,7 +316,7 @@ if (!empty($sql_all_notifications)) {
                             </a>
                         </li>
                         <?php if (isUserRole('SuperAdmin') || isUserRole('Officer')): // Updated condition to include 'Officer' 
-                        ?>
+                                ?>
                             <li class="sidebar-item">
                                 <a class="sidebar-link" href="../officer/activity-logs.php">
                                     <iconify-icon icon="mdi:history"></iconify-icon>
@@ -415,43 +415,8 @@ if (!empty($sql_all_notifications)) {
             .dark-mode .badge.bg-primary {
                 background-color: #0d6efd;
             }
+
             /* Sidebar Styling */
-.left-sidebar {
-    position: fixed;            /* Fix the sidebar position */
-    top: 0;                     /* Align to the top */
-    left: 0;                    /* Align to the left */
-    height: 100vh;              /* Full viewport height */
-    width: 250px;               /* Set a fixed width */
-    z-index: 1000;              /* Ensure it stays above other elements */
-}
-
-/* Adjust the main content to account for the fixed sidebar */
-.page-wrapper {
-    margin-left: 250px;         /* Same as the sidebar width */
-    transition: margin-left 0.3s ease; /* Smooth transition if sidebar width changes */
-}
-
-/* Responsive Adjustments */
-@media (max-width: 1200px) {
-    .left-sidebar {
-        width: 200px;           /* Reduce width on smaller screens */
-    }
-    .page-wrapper {
-        margin-left: 200px;
-    }
-}
-
-@media (max-width: 768px) {
-    .left-sidebar {
-        width: 100%;             /* Make sidebar full width on very small screens */
-        height: auto;
-        position: relative;      /* Allow it to scroll with content */
-    }
-    .page-wrapper {
-        margin-left: 0;
-    }
-}
-
         </style>
 
         <div class="page-wrapper">
@@ -917,7 +882,7 @@ if (!empty($sql_all_notifications)) {
                                     <!-- start notification Dropdown (Horizontal Layout) -->
                                     <!-- ------------------------------- -->
                                     <?php if ($isSuperAdmin || $isOfficer): // Only show notifications if user has access 
-                                    ?>
+                                            ?>
                                         <li class="nav-item dropdown nav-icon-hover-bg rounded-circle">
                                             <a class="nav-link position-relative notification-icon"
                                                 href="javascript:void(0)" id="notificationDropdownHorizontal"
@@ -1047,10 +1012,11 @@ if (!empty($sql_all_notifications)) {
 
                 </div>
                 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+                <link rel="stylesheet" type="text/css"
+                    href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
                 <script type="text/css" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
                 <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+                    document.addEventListener('DOMContentLoaded', function () {
                         // Function to mark notifications as seen
                         function markNotificationsAsSeen(maxLogID, dropdownId) {
                             $.ajax({
@@ -1060,7 +1026,7 @@ if (!empty($sql_all_notifications)) {
                                     action: 'mark_seen',
                                     last_seen_logid: maxLogID
                                 },
-                                success: function(response) {
+                                success: function (response) {
                                     try {
                                         var res = JSON.parse(response);
                                         if (res.status === 'success') {
@@ -1076,37 +1042,37 @@ if (!empty($sql_all_notifications)) {
                                         console.error('Invalid JSON response');
                                     }
                                 },
-                                error: function() {
+                                error: function () {
                                     console.error('Failed to mark notifications as seen.');
                                 }
                             });
                         }
 
                         <?php if ($isSuperAdmin || $isOfficer): // Only add event listeners if the user has access 
-                        ?>
+                                ?>
                             // Handle click on notification icon (Vertical Layout)
-                            $('#notificationDropdown').on('click', function() {
+                            $('#notificationDropdown').on('click', function () {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdown');
                                 <?php endif; ?>
                             });
 
                             // Handle hover on notification icon (Vertical Layout)
-                            $('#notificationDropdown').on('mouseenter', function() {
+                            $('#notificationDropdown').on('mouseenter', function () {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdown');
                                 <?php endif; ?>
                             });
 
                             // Handle click on notification icon (Horizontal Layout)
-                            $('#notificationDropdownHorizontal').on('click', function() {
+                            $('#notificationDropdownHorizontal').on('click', function () {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdownHorizontal');
                                 <?php endif; ?>
                             });
 
                             // Handle hover on notification icon (Horizontal Layout)
-                            $('#notificationDropdownHorizontal').on('mouseenter', function() {
+                            $('#notificationDropdownHorizontal').on('mouseenter', function () {
                                 <?php if ($new_notification_count > 0): ?>
                                     markNotificationsAsSeen(<?php echo $max_logid; ?>, '#notificationDropdownHorizontal');
                                 <?php endif; ?>
@@ -1119,7 +1085,7 @@ if (!empty($sql_all_notifications)) {
 
                 <script>
                     // Load theme preference from localStorage
-                    document.addEventListener("DOMContentLoaded", function() {
+                    document.addEventListener("DOMContentLoaded", function () {
                         const savedTheme = localStorage.getItem("theme");
                         if (savedTheme) {
                             document.documentElement.setAttribute("data-bs-theme", savedTheme);
@@ -1153,7 +1119,7 @@ if (!empty($sql_all_notifications)) {
                         document.querySelectorAll(".sun").forEach(el => el.style.display = isDark ? "flex" : "none");
                         document.querySelectorAll(".moon").forEach(el => el.style.display = isDark ? "none" : "flex");
                     }
-                    document.addEventListener("DOMContentLoaded", function() {
+                    document.addEventListener("DOMContentLoaded", function () {
                         const savedTheme = localStorage.getItem("theme");
                         if (savedTheme) {
                             document.documentElement.setAttribute("data-bs-theme", savedTheme);
@@ -1217,7 +1183,7 @@ if (!empty($sql_all_notifications)) {
                         // Clear theme preference from localStorage
                         localStorage.removeItem("theme");
                         <?php $_SESSION['reset_theme'] = false; // Reset the flag 
-                        ?>
+                            ?>
                     <?php endif; ?>
                 </script>
 
