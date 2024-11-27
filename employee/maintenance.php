@@ -133,22 +133,36 @@ $truck_result = $conn->query($truck_query);
   </div>
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   // Function to populate confirmation modal
   function reviewData() {
-    const maintenanceDate = document.getElementById('maintenanceDate').value;
-    const maintenanceCategory = document.getElementById('maintenanceCategory').value;
-    const maintenanceDescription = document.getElementById('maintenanceDescription').value;
+    const form = document.getElementById('addMaintenanceForm');
+    
+    // Check if the form is valid
+    if (form.reportValidity()) {
+      // If valid, proceed to collect data and show confirmation modal
+      const maintenanceDate = document.getElementById('maintenanceDate').value;
+      const maintenanceCategory = document.getElementById('maintenanceCategory').value;
+      const maintenanceDescription = document.getElementById('maintenanceDescription').value;
 
-    // Populate the modal
-    document.getElementById('reviewDate').textContent = maintenanceDate;
-    document.getElementById('reviewCategory').textContent = maintenanceCategory;
-    document.getElementById('reviewDescription').textContent = maintenanceDescription;
+      // Populate the modal with form data
+      document.getElementById('reviewDate').textContent = maintenanceDate;
+      document.getElementById('reviewCategory').textContent = maintenanceCategory;
+      document.getElementById('reviewDescription').textContent = maintenanceDescription;
 
-    // Show confirmation modal
-    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-    confirmationModal.show();
+      // Show confirmation modal
+      const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+      confirmationModal.show();
+    } else {
+      // If invalid, focus on the first invalid field
+      const firstInvalid = form.querySelector(':invalid');
+      if (firstInvalid) {
+        firstInvalid.focus();
+      }
+      // Browser will automatically display validation messages
+    }
   }
 
   // Function to submit the form and show SweetAlert
@@ -178,6 +192,7 @@ $truck_result = $conn->query($truck_query);
     });
   }
 </script>
+
 
 <?php
 include '../employee/footer.php';
