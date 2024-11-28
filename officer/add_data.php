@@ -290,7 +290,7 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                                             </span>
                                         </div>
                                         <input type="number" class="form-control" id="input-dr-no" placeholder="DR No"
-                                            min="1" required>
+                                            min="1" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     </div>
                                     <!-- Quantity -->
                                     <div class="col-md-2">
@@ -352,11 +352,11 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                                 <div class="d-flex align-items-center mb-2">
                                     <label for="fuel-unit-price" class="form-label mb-0 me-2">Unit Price</label>
                                     <span class="text-danger small fst-italic d-none " id="fuel-unit-price-error">
-                                        Enter a value between 50 and 100.
+                                        Enter a value between 40 and 100.
                                     </span>
                                 </div>
                                 <input type="number" class="form-control" id="fuel-unit-price" name="fuel_unit_price"
-                                    placeholder="Enter price per liter" step="0.01" min="50" max="100" required>
+                                    placeholder="Enter price per liter" step="0.01" min="40" max="100" required>
                             </div>
 
                         </div>
@@ -1232,9 +1232,9 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
             const fuelUnitPriceError = $('#fuel-unit-price-error');
             const value = parseFloat(fuelUnitPriceInput.val());
 
-            if (isNaN(value) || value < 50 || value > 100) {
+            if (isNaN(value) || value < 40 || value > 100) {
                 fuelUnitPriceInput.addClass('is-invalid');
-                fuelUnitPriceError.removeClass('d-none').text('Enter a value between 50 and 100.');
+                fuelUnitPriceError.removeClass('d-none').text('Enter a value between 40 and 100.');
                 return false;
             } else {
                 fuelUnitPriceInput.removeClass('is-invalid').addClass('is-valid');
