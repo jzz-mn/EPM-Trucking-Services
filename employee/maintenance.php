@@ -76,23 +76,19 @@ $truck_result = $conn->query($truck_query);
                 <label for="maintenanceDescription" class="form-label">Description</label>
                 <select class="form-control" id="maintenanceDescription" name="maintenanceDescription" required>
                   <option value="" disabled selected>Select a description</option>
-                  <option value="PURCHASE MATERIALS (COOL AIR SPARE PARTS)">PURCHASE MATERIALS (COOL AIR SPARE PARTS)
-                  </option>
-                  <option value="REEFER BAN REPAIR LABOR">REEFER BAN REPAIR LABOR</option>
-                  <option value="FREON">FREON</option>
-                  <option value="COMPRESSOR">COMPRESSOR</option>
-                  <option value="FUEL & OIL EXP">FUEL & OIL EXP</option>
-                  <option value="GEAR OIL EXP">GEAR OIL EXP</option>
-                  <option value="TIRE 2T 750X15">TIRE 2T 750X15</option>
-                  <option value="TUBE 2T 750X15">TUBE 2T 750X15</option>
-                  <option value="TIRE 2T 700X16">TIRE 2T 700X16</option>
-                  <option value="TUBE 2T 700X16">TUBE 2T 700X16</option>
-                  <option value="TUBE 4T 700X16">TUBE 4T 700X16</option>
-                  <option value="TOLL GATE">TOLL GATE</option>
-                  <option value="PARKING FEE">PARKING FEE</option>
-                  <option value="PARKING FEE/TOLL GATE">PARKING FEE/TOLL GATE</option>
-                  <option value="TRUCK INSURANCE">TRUCK INSURANCE</option>
-                  <option value="LEGALIZATION">LEGALIZATION</option>
+                  <?php
+                  // Fetch unique descriptions from the truckmaintenance table
+                  $sql = "SELECT DISTINCT Description FROM truckmaintenance";
+                  $result = $conn->query($sql);
+
+                  if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                      echo '<option value="' . htmlspecialchars($row['Description']) . '">' . htmlspecialchars($row['Description']) . '</option>';
+                    }
+                  } else {
+                    echo '<option value="">No descriptions available</option>';
+                  }
+                  ?>
                 </select>
               </div>
             </div>
