@@ -290,13 +290,13 @@ if (isset($_SESSION['truck_id']) && !isset($truck_display)) {
                                             </span>
                                         </div>
                                         <input type="number" class="form-control" id="input-dr-no" placeholder="DR No"
-                                            min="1" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        step="1" min="1">
                                     </div>
                                     <!-- Quantity -->
                                     <div class="col-md-2">
                                         <label for="input-quantity" class="form-label">Quantity</label>
                                         <input type="number" class="form-control" id="input-quantity"
-                                            placeholder="Quantity" min="0" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                            placeholder="Quantity" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     </div>
                                     <!-- KGs -->
                                     <div class="col-md-2">
